@@ -20,7 +20,7 @@ class ContainerBoat;
 
 class GenericBoat {
     private:
-        float radius; // Distance between applied force point and Center of Mass [m]
+        float radius; // Distance between applied force point and Center of mass [m]
         float mass; // Mass of Boat [kg]
         float inertia; // Moment of inertia [kg*m^2]
         // Drag coefficient of movement
@@ -37,11 +37,9 @@ class GenericBoat {
 
     protected:
         // State variables
-        Vector3f pos; // Position [m]
-        Vector3f vel; // Velocity [m/s]
+        Vector3f pos; // Position [m], [m], [rad]
+        Vector3f vel; // Velocity [m/s], [m/s], [rad/s]
 
-        // Control variables
-        Vector2f u_max; // Max control values
         
 
     public:
@@ -49,16 +47,25 @@ class GenericBoat {
         GenericBoat(); // Basic setup constructor, set every value to 1
         GenericBoat(const GenericBoat &gen_boat); // Copy constructor
         GenericBoat(float radius, float mass, float inertia, float mu_l, 
-        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, Vector2f u_max);
+        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, float F_max,
+         float eta_max); // Parameterized constructor
         // Destructor
         ~GenericBoat();
 
         // RK-4 method for propogation
         void propogate(Vector2f control, float dt);
 
-        // Info getting
+        // Accessors
         Vector3f get_pos();
         Vector3f get_vel();
+        float get_radius() const;
+        float get_mass() const;
+        float get_inertia() const;
+        float get_mu_l() const;
+        float get_mu_ct() const;
+        float get_mu_r() const;
+        float get_F_max() const;
+        float get_eta_max() const;
         void print_params();
     
 };

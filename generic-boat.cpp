@@ -42,10 +42,11 @@ GenericBoat::GenericBoat(const GenericBoat &gen_boat) {
     this->eta_max = gen_boat.eta_max;
 }
 GenericBoat::GenericBoat(float radius, float mass, float inertia, float mu_l, 
-        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, Vector2f u_max) : 
+        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, float F_max,
+         float eta_max) : 
         radius(radius), mass(mass), 
-inertia(inertia), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), F_max(u_max[0]), 
-eta_max(u_max[1]) {
+inertia(inertia), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), F_max(F_max), 
+eta_max(eta_max) {
     this->pos = pos;
     this->vel = vel;
 }
@@ -54,6 +55,7 @@ eta_max(u_max[1]) {
 GenericBoat::~GenericBoat() {
         // No specific resource management needed here
 }
+
 
 //EOM
  Matrix2x3f GenericBoat::state_der(Matrix2x3f state, Vector2f control) {
@@ -143,12 +145,44 @@ void GenericBoat::propogate(Vector2f control, float dt) {
     // cout << "hi" << endl;
 }
 
-Vector3f GenericBoat::get_pos() {
-    return this->pos;
-}
+
+// Accessors
+Vector3f GenericBoat::get_pos() { return this->pos; }
 
 Vector3f GenericBoat::get_vel() {
     return this->vel;
+}
+
+float GenericBoat::get_radius() const {
+    return this->radius;
+}
+
+float GenericBoat::get_mass() const {
+    return this->mass;
+}
+
+float GenericBoat::get_inertia() const {
+    return this->inertia;
+}
+
+float GenericBoat::get_mu_l() const {
+    return this->mu_l;
+}
+
+float GenericBoat::get_mu_ct() const {
+    return this->mu_ct;
+}
+
+float GenericBoat::get_mu_r() const {
+    return this->mu_r;
+}
+
+float GenericBoat::get_F_max() const {
+    return this->F_max;
+}
+
+float GenericBoat::get_eta_max() const {
+    return this->eta_max;
 }
 
 void GenericBoat::print_params() {
