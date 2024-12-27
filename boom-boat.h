@@ -4,6 +4,9 @@
 #include "generic-boat.h"
 #include <iostream>
 
+using Eigen::Vector3f;
+using Eigen::Vector2f;
+
 class BoomBoat : public GenericBoat {
 private:
     // Member variables
@@ -17,8 +20,10 @@ public:
     // Constructors
     BoomBoat(); // Default constructor
     BoomBoat(const BoomBoat &boom_boat); // Copy constructor
+    BoomBoat(Vector3f pos);
     BoomBoat(float radius, float mass, float inertia, float mu_l, float mu_ct, 
-             float mu_r, float fuel, float cap, float F_max, float eta_max); // Parameterized constructor
+             float mu_r, Vector3f pos, Vector3f vel, float fuel, float cap,
+              float F_max, float eta_max); // Parameterized constructor
 
     // Destructor
     ~BoomBoat();
@@ -31,7 +36,7 @@ public:
     void set_fuel(float fuel);
 
     // Utility function to display BoomBoat status
-    void print_status();
+    void print_status() const;
 };
 
 #endif

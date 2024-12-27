@@ -56,8 +56,8 @@ class GenericBoat {
         void propogate(Vector2f control, float dt);
 
         // Accessors
-        Vector3f get_pos();
-        Vector3f get_vel();
+        Vector3f get_pos() const;
+        Vector3f get_vel() const;
         float get_radius() const;
         float get_mass() const;
         float get_inertia() const;
@@ -67,6 +67,10 @@ class GenericBoat {
         float get_F_max() const;
         float get_eta_max() const;
         void print_params();
+
+        // Setters
+        void set_pos(Vector3f pos);
+        void set_vel(Vector3f vel);
     
 };
 // Helper functions

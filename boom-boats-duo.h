@@ -7,6 +7,7 @@
 using Eigen::MatrixXf;
 using Eigen::Vector2f;
 using Eigen::VectorXf;
+using std::string;
 
 class Boom {
 private:
@@ -21,7 +22,10 @@ private:
 public:
     // Constructor
     Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r);
-
+    Boom(size_t num_links, float L);
+    // Default constructor
+    Boom();
+    
     // Destructor
     ~Boom();
 
@@ -51,13 +55,17 @@ private:
 
 public:
     // Constructor
-    BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2, size_t num_links, float L, float mu_l, float mu_ct, float mu_r);
+    BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2, size_t num_links,
+     float L, float mu_l, float mu_ct, float mu_r, Vector2f center,
+      float orientation);
+    BoomBoatsDuo(Vector2f center, float orientation, size_t num_links, float L);
 
     // Destructor
     ~BoomBoatsDuo();
 
     // Utility functions
-    void print_status();
+    void print_status() const;
+    void print_to_file(const string &filename, const string &foldername) const;
 
     // Propagation function
     void propagate(const Vector2f &control1, const Vector2f &control2);

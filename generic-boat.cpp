@@ -126,11 +126,8 @@ void GenericBoat::propogate(Vector2f control, float dt) {
     // Matrix2x3f y_n;
     // y_n << this->pos[0], this->pos[1], wrap_theta(this->pos[2]),
     //        this->vel[0], this->vel[1], this->vel[2];
-    // // Forward Euler
-
-    Matrix2x3f state_dot = this->state_der(y_n, control);
-    
-    Matrix2x3f y_next = y_n + dt * state_dot;
+    // Matrix2x3f state_dot = this->state_der(y_n, control);
+    // Matrix2x3f y_next = y_n + dt * state_dot;
 
     this->pos = y_next.row(0);  // Takes the first 3 elements from y_next
 
@@ -147,43 +144,25 @@ void GenericBoat::propogate(Vector2f control, float dt) {
 
 
 // Accessors
-Vector3f GenericBoat::get_pos() { return this->pos; }
+Vector3f GenericBoat::get_pos() const { return this->pos; }
 
-Vector3f GenericBoat::get_vel() {
-    return this->vel;
-}
+Vector3f GenericBoat::get_vel() const { return this->vel; }
 
-float GenericBoat::get_radius() const {
-    return this->radius;
-}
+float GenericBoat::get_radius() const { return this->radius; }
 
-float GenericBoat::get_mass() const {
-    return this->mass;
-}
+float GenericBoat::get_mass() const { return this->mass; }
 
-float GenericBoat::get_inertia() const {
-    return this->inertia;
-}
+float GenericBoat::get_inertia() const { return this->inertia; }
 
-float GenericBoat::get_mu_l() const {
-    return this->mu_l;
-}
+float GenericBoat::get_mu_l() const { return this->mu_l; }
 
-float GenericBoat::get_mu_ct() const {
-    return this->mu_ct;
-}
+float GenericBoat::get_mu_ct() const { return this->mu_ct; }
 
-float GenericBoat::get_mu_r() const {
-    return this->mu_r;
-}
+float GenericBoat::get_mu_r() const { return this->mu_r; }
 
-float GenericBoat::get_F_max() const {
-    return this->F_max;
-}
+float GenericBoat::get_F_max() const { return this->F_max; }
 
-float GenericBoat::get_eta_max() const {
-    return this->eta_max;
-}
+float GenericBoat::get_eta_max() const { return this->eta_max; }    
 
 void GenericBoat::print_params() {
     std::cout << "Radius: " << this->radius << " m\n" << endl;
@@ -192,6 +171,14 @@ void GenericBoat::print_params() {
     std::cout << "Mu_l (Linear Drag): " << this->mu_l << " kg/m\n" << endl;
     std::cout << "Mu_ct (Cross Track Drag): " << this->mu_ct << " kg/m\n" << endl;
     std::cout << "Mu_r (Rotational Drag): " << this->mu_r << " kg*m^2\n" << endl;
+}
+
+void GenericBoat::set_pos(Vector3f pos) {
+    this->pos = pos;
+}
+
+void GenericBoat::set_vel(Vector3f vel) {
+    this->vel = vel;
 }
 
 float wrap_theta(float theta) {
