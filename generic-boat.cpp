@@ -148,6 +148,8 @@ Vector3f GenericBoat::get_pos() const { return this->pos; }
 
 Vector3f GenericBoat::get_vel() const { return this->vel; }
 
+Vector2f GenericBoat::get_control() const { return Vector2f(this->F, this->eta); }
+
 float GenericBoat::get_radius() const { return this->radius; }
 
 float GenericBoat::get_mass() const { return this->mass; }
@@ -179,6 +181,11 @@ void GenericBoat::set_pos(Vector3f pos) {
 
 void GenericBoat::set_vel(Vector3f vel) {
     this->vel = vel;
+}
+
+void GenericBoat::set_control(Vector2f control) {
+    this->F = control[0];
+    this->eta = control[1];
 }
 
 float wrap_theta(float theta) {

@@ -29,7 +29,7 @@ Boom::Boom(size_t num_links, float L) : L(L), mu_l(0.0), mu_ct(0.0), mu_r(0.0) {
 
 // Default Constructor
 Boom::Boom() : L(0.0), mu_l(0.0), mu_ct(0.0), mu_r(0.0) {
-    links_states = MatrixXf::Zero(0, 6);
+    links_states = MatrixXf::Zero(1, 6); // Default to 1 link
 }
 
 // Boom Destructor
@@ -57,6 +57,8 @@ size_t Boom::get_num_links() const {
 }
 
 void Boom::print_links_states() const {
+    cout << "Boom Length: " << L << endl;
+    cout << "Number of Links: " << links_states.rows() << endl;
     cout << "Links States: \n" << links_states << endl;
 }
 
@@ -141,39 +143,30 @@ bool Boom::is_valid_state() const {
 // BoomBoatsDuo Constructor
 BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
  size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
-  Vector2f center, float orientation) {
-        // // Check if distance between boats is greater than the sum of the boom links
-        // float dist = (boat1.get_pos().head<2>() - boat2.get_pos().head<2>()).norm();
-        // float boom_length = num_links * L;
-        // if (dist > boom_length) {
-        //     throw std::invalid_argument("Distance between boats is greater than the sum of the boom links");
-        // }
-        Boom boom(num_links, L, mu_l, mu_ct, mu_r);
-        BoomBoat boat1 = BoomBoat(b1.get_radius(), b1.get_mass(), 
-        b1.get_inertia(), b1.get_mu_l(), b1.get_mu_ct(), b1.get_mu_r(),
-         b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(),
-          b1.get_F_max(), b1.get_eta_max());
-          
-        BoomBoat boat2 = BoomBoat(b2.get_radius(), b2.get_mass(), 
-        b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
-         b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(),
-          b2.get_F_max(), b2.get_eta_max());
+  Vector2f center, float orientation)
+    : boat1(b1.get_radius(), b1.get_mass(), b1.get_inertia(), b1.get_mu_l(), b1.get_mu_ct(), b1.get_mu_r(),
+            b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(), b1.get_F_max(), b1.get_eta_max()),
+      boat2(b2.get_radius(), b2.get_mass(), b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
+            b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(), b2.get_F_max(), b2.get_eta_max()),
+            boom(num_links, L, mu_l, mu_ct, mu_r) {
 
         // Place boats at the center with the given orientation of the line 
         // connecting the boats
-        float b1_theta_orig = boat1.get_pos()(2);
-        float b2_theta_orig = boat2.get_pos()(2);
-        Vector3f b1_pos = Vector3f(center(0) - 0.5 * num_links * L * cos(orientation), center(1) - 0.5 * N *L * sin(orientation), b1_theta_orig);
-        Vector3f b2_pos = Vector3f(center(0) + 0.5 * num_links * L * cos(orientation), center(1) + 0.5 * N *L * sin(orientation), b2_theta_orig);
+        // float b1_theta_orig = boat1.get_pos()(2);
+        // float b2_theta_orig = boat2.get_pos()(2);
+        Vector3f b1_pos = Vector3f(center(0) - 0.5 * num_links * L * cos(orientation), center(1) - 0.5 * num_links * L * sin(orientation), orientation);
+        Vector3f b2_pos = Vector3f(center(0) + 0.5 * num_links * L * cos(orientation), center(1) + 0.5 * num_links * L * sin(orientation), orientation);
 
-        Vector3f b1_stern = Vector3f(b1_pos(0) - b1.get_radius() * sin(b1_pos(2)), b1_pos(1) - b1.get_radius() * cos(b1_pos(2)), b1_pos(2));
-        Vector3f b2_stern = Vector3f(b2_pos(0) - b2.get_radius() * sin(b2_pos(2)), b2_pos(1) - b2.get_radius() * cos(b2_pos(2)), b2_pos(2));
+        // Vector3f b1_stern = Vector3f(b1_pos(0) - b1.get_radius() * sin(b1_pos(2)), b1_pos(1) - b1.get_radius() * cos(b1_pos(2)), b1_pos(2));
+        // Vector3f b2_stern = Vector3f(b2_pos(0) - b2.get_radius() * sin(b2_pos(2)), b2_pos(1) - b2.get_radius() * cos(b2_pos(2)), b2_pos(2));
+
+        
 
         boat1.set_pos(b1_pos);
         boat2.set_pos(b2_pos);
         for (size_t i = 0; i < boom.get_num_links(); ++i) {
-            float x = b1_stern(0) + (i + 0.5) * L * cos(orientation);
-            float y = b2_stern(1) + (i + 0.5) * L * sin(orientation);
+            float x = b1_pos(0) + (i + 0.5) * L * cos(orientation);
+            float y = b1_pos(1) + (i + 0.5) * L * sin(orientation);
             float theta = orientation;
             VectorXf state(6);
             state << x, y, theta, 0.0, 0.0, 0.0;
@@ -219,7 +212,6 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     }
     // Construct the full file path
     string filepath = foldername + "/" + filename;
-
     // Open the file in append mode
     std::ofstream file(filepath, std::ios_base::app);
     if (!file.is_open()) {
@@ -229,7 +221,9 @@ void BoomBoatsDuo::print_to_file(const string &filename,
 
 
     // Write the state to a file: first 6 numbers are boat1.get_pos(),
-    // boat1.get_vel(), second 6 numbers are boat2.get_pos. After that num_links
+    // boat1.get_vel(), next two numbers are Force F and steering angle eta.
+    // next, 6 numbers are boat2.get_pos and boat2.get_vel(). next two numbers 
+    // are force F and steering angle eta. After that num_links
     // and L, and then a sequence of every link's position parameters
 
     // Variable to hold all data
@@ -238,14 +232,18 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     // Write the state of boat1
     Vector3f boat1_pos = boat1.get_pos();
     Vector3f boat1_vel = boat1.get_vel();
+    Vector2f boat1_control = boat1.get_control();
     ss << boat1_pos.transpose() << " ";
     ss << boat1_vel.transpose() << " ";
+    ss << boat1_control.transpose() << " ";
 
     // Write the state of boat2
     Vector3f boat2_pos = boat2.get_pos();
     Vector3f boat2_vel = boat2.get_vel();
+    Vector2f boat2_control = boat2.get_control();
     ss << boat2_pos.transpose() << " ";
     ss << boat2_vel.transpose() << " ";
+    ss << boat2_control.transpose() << " ";
 
     // Write about the boom
     ss << boom.get_num_links() << " ";
@@ -256,7 +254,6 @@ void BoomBoatsDuo::print_to_file(const string &filename,
         VectorXf link_state = boom.get_link_state(i);
         ss << link_state.transpose() << " ";
     }
-
     // Write the collected string to the file
     file << ss.str() << std::endl;
 

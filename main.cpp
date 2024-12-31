@@ -50,21 +50,27 @@ int main(int argc, char* argv[]) {
     if (argc < 10) {
         // std::cerr << "No parameters input" << std::endl;
     }
+    // T is the first argument when running the program
+    float T = std::stof(argv[1]);
+    // dt is the second argument when running the program
+    float dt = std::stof(argv[2]);
     
     BoomBoat *boat = new BoomBoat();
     size_t num_links = 6;
     float L = 0.5;
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, 1.0, 1.0,
-     1.0, Vector2f(0.0, 0.0), 0.0);
-    delete boat;
+     1.0, Vector2f(1.0, 1.0), PI / 3);
+    // duo->print_status();
+
     int num_duos = 1;
+
     BoomBoatsDuo** duo_arr = new BoomBoatsDuo*[num_duos];
     duo_arr[0] = duo;
+    // duo_arr[0]->print_status();
 
-    // boat->print_status();
     
-    float T = 30;
-    float dt = 1e-2;
+    // float T = 30;
+    // float dt = 1e-2;
     int numSteps = static_cast<int>(T / dt) + 1;
     RowVectorXf t = RowVectorXf::LinSpaced(numSteps, 0.0f, T);
 
@@ -105,7 +111,6 @@ int main(int argc, char* argv[]) {
             string filename = "Duo" + std::to_string(j) + ".txt";
             duo_arr[j]->print_to_file(filename, foldername);
         }
-
     }
     std::cout << std::endl; // Going down a line
     std::cout.flush(); // Force immediate display of the output
@@ -127,7 +132,7 @@ int main(int argc, char* argv[]) {
 //         cerr << "Unable to open file output.txt for writing." << endl;
 //     }
     
-    // delete boat;
+    delete boat;
     delete duo;
     delete duo_arr;
     return 0;
