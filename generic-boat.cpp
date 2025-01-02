@@ -56,6 +56,20 @@ GenericBoat::~GenericBoat() {
         // No specific resource management needed here
 }
 
+// Assignment operator
+GenericBoat& GenericBoat::operator=(const GenericBoat &gen_boat) {
+    this->radius = gen_boat.radius;
+    this->mass = gen_boat.mass;
+    this->inertia = gen_boat.inertia;
+    this->mu_l = gen_boat.mu_l;
+    this->mu_ct = gen_boat.mu_ct;
+    this->mu_r = gen_boat.mu_r;
+    this->pos = gen_boat.pos;
+    this->vel = gen_boat.vel;
+    this->F_max = gen_boat.F_max;
+    this->eta_max = gen_boat.eta_max;
+    return *this;
+}
 
 //EOM
  Matrix2x3f GenericBoat::state_der(Matrix2x3f state, Vector2f control) {

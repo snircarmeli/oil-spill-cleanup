@@ -12,7 +12,7 @@ private:
     // Member variables
     float fuel; // Fuel [kg]
     float tank_curr; // Waste oil in tank [L]
-    const float cap; // Waste oil capacity [L]
+    float cap; // Waste oil capacity [L]
     // const float F_max; // Maximum force applied by engine [N]
     // const float eta_max; // Maximum steering angle [rad]
 
@@ -27,6 +27,9 @@ public:
 
     // Destructor
     ~BoomBoat();
+
+    // Assignment operator
+    BoomBoat &operator=(const BoomBoat &boom_boat);
 
     // Getter and Setter for fuel
     float get_fuel() const;

@@ -41,6 +41,17 @@ BoomBoat::BoomBoat(float radius, float mass, float inertia, float mu_l,
 // Destructor
 BoomBoat::~BoomBoat() {}
 
+// Assignment operator
+BoomBoat &BoomBoat::operator=(const BoomBoat &boom_boat) {
+    if (this != &boom_boat) {
+        GenericBoat::operator=(boom_boat);
+        this->fuel = boom_boat.fuel;
+        this->tank_curr = boom_boat.tank_curr;
+        this->cap = boom_boat.cap;
+        }
+    return *this;
+}
+
 // Getter for fuel
 float BoomBoat::get_fuel() const { return fuel; }
 

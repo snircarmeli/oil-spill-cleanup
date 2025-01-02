@@ -17,23 +17,38 @@ namespace fs = std::filesystem;
 const float PI = 3.141592653589793;
 
 // Boom Constructor
-Boom::Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r)
-    : L(L), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r) {
+Boom::Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
+ float I, float m)
+    : L(L), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), I(I), m(m) {
        links_states = MatrixXf::Zero(num_links, 6);
     }
 
 // Need to decide on friction parameters
-Boom::Boom(size_t num_links, float L) : L(L), mu_l(0.0), mu_ct(0.0), mu_r(0.0) {
+Boom::Boom(size_t num_links, float L) : L(L), mu_l(0.0), mu_ct(0.0), mu_r(0.0), I(1.0), m(1.0) {
     links_states = MatrixXf::Zero(num_links, 6);
 }
 
 // Default Constructor
-Boom::Boom() : L(0.0), mu_l(0.0), mu_ct(0.0), mu_r(0.0) {
+Boom::Boom() : L(0.0), mu_l(0.0), mu_ct(0.0), mu_r(0.0), I(1.0), m(1.0) {
     links_states = MatrixXf::Zero(1, 6); // Default to 1 link
 }
 
 // Boom Destructor
 Boom::~Boom() {}
+
+// Assignment Operator
+Boom& Boom::operator=(const Boom& other) {
+    if (this != &other) {
+        L = other.L;
+        mu_l = other.mu_l;
+        mu_ct = other.mu_ct;
+        mu_r = other.mu_r;
+        I = other.I;
+        m = other.m;
+        links_states = other.links_states;
+    }
+    return *this;
+}
 
 // Accessors
 void Boom::set_link_state(size_t index, const VectorXf &state) {
@@ -45,6 +60,10 @@ VectorXf Boom::get_link_state(size_t index) const {
 }
 
 float Boom::get_L() const { return L; }
+
+float Boom::get_I() const { return I; }
+
+float Boom::get_m() const { return m; }
 
 float Boom::get_mu_l() const { return mu_l; }
 
@@ -143,12 +162,12 @@ bool Boom::is_valid_state() const {
 // BoomBoatsDuo Constructor
 BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
  size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
-  Vector2f center, float orientation)
+  float I, float m, Vector2f center, float orientation)
     : boat1(b1.get_radius(), b1.get_mass(), b1.get_inertia(), b1.get_mu_l(), b1.get_mu_ct(), b1.get_mu_r(),
             b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(), b1.get_F_max(), b1.get_eta_max()),
       boat2(b2.get_radius(), b2.get_mass(), b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
             b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(), b2.get_F_max(), b2.get_eta_max()),
-            boom(num_links, L, mu_l, mu_ct, mu_r) {
+            boom(num_links, L, mu_l, mu_ct, mu_r, I, m) {
 
         // Place boats at the center with the given orientation of the line 
         // connecting the boats
@@ -177,6 +196,7 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
 BoomBoatsDuo:: BoomBoatsDuo(Vector2f center,  float orientation,
  size_t num_links, float L) {
     Boom boom(num_links, L);
+    this->boom = boom;
     Vector3f boat1_pos = Vector3f(center(0) - L * num_links * cos(orientation), 
     center(1) - L * num_links * sin(orientation), PI/2 + orientation);
     Vector3f boat2_pos = Vector3f(center(0) + L * num_links * cos(orientation), 
@@ -184,11 +204,24 @@ BoomBoatsDuo:: BoomBoatsDuo(Vector2f center,  float orientation,
 
     BoomBoat boat1 = BoomBoat(boat1_pos);
     BoomBoat boat2 = BoomBoat(boat2_pos);
+    this->boat1 = boat1;
+    this->boat2 = boat2;
+
 }
 
 
 // BoomBoatsDuo Destructor
 BoomBoatsDuo::~BoomBoatsDuo() {}
+
+// Assignment Operator
+BoomBoatsDuo& BoomBoatsDuo::operator=(const BoomBoatsDuo &other) {
+    if (this != &other) {
+        boat1 = other.boat1;
+        boat2 = other.boat2;
+        boom = other.boom;
+    }
+    return *this;
+}
 
 // Utility functions
 

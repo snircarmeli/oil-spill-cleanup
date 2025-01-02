@@ -57,6 +57,9 @@ class GenericBoat {
         // Destructor
         ~GenericBoat();
 
+        // Assignment operator
+        GenericBoat& operator=(const GenericBoat &other);
+
         // RK-4 method for propogation
         void propogate(Vector2f control, float dt);
 

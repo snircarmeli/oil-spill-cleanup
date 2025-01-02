@@ -21,6 +21,7 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
     ax.set_title("Duo Boats with Dynamic Rudder Animation")
+    ax.set_aspect('equal')
     
     # Create empty plots for boats and links
     boat_lines = []  # To store boat geometry lines for all boats
@@ -54,15 +55,15 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
 
         # Boat vertices (static in local coordinates)
         base_boat_vertices = np.array([
-            [-0.5, 0.5],  # Bow port side
-            [-0.5, -0.5],  # Stern port side
-            [0, -0.5],  # Stern middle
-            [rudder_L * sin(eta), -0.5 - rudder_L * cos(eta)], # End of rudder
-            [0, -0.5],  # Stern middle
-            [0.5, -0.5],  # Stern starboard side
-            [0.5, 0.5],  # Bow starboard side
-            [0, 1],  # Bow, head of ship
-            [-0.5, 0.5],  # Complete the loop
+            [-0.5, 1],  # Bow port side
+            [-0.5, 0],  # Stern port side
+            [0, 0],  # Stern middle
+            [rudder_L * sin(eta), - rudder_L * cos(eta)], # End of rudder
+            [0, 0],  # Stern middle
+            [0.5, 0],  # Stern starboard side
+            [0.5, 1],  # Bow starboard side
+            [0, 1.5],  # Bow, head of ship
+            [-0.5, 1],  # Complete the loop
         ]) * size
 
         transformed = base_boat_vertices @ rotation_matrix.T  # Rotate
