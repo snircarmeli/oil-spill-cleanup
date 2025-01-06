@@ -15,7 +15,6 @@ using Eigen::Vector3f;
 using Eigen::Vector2f;
 using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
 
-#define N 6
 
 const double PI = 3.141592653589793;
 

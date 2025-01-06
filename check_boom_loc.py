@@ -28,7 +28,7 @@ print("Removing object files ...\n")
 subprocess.run(command, shell=True, text=True, capture_output=True)
 
 # Simulation time 
-T = 5
+T = 15
 # Time step
 dt = 0.01
 command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe {T} {dt}"
@@ -68,18 +68,6 @@ if out_code == 0:
             # Initialize a list for the `i-th` duo
             duo_boats_data.append([])
 
-            # Variables to hold the data for each duo for a single time step
-            duo_data = {
-                'boat1_pos': [],
-                'boat1_vel': [],
-                'boat1_control': [],
-                'boat2_pos': [],
-                'boat2_vel': [],
-                'boat2_control': [],
-                'num_links': 0,
-                'link_length': 0,
-                'links_states': []
-            }
 
             # first 6 numbers are boat1.get_pos(), boat1.get_vel(), next 2 
             # numbers are Force F and steering angle eta.
@@ -90,7 +78,19 @@ if out_code == 0:
             values = list(map(float, lines[0].split()))
             num_links = int(values[16])
             link_length = values[17]
-            for j, line in enumerate(lines):
+            for j, line in enumerate(lines):     
+                # Variables to hold the data for each duo for a single time step
+                duo_data = {
+                    'boat1_pos': [],
+                    'boat1_vel': [],
+                    'boat1_control': [],
+                    'boat2_pos': [],
+                    'boat2_vel': [],
+                    'boat2_control': [],
+                    'num_links': 0,
+                    'link_length': 0,
+                    'links_states': []
+                }
                 duo_boats_data[i].append([])
                 values = list(map(float, line.split()))
                 # print(values)
@@ -109,8 +109,9 @@ if out_code == 0:
 
                 # print(duo_data)
                 duo_boats_data[i][j] = duo_data.copy()
-                # print(duo_boats_data[i][j])
-                # print()
+                
+            # print(duo_boats_data[i][0]['links_states'])
+            # print()
                 
     
     print("Data extraction completed successfully\n")

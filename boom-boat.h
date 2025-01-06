@@ -6,6 +6,8 @@
 
 using Eigen::Vector3f;
 using Eigen::Vector2f;
+using Eigen::VectorXf;
+using Eigen::MatrixXf;
 
 class BoomBoat : public GenericBoat {
 private:
@@ -40,6 +42,10 @@ public:
 
     // Utility function to display BoomBoat status
     void print_status() const;
+
+    // state derivative function
+    VectorXf state_der(VectorXf state, Vector2f control,
+     Vector2f boom_force) const;
 };
 
-#endif
+#endif // BOOM_BOAT_H

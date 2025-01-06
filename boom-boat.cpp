@@ -2,6 +2,12 @@
 #include <iostream>
 #include <Eigen/Dense>
 
+using Eigen::Vector3f;
+using Eigen::Vector2f;
+using Eigen::Matrix3f;
+using Eigen::VectorXf;
+
+
 const float DEFAULT_CAPACITY = 100;
 const float DEFAULT_INITIAL_FUEL = DEFAULT_CAPACITY;
 
@@ -82,3 +88,51 @@ void BoomBoat::print_status() const {
     std::cout << "Position: " << this->get_pos().transpose() << std::endl;
     std::cout << "Velocity: " << this->get_vel().transpose() << std::endl;
 }
+
+// State derivative function
+VectorXf BoomBoat::state_der(VectorXf state, Vector2f control,
+     Vector2f boom_force) const {
+    // state = [x, y, theta, x_dot, y_dot, omega]
+    // control = [F, eta]
+
+    // Unpack state
+    // float x = state(0);
+    // float y = state(1);
+    float theta = state(2);
+    float x_dot = state(3);
+    float y_dot = state(4);
+    float omega = state(5);
+    // Unpack control
+    float F = control(0);
+    float eta = control(1);
+
+    // Unpack boat parameters
+    float r = this->get_radius();
+    float mass = this->get_mass();
+    float I = this->get_inertia();
+    float mu_r = this->get_mu_r();
+    float mu_l = this->get_mu_l();
+    float mu_ct = this->get_mu_ct();
+
+    // Rotation to local frame
+    float u = x_dot * sin(theta) + y_dot * cos(theta);
+    float v = x_dot * cos(theta) - y_dot * sin(theta);
+
+    float F1 = boom_force(0);
+    float F2 = boom_force(1);
+    float F_boom_u = F1 * sin(theta) + F2 * cos(theta);
+    float F_boom_v = F1 * cos(theta) - F2 * sin(theta);
+
+    // EOM
+    float u_dot = (F * cos(eta) - mu_l * u * u * sign(u) + F_boom_u) / mass;
+    float v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v) + F_boom_v) / mass;
+    float omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega) - r * F_boom_v) / I;
+
+    // Rotation backward to global frame
+    float x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);
+    float y_dotdot = u_dot * cos(theta) - v_dot * sin(theta);
+
+    VectorXf state_dot(6);
+    state_dot << x_dot, y_dot, omega, x_dotdot, y_dotdot, omega_dot;
+    return state_dot;
+     }

@@ -1,7 +1,6 @@
 #ifndef BOAT_H
 #define BOAT_H
 
-#include <array>
 #include <vector>
 #include <Eigen/Dense>
 
@@ -12,8 +11,6 @@ using Eigen::Vector3f;
 using Eigen::Vector2f;
 using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
 
-using std::array;
-#define N 6
 
 class BoomBoat;
 class ContainerBoat;

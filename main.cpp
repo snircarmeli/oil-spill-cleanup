@@ -56,10 +56,18 @@ int main(int argc, char* argv[]) {
     float dt = std::stof(argv[2]);
     
     BoomBoat *boat = new BoomBoat();
-    size_t num_links = 6;
+    size_t num_links = 4;
     float L = 0.5;
+    float I = 1;
+    float m = 20;
+    float k = 8000;
+    float c = 100;
+    float mu_l = 1.0;
+    float mu_ct = 2000.0;
+    float mu_r = 1.0;
+    float orientation = 0.0;
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, 1.0, 1.0,
-     1.0, Vector2f(1.0, 1.0), PI / 3);
+     1.0, I, m, k, c, Vector2f(1.0, 1.0), orientation);
     // duo->print_status();
 
     int num_duos = 1;
@@ -74,26 +82,36 @@ int main(int argc, char* argv[]) {
     int numSteps = static_cast<int>(T / dt) + 1;
     RowVectorXf t = RowVectorXf::LinSpaced(numSteps, 0.0f, T);
 
-    MatrixXf control = MatrixXf::Zero(numSteps, 2);
+    MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
+    MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
+    // set all forces to 1000 and all steering angles to 0
+    control1.col(0) = 1000 * VectorXf::Ones(numSteps);
+    control2.col(0) = 1000 * VectorXf::Ones(numSteps);
 
     MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
     string foldername = "DuosData";
     erase_folder_content(foldername);
 
     // Print time every k iterations
-    int k = 500;
+    int k_itr = 500;
 
     std::cout << "Running simulation..." << std::endl << std::endl;
     std::cout.flush(); // Force immediate display of the output
 
     for (int i = 0; i < numSteps; i++) {
-        if (i % k == 0) {
+        if (i % k_itr == 0) {
+
             std::cout << "Simulation time: " 
                     << std::fixed << std::setprecision(2) 
                     << std::setw(6) << i * dt << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
             std::cout.flush(); // Force flush the buffer
-}
+        }
+
+        Vector2f control1_vec = control1.row(i);
+        Vector2f control2_vec = control2.row(i);
+        duo_arr[0]->propagate(dt, control1_vec, control2_vec);
+
 
         // control(i,0) = 1000;
         // control(i, 1) = -1 * PI / 9;
