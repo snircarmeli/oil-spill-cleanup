@@ -127,6 +127,8 @@ VectorXf BoomBoat::state_der(VectorXf state, Vector2f control,
     float u_dot = (F * cos(eta) - mu_l * u * u * sign(u) + F_boom_u) / mass;
     float v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v) + F_boom_v) / mass;
     float omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega) - r * F_boom_v) / I;
+    // cout << "F_boom_v: " << F_boom_v << endl;
+    // cout.flush();
 
     // Rotation backward to global frame
     float x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);

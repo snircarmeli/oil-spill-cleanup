@@ -56,18 +56,18 @@ int main(int argc, char* argv[]) {
     float dt = std::stof(argv[2]);
     
     BoomBoat *boat = new BoomBoat();
-    size_t num_links = 4;
+    size_t num_links = 10;
     float L = 0.5;
     float I = 1;
     float m = 20;
     float k = 8000;
     float c = 100;
-    float mu_l = 1.0;
-    float mu_ct = 2000.0;
-    float mu_r = 1.0;
+    float mu_l = 10.0;
+    float mu_ct = 80.0;
+    float mu_r = 10.0;
     float orientation = 0.0;
-    BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, 1.0, 1.0,
-     1.0, I, m, k, c, Vector2f(1.0, 1.0), orientation);
+    BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
+     mu_ct, mu_r, I, m, k, c, Vector2f(1.0, 1.0), orientation);
     // duo->print_status();
 
     int num_duos = 1;
@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
     MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
     MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
     // set all forces to 1000 and all steering angles to 0
-    control1.col(0) = 1000 * VectorXf::Ones(numSteps);
-    control2.col(0) = 1000 * VectorXf::Ones(numSteps);
+    control1.col(0) = 1500 * VectorXf::Ones(numSteps);
+    control2.col(0) = 1500 * VectorXf::Ones(numSteps);
 
     MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
     string foldername = "DuosData";

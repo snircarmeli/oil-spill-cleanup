@@ -1,27 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from math import sin, cos
-
-# Function that takes a list of data files and a time vector and animates them. 
-# the data file duo_boats_data should be a list with the following structure:  
-# duo_boats_data[i] = boat1_pos, boat1_vel, boat1_control, 
-# boat2_pos, boat2_vel, boat2_control,
-# num_links, link_length, links_states]
-# where each list contains the data for a single time step. duo_boats_data[i] is
-# the data for the i-th duo.
-# The time vector should be a list of the same length as duo_boats_data.
-# Animate the data for all the duos in duo_boats_data in a single plot.
-
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from math import sin, cos, pi
 
 def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
     fig, ax = plt.subplots()
-    ax.set_xlim(-10, 10)  # Adjust based on your data range
-    ax.set_ylim(-10, 10)
+    ax.set_xlim(-7.5, 7.5)  
+    ax.set_ylim(-2.5, 7.5)
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
     ax.set_title("Duo Boats with Dynamic Rudder Animation")
@@ -31,12 +16,16 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
     link_lines = []  # To store links for all duos
     link_dots = []   # To store dots at the edges of links
 
-    for _ in range(len(duo_boats_data)):
+    for i in range(len(duo_boats_data)):
         line_boat1, = ax.plot([], [], 'b-', label='Boat 1')  # Boat 1 geometry
         line_boat2, = ax.plot([], [], 'r-', label='Boat 2')  # Boat 2 geometry
         boat_lines.append((line_boat1, line_boat2))
 
-        links, = ax.plot([], [], 'g-', label='Links')
+        num_links = int(duo_boats_data[0][0]['num_links'])  # Convert to integer
+        links = []
+        for _ in range(num_links):
+            link, = ax.plot([], [], 'g-')
+            links.append(link)
         link_lines.append(links)
 
         dots, = ax.plot([], [], 'ko', markersize=1.5)  # Small black dots
@@ -45,9 +34,10 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
     ax.legend(loc="upper right")
 
     def transform_vertices(position, angle, eta, rudder_l=0.4):
+        angle = angle - pi / 2  # Rotate 90 degrees to align with the boat
         rotation_matrix = np.array([
-            [cos(angle), -sin(angle)],
-            [sin(angle), cos(angle)]
+            [sin(angle ), cos(angle)],
+            [cos(angle), -sin(angle)]
         ])
 
         base_boat_vertices = np.array([
@@ -70,11 +60,12 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
         for line_boat1, line_boat2 in boat_lines:
             line_boat1.set_data([], [])
             line_boat2.set_data([], [])
-        for link in link_lines:
-            link.set_data([], [])
+        for links in link_lines:
+            for link in links:
+                link.set_data([], [])
         for dots in link_dots:
             dots.set_data([], [])
-        return [line for pair in boat_lines for line in pair] + link_lines + link_dots
+        return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
 
     def update(frame):
         L = duo_boats_data[0][frame]['link_length']
@@ -117,14 +108,16 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
                     dots_positions = np.array(dots_positions)
 
                     # Update plot data
-                    link_lines[i].set_data(links_positions[:, 0], links_positions[:, 1])
+                    for j, link in enumerate(link_lines[i]):
+                        link.set_data(links_positions[2*j:2*j+2, 0], links_positions[2*j:2*j+2, 1])
                     link_dots[i].set_data(dots_positions[:, 0], dots_positions[:, 1])
                 else:
-                    link_lines[i].set_data([], [])
+                    for link in link_lines[i]:
+                        link.set_data([], [])
                     link_dots[i].set_data([], [])
 
-        return [line for pair in boat_lines for line in pair] + link_lines + link_dots
+        return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
 
     interval = 1000 * time_vec[-1] / len(time_vec)  # Interval in milliseconds
-    ani = FuncAnimation(fig, update, frames=len(time_vec), init_func=init, blit=True, interval=interval)
+    ani = FuncAnimation(fig, update, frames=len(time_vec), init_func=init, blit=True, interval=100)
     plt.show()
