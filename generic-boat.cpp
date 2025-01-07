@@ -6,6 +6,11 @@
 #include <cstdio>
 #include <stdexcept> // For std::runtime_error
 #include <Eigen/Dense>
+#include <fstream> // For file I/O
+
+// Parsing json parameters
+#include "json/json.hpp"
+using json = nlohmann::json;
 
 using std::sin;
 using std::cos;
@@ -18,14 +23,34 @@ using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
 
 const double PI = 3.141592653589793;
 
-
 // Constructors
 // radius - 2 mass - 600 inertia - 50 mu_l - 1 mu_ct - 100 mu_r - 1 F_max - 100 eta_max - pi/2
-GenericBoat::GenericBoat() : radius(2), mass(600), inertia(50), mu_l(100), mu_ct(1000), 
-mu_r(1000), F_max(100000), eta_max(PI / 2) {
-        this->pos << 0, 0, 0;
-        this->vel << 0, 0, 0;
+GenericBoat::GenericBoat() {
+    // Load parameters from params.json
+    std::ifstream file("params.json");
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params.json");
     }
+
+    json params;
+    file >> params;
+
+    json generic_boat_params = params["generic_boat"];
+    this->radius = generic_boat_params["radius"].get<float>();
+    this->mass = generic_boat_params["mass"].get<float>();
+    this->inertia = generic_boat_params["inertia"].get<float>();
+    this->mu_l = generic_boat_params["drag_coefficients"]["linear"].get<float>();
+    this->mu_ct = generic_boat_params["drag_coefficients"]["cross_track"].get<float>();
+    this->mu_r = generic_boat_params["drag_coefficients"]["rotational"].get<float>();
+    this->F_max = generic_boat_params["max_controls"]["force"].get<float>();
+    this->eta_max = generic_boat_params["max_controls"]["steering_angle"].get<float>();
+    this->pos << generic_boat_params["initial_position"][0].get<float>(),
+     generic_boat_params["initial_position"][1].get<float>(),
+     generic_boat_params["initial_position"][2].get<float>();
+    this->vel << generic_boat_params["initial_velocity"][0].get<float>(),
+     generic_boat_params["initial_velocity"][1].get<float>(), 
+     generic_boat_params["initial_velocity"][2].get<float>();
+}
 
 GenericBoat::GenericBoat(const GenericBoat &gen_boat) {
     this->radius = gen_boat.radius;

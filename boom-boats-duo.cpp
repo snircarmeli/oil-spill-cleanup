@@ -5,6 +5,10 @@
 #include <fstream>
 #include <filesystem> // For filesystem operations (C++17 and later)
 
+// For JSON parameters parsing
+#include "json/json.hpp"
+using json = nlohmann::json;
+
 using Eigen::VectorXf;
 using Eigen::Vector2f;
 using Eigen::MatrixXf;
@@ -26,16 +30,61 @@ Boom::Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
        links_states = MatrixXf::Zero(num_links, 6);
     }
 
-// Need to decide on friction parameters
-Boom::Boom(size_t num_links, float L) : L(L), mu_l(1.0), mu_ct(1.0), mu_r(1.0),
- I(1.0), m(1.0), k(K_deault), c(C_default) {
+Boom::Boom(size_t num_links, float L) {
+    // Read parameters from JSON file
+    std::string params_file = "params.json";
+    std::ifstream file(params_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file");
+    }
+    json params;
+    file >> params;
+    file.close();
+
+    links_states = MatrixXf::Zero(num_links, 6);
+    this->L = L;
+    
+    json boom_params = params["boom"];
+    json drag_params = boom_params["drag_coefficients"];
+    // Extract parameters from JSON
+    this->mu_l = drag_params["linear"].get<float>();
+    this->mu_ct = drag_params["cross_track"].get<float>();
+    this->mu_r = drag_params["rotational"].get<float>();
+    this->I = boom_params["inertia"].get<float>();
+    this->m = boom_params["mass"].get<float>();
+    this->k = boom_params["spring_constant"].get<float>();
+    this->c = boom_params["damping_coefficient"].get<float>();
+
     links_states = MatrixXf::Zero(num_links, 6);
 }
 
 // Default Constructor
-Boom::Boom() : L(1.0), mu_l(1.0), mu_ct(1.0), mu_r(1.0), I(1.0), m(1.0),
- k(K_deault), c(C_default) {
-    links_states = MatrixXf::Zero(1, 6); // Default to 1 link
+Boom::Boom() {
+    // Read parameters from JSON file
+    std::string params_file = "params.json";
+    std::ifstream file(params_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file");
+    }
+    json params;
+    file >> params;
+    file.close();
+
+    json boom_params = params["boom"];
+    json drag_params = boom_params["drag_coefficients"];
+    
+    // Extract parameters from JSON
+    this->L = boom_params["link_length"].get<float>();
+    this->mu_l = drag_params["linear"].get<float>();
+    this->mu_ct = drag_params["cross_track"].get<float>();
+    this->mu_r = drag_params["rotational"].get<float>();
+    this->I = boom_params["inertia"].get<float>();
+    this->m = boom_params["mass"].get<float>();
+    this->k = boom_params["spring_constant"].get<float>();
+    this->c = boom_params["damping_coefficient"].get<float>();
+    size_t num_links = boom_params["num_links"].get<size_t>();
+
+    links_states = MatrixXf::Zero(num_links, 6);
 }
 
 // Boom Destructor
@@ -136,7 +185,7 @@ void Boom::print_links_states() const {
 bool Boom::is_valid_state() const {
     // Check if boom doesn't intersect itself
 
-    for (size_t i = 0; i < get_num_links(); ++i) {
+    for (int i = 0; i < get_num_links(); ++i) {
 
         float x_i = links_states(i, 1);
         float y_i = links_states(i, 2);
@@ -149,7 +198,9 @@ bool Boom::is_valid_state() const {
         float x_12 = x_i - 0.5 * L * cos(theta_i);
         float y_12 = y_i - 0.5 * L * sin(theta_i); 
 
-        for (size_t j = i + 1; j < get_num_links(); ++j) {
+        // Starting from the second next link. Every two adjacent links can
+        // intersect because of the spring-damper model.
+        for (int j = i + 2; j < get_num_links(); ++j) {
             float x_j = links_states(j, 1);
             float y_j= links_states(j, 2);
             float theta_j = links_states(j, 3);
@@ -301,7 +352,7 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
 
         boat1.set_pos(b1_pos);
         boat2.set_pos(b2_pos);
-        for (size_t i = 0; i < boom.get_num_links(); ++i) {
+        for (int i = 0; i < boom.get_num_links(); ++i) {
             float x = b1_pos(0) + (i + 0.5) * L * cos(orientation);
             float y = b1_pos(1) + (i + 0.5) * L * sin(orientation);
             float theta = orientation;
@@ -401,7 +452,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     ss << boom.get_L() << " ";
 
     // Write the state of the boom links
-    for (size_t i = 0; i < boom.get_num_links(); ++i) {
+    for (int i = 0; i < boom.get_num_links(); ++i) {
         VectorXf link_state = boom.get_link_state(i);
         ss << link_state.transpose() << " ";
     }
@@ -411,6 +462,15 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     file.close();
 }
 
+// Validation of states
+bool BoomBoatsDuo::is_valid_state() const {
+    // Check if the boom doesn't intersect itself
+    if (!this->boom.is_valid_state()) {
+        cout << "Boom intersects itself" << endl;
+        cout.flush();
+        return false;
+    }
+}
 
 // Propagation function
 MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
@@ -492,8 +552,10 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(0).tail(3) = this->boat1.get_vel().transpose();
     state.row(1).head(3) = this->boat2.get_pos().transpose();
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
+
+    MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
     // set states of links: rows 2-end
-    for (size_t i = 0; i < this->boom.get_num_links(); i++) {
+    for (int i = 0; i < this->boom.get_num_links(); i++) {
         state.row(i + 2) = this->boom.get_link_state(i).transpose();
     }
 
@@ -502,10 +564,12 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     MatrixXf k2 = this->state_der(control1, control2, state + (dt / 2) * k1);
     MatrixXf k3 = this->state_der(control1, control2, state + (dt / 2) * k2);
     MatrixXf k4 = this->state_der(control1, control2, state + dt * k3);
-
-    // Compute y_(n+1) using vectorized operations
-    MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
     state_new = state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+    
+    // // Update the state using forward Euler
+    // MatrixXf state_der = this->state_der(control1, control2, state);
+    // state_new = state + dt * state_der;
+
     // wrap theta for all states, third column
     for (int i = 0; i < state_new.rows(); i++) {
         state_new(i, 2) = wrap_theta(state_new(i, 2));
@@ -516,7 +580,7 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     this->boat2.set_pos(state_new.row(1).head(3).transpose());
     this->boat2.set_vel(state_new.row(1).tail(3).transpose());
     // set states of links: rows 2-end
-    for (size_t i = 0; i < this->boom.get_num_links(); i++) {
+    for (int i = 0; i < this->boom.get_num_links(); i++) {
         this->boom.set_link_state(i, state_new.row(i + 2).transpose());
     }
 }

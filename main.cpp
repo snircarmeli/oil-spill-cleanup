@@ -9,6 +9,10 @@
 #include <Eigen/Dense>
 #include <filesystem> 
 
+// For JSON parameters parsing
+#include "json/json.hpp"
+using json = nlohmann::json;
+
 using std::sin;
 using std::vector;
 using Matrix = vector<vector<float>>;
@@ -50,21 +54,45 @@ int main(int argc, char* argv[]) {
     if (argc < 10) {
         // std::cerr << "No parameters input" << std::endl;
     }
-    // T is the first argument when running the program
-    float T = std::stof(argv[1]);
-    // dt is the second argument when running the program
-    float dt = std::stof(argv[2]);
-    
+
+    // Access parameters
+
+    // Path to the JSON file
+    std::string file_path = "params.json";
+
+    // Open the file and parse it
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open parameters file " << file_path << std::endl;
+        return 1;
+    }
+
+    json params;
+    file >> params;
+
+    json generic_boat_params = params["generic_boat"];
+    json boom_params = params["boom"];
+    json duo_params = params["boom_boats_duo"];
+    json simulation_params = params["simulation"];
+    json file_management_params = params["file_management"];
+
+
+    //Simulation parameters
+    float T = simulation_params["time_duration"];
+    float dt = simulation_params["time_step"];
+    // Boom parameters
+    size_t num_links = boom_params["num_links"];
+    float L = boom_params["link_length"];
+    float I = boom_params["inertia"];
+    float m = boom_params["mass"];
+    float k = boom_params["spring_constant"];
+    float c = boom_params["damping_coefficient"];
+    float mu_l = boom_params["drag_coefficients"]["linear"];
+    float mu_ct = boom_params["drag_coefficients"]["cross_track"];
+    float mu_r = boom_params["drag_coefficients"]["rotational"];
+
     BoomBoat *boat = new BoomBoat();
-    size_t num_links = 10;
-    float L = 0.5;
-    float I = 1;
-    float m = 20;
-    float k = 8000;
-    float c = 100;
-    float mu_l = 10.0;
-    float mu_ct = 80.0;
-    float mu_r = 10.0;
+    cout << "Managed to create boat" << endl;
     float orientation = 0.0;
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
      mu_ct, mu_r, I, m, k, c, Vector2f(1.0, 1.0), orientation);
@@ -89,11 +117,11 @@ int main(int argc, char* argv[]) {
     control2.col(0) = 1500 * VectorXf::Ones(numSteps);
 
     MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
-    string foldername = "DuosData";
+    string foldername = file_management_params["output_folder"];
     erase_folder_content(foldername);
 
     // Print time every k iterations
-    int k_itr = 500;
+    int k_itr = simulation_params["print_interval"];
 
     std::cout << "Running simulation..." << std::endl << std::endl;
     std::cout.flush(); // Force immediate display of the output

@@ -119,5 +119,12 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
         return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
 
     interval = 1000 * time_vec[-1] / len(time_vec)  # Interval in milliseconds
-    ani = FuncAnimation(fig, update, frames=len(time_vec), init_func=init, blit=True, interval=100)
+    time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
+
+    def update_with_time(frame):
+        artists = update(frame)
+        time_text.set_text(f'Time: {time_vec[frame]:.2f}s')
+        return artists + [time_text]
+
+    ani = FuncAnimation(fig, update_with_time, frames=len(time_vec), init_func=init, blit=True, interval=interval)
     plt.show()

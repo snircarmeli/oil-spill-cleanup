@@ -4,6 +4,10 @@ CXX = g++
 # Compiler flags
 CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3
 
+# -I/usr/include/json
+# -I/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/include \
+# -I/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/include/json
+
 # Object files
 OBJS = main.o generic-boat.o boom-boat.o boom-boats-duo.o
 RM = rm -rf
@@ -18,7 +22,7 @@ all: $(EXEC)
 $(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-# Compile main.o
+# Compile main.o 
 main.o: main.cpp generic-boat.h boom-boat.h boom-boats-duo.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

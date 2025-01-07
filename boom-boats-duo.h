@@ -89,6 +89,10 @@ public:
     void print_status() const;
     void print_to_file(const string &filename, const string &foldername) const;
 
+    // Validation of state
+    bool is_valid_state() const; // Check if boom doesn't intersect itself and
+    // if the boats are not colliding with each other or with the boom
+
     // Propagation function
     MatrixXf state_der(const Vector2f &control1, const Vector2f &control2,
      MatrixXf state) const;

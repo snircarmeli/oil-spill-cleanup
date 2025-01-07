@@ -1,0 +1,60 @@
+{
+    "generic_boat": {
+        "radius": 2.0,
+        "mass": 600.0,
+        "inertia": 50.0,
+        "drag_coefficients": {
+            "linear": 100.0,
+            "cross_track": 10000.0,
+            "rotational": 1000.0
+        },
+        "max_controls": {
+            "force": 100000.0,
+            "steering_angle": 1.57079632679
+        },
+        "initial_position": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "initial_velocity": [
+            0.0,
+            0.0,
+            0.0
+        ]
+
+    },
+    "boom": {
+        "num_links": 6,
+        "link_length": 0.5,
+        "inertia": 1.0,
+        "mass": 20.0,
+        "spring_constant": 10000.0,
+        "damping_coefficient": 1000.0,
+        "drag_coefficients": {
+            "linear": 10.0,
+            "cross_track": 80.0,
+            "rotational": 10.0
+        }
+    },
+    "boom_boat": {
+        "initial_fuel": 100.0,
+        "waste_tank_capacity": 100.0
+    },
+    "boom_boats_duo": {
+        "num_duos": 1,
+        "initial_center": [
+            1.0,
+            1.0
+        ],
+        "initial_orientation": 1.0471975512
+    },
+    "simulation": {
+        "time_duration": 15.0,
+        "time_step": 0.01,
+        "print_interval": 500
+    },
+    "file_management": {
+        "output_folder": "DuosData"
+    }
+}

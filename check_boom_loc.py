@@ -8,6 +8,7 @@ from matplotlib.animation import FuncAnimation
 import os
 import glob
 import animate_all_data
+import json
 
 # Clear the console in a cross-platform way
 import platform
@@ -27,11 +28,7 @@ command = "make clean"
 print("Removing object files ...\n")
 subprocess.run(command, shell=True, text=True, capture_output=True)
 
-# Simulation time 
-T = 15
-# Time step
-dt = 0.01
-command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe {T} {dt}"
+command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe"
 print("Running the main.exe file...\n")
 process = subprocess.run(command, shell=True, text=True)
 # print(process.stdout)
@@ -57,6 +54,11 @@ if out_code == 0:
     num_txt_files = len(txt_files)
     print(f"Number of files in the folder {foldername}: ", num_txt_files, "\n")
 
+    # Import time parameters from params.json
+    with open('params.json') as f:
+        simulation_params = json.load(f)["simulation"]
+    T = simulation_params['time_duration']
+    dt = simulation_params['time_step']
     time_vec = np.arange(0, T, dt)
     # Initialize a list to hold the data for each duo
     duo_boats_data = []

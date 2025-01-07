@@ -1,27 +1,57 @@
 #include "boom-boat.h"
 #include <iostream>
 #include <Eigen/Dense>
+#include <fstream>
+
+// Parsing json parameters
+#include "json/json.hpp"
+using json = nlohmann::json;
 
 using Eigen::Vector3f;
 using Eigen::Vector2f;
 using Eigen::Matrix3f;
 using Eigen::VectorXf;
 
-
-const float DEFAULT_CAPACITY = 100;
-const float DEFAULT_INITIAL_FUEL = DEFAULT_CAPACITY;
+// // These parameters are defined in the json file
+// const float DEFAULT_CAPACITY = 100;
+// const float DEFAULT_INITIAL_FUEL = DEFAULT_CAPACITY;
 
 
 // Default constructor
-BoomBoat::BoomBoat() : GenericBoat(), fuel(0.0), tank_curr(0.0), cap(0.0) {
+BoomBoat::BoomBoat() : GenericBoat() {
+    // cout << "Managed to get here" << endl;
+    // Load parameters from params.json
+    std::ifstream file("params.json");
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params.json");
+    }
+    json params;
+    file >> params;
+    json boom_boat_params = params["boom_boat"];
+    cout << "Managed to get params in boom-boats.cpp" << endl;
+    this->fuel = boom_boat_params["initial_fuel"].get<float>();
+    cout << "Managed to get fuel" << endl;
+    this->cap = boom_boat_params["waste_tank_capacity"].get<float>();
+    cout << "Managed to get cap" << endl;
+    this->tank_curr = 0.0;
     this->pos << 0, 0, 0;
     this->vel << 0, 0, 0;
     this->set_control(Vector2f(0.0, 0.0));
 }
 
 // Constructor with position
-BoomBoat::BoomBoat(Vector3f pos) : GenericBoat(), fuel(DEFAULT_INITIAL_FUEL),
- tank_curr(DEFAULT_INITIAL_FUEL), cap(DEFAULT_CAPACITY) {
+BoomBoat::BoomBoat(Vector3f pos) : GenericBoat() {
+    // Load parameters from params.json
+    std::ifstream file("params.json");
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params.json");
+    }
+    json params;
+    file >> params;
+    json boom_boat_params = params["boom_boat"];
+    this->fuel = boom_boat_params["initial_fuel"].get<float>();
+    this->cap = boom_boat_params["waste_tank_capacity"].get<float>();
+    this->tank_curr = 0.0;
     this->pos = pos;
     this->vel << 0, 0, 0;
     this->set_control(Vector2f(0.0, 0.0));
