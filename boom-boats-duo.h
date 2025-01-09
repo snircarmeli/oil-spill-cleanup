@@ -97,11 +97,20 @@ public:
     MatrixXf state_der(const Vector2f &control1, const Vector2f &control2,
      MatrixXf state) const;
     void propagate(float dt, const Vector2f &control1,
-     const Vector2f &control2);
+     const Vector2f &control2, std::string integration_method);
 };
 
 // Helper functions
-float wrap_theta(float theta);
-int sign(float x);
+// Euler integration
+MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
+ float dt);
+
+// Runge-Kutta 4th order integration: requires state derivative function
+MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2, 
+ const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+
+// These functions are already defined in generic-boat.h 
+// float wrap_theta(float theta);
+// int sign(float x);
 
 #endif

@@ -9,6 +9,7 @@ import os
 import glob
 import animate_all_data
 import json
+import time
 
 # Clear the console in a cross-platform way
 import platform
@@ -22,7 +23,9 @@ clear_console()
 
 command = "make"
 print("Compiling the code...\n")
+start_time = time.time()
 subprocess.run(command, shell=True, text=True, capture_output=True)
+print(f"Compilation time: {time.time() - start_time} seconds\n")
 
 command = "make clean"
 print("Removing object files ...\n")

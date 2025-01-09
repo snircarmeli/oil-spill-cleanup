@@ -470,6 +470,28 @@ bool BoomBoatsDuo::is_valid_state() const {
         cout.flush();
         return false;
     }
+
+    // Check if the boats don't intersect each other
+    // Load parameter ["boom_boats_duo"]["minimum_distance"]
+    std::string params_file = "params.json";
+    std::ifstream file(params_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file");
+    }
+    json params;
+    file >> params;
+    file.close();
+    float min_distance = params["boom_boats_duo"]["minimum_distance"];
+    Vector2f boat1_pos = boat1.get_pos().head(2);
+    Vector2f boat2_pos = boat2.get_pos().head(2);
+    float distance = (boat1_pos - boat2_pos).norm();
+    if (distance < min_distance) {
+        cout << "Boats are too close" << endl;
+        cout.flush();
+        return false;
+        }
+    return true;
+
 }
 
 // Propagation function
@@ -545,7 +567,7 @@ MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
 
 // Propagation function
 void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
- const Vector2f &control2) {
+ const Vector2f &control2, std::string integration_method) {
     // Calculate state derivative
     MatrixXf state = MatrixXf::Zero(2 + this->boom.get_num_links(), 6);
     state.row(0).head(3) = this->boat1.get_pos().transpose();
@@ -559,12 +581,20 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
         state.row(i + 2) = this->boom.get_link_state(i).transpose();
     }
 
+    if (integration_method == "RK4") {
+        state_new = RK4_integration(control1, control2, state, dt, *this);
+        } else if (integration_method == "Euler") {
+        state_new = Euler_integration(state, this->state_der(control1, control2, state), dt);
+    } else {
+        throw std::runtime_error("Invalid integration method: " + integration_method);
+    }
+
     // Update the state using Runge-Kutta 4
-    MatrixXf k1 = this->state_der(control1, control2, state);
-    MatrixXf k2 = this->state_der(control1, control2, state + (dt / 2) * k1);
-    MatrixXf k3 = this->state_der(control1, control2, state + (dt / 2) * k2);
-    MatrixXf k4 = this->state_der(control1, control2, state + dt * k3);
-    state_new = state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+    // MatrixXf k1 = this->state_der(control1, control2, state);
+    // MatrixXf k2 = this->state_der(control1, control2, state + (dt / 2) * k1);
+    // MatrixXf k3 = this->state_der(control1, control2, state + (dt / 2) * k2);
+    // MatrixXf k4 = this->state_der(control1, control2, state + dt * k3);
+    // state_new = state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
     
     // // Update the state using forward Euler
     // MatrixXf state_der = this->state_der(control1, control2, state);
@@ -587,7 +617,26 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
 
 
 
-// Helper functions - Already defined in generic-boat.cpp
+// Helper functions 
+// Euler integration
+MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
+ float dt) {
+    return state + dt * state_der;
+}
+
+// Runge-Kutta 4 integration
+MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + (dt / 2) * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + (dt / 2) * k2);
+    MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + dt * k3);
+
+    return state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+}
+
+
+// Already defined in generic-boat.cpp
 // float wrap_theta(float theta) {
 //     theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
 //     if (theta > PI) {

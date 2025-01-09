@@ -19,7 +19,6 @@ using Eigen::VectorXf;
 
 // Default constructor
 BoomBoat::BoomBoat() : GenericBoat() {
-    // cout << "Managed to get here" << endl;
     // Load parameters from params.json
     std::ifstream file("params.json");
     if (!file.is_open()) {
@@ -28,11 +27,8 @@ BoomBoat::BoomBoat() : GenericBoat() {
     json params;
     file >> params;
     json boom_boat_params = params["boom_boat"];
-    cout << "Managed to get params in boom-boats.cpp" << endl;
     this->fuel = boom_boat_params["initial_fuel"].get<float>();
-    cout << "Managed to get fuel" << endl;
     this->cap = boom_boat_params["waste_tank_capacity"].get<float>();
-    cout << "Managed to get cap" << endl;
     this->tank_curr = 0.0;
     this->pos << 0, 0, 0;
     this->vel << 0, 0, 0;

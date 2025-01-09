@@ -25,11 +25,11 @@
 
     },
     "boom": {
-        "num_links": 6,
+        "num_links": 15,
         "link_length": 0.5,
         "inertia": 1.0,
         "mass": 20.0,
-        "spring_constant": 10000.0,
+        "spring_constant": 12000.0,
         "damping_coefficient": 1000.0,
         "drag_coefficients": {
             "linear": 10.0,
@@ -47,12 +47,14 @@
             1.0,
             1.0
         ],
-        "initial_orientation": 1.0471975512
+        "initial_orientation": 1.0471975512,
+        "minimal_distance": 5.0
     },
     "simulation": {
         "time_duration": 15.0,
         "time_step": 0.01,
-        "print_interval": 500
+        "print_interval": 500,
+        "integration_method": "RK4"
     },
     "file_management": {
         "output_folder": "DuosData"
