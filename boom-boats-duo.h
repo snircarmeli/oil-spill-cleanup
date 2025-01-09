@@ -109,6 +109,10 @@ MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
 MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2, 
  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
+// Runge-Kutta 4-5 adaptive integration
+MatrixXf RK45_integration(const Vector2f &control1, const Vector2f &control2, 
+ const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+
 // These functions are already defined in generic-boat.h 
 // float wrap_theta(float theta);
 // int sign(float x);

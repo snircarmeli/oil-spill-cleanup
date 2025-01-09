@@ -8,7 +8,6 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <filesystem> 
-#include <chrono> // For measuring time
 
 // For JSON parameters parsing
 #include "json/json.hpp"
@@ -44,15 +43,13 @@ void erase_folder_content(const std::string& foldername) {
         }
     }
 
-    std::cout << "All files in folder " << foldername << " have been removed." << std::endl << std::endl;
-    std::cout.flush(); // Force immediate display of the output
+    // std::cout << "All files in folder " << foldername << " have been removed." << std::endl << std::endl;
+    // std::cout.flush(); // Force immediate display of the output
 }
 
 const float PI = 3.141592653589793;
 
 int main(int argc, char* argv[]) {
-    // Start timing
-    auto start_time = std::chrono::high_resolution_clock::now();
 
     // Check if the correct number of arguments is provided
     if (argc < 10) {
@@ -96,7 +93,7 @@ int main(int argc, char* argv[]) {
     float mu_r = boom_params["drag_coefficients"]["rotational"];
 
     BoomBoat *boat = new BoomBoat();
-    cout << "Managed to create boat" << endl;
+    // cout << "Managed to create boat" << endl;
     float orientation = 0.0;
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
      mu_ct, mu_r, I, m, k, c, Vector2f(1.0, 1.0), orientation);
@@ -187,16 +184,4 @@ int main(int argc, char* argv[]) {
     delete boat;
     delete duo;
     delete duo_arr;
-
-    // End timing
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time = end_time - start_time;
-
-    // Print execution time with details
-    std::cout << "Execution time with " << num_duos << " duos, "
-          << num_links << " links, and integration method " 
-          << integration_method << ": "
-          << elapsed_time.count() << " seconds" << std::endl;
-    return 0;
-
 }

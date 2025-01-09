@@ -28,34 +28,43 @@ subprocess.run(command, shell=True, text=True, capture_output=True)
 print(f"Compilation time: {time.time() - start_time} seconds\n")
 
 command = "make clean"
-print("Removing object files ...\n")
+# print("Removing object files ...\n")
 subprocess.run(command, shell=True, text=True, capture_output=True)
 
 command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe"
-print("Running the main.exe file...\n")
+# print("Running the main.exe file...\n")
+start_time = time.time()
 process = subprocess.run(command, shell=True, text=True)
-# print(process.stdout)
+running_time = time.time() - start_time
 
 out_code = process.returncode
 # stdout = process.stdout
 # print("stdout: ", stdout)
 
-if out_code == 0:
-    print("Simulation completed successfully\n")
+if out_code == 0:    
     # Path to the file
-    foldername = 'DuosData'
+    file_management_params = json.load(open('params.json'))['file_management']
+    boom_params = json.load(open('params.json'))['boom']
+
+    foldername = file_management_params['output_folder']
     folder_path = r'/mnt/c/Users/snir2/OneDrive - Technion/Msc. Electrical Engineering/Thesis/code/' + foldername
     # Check if the folder exists
     folder_exists = os.path.exists(folder_path)
     if folder_exists:
-        print(f"Data is in the folder {foldername}\n")
+        # print(f"Data is in the folder {foldername}\n")
+        pass
     else:
         print(f"Data folder does not exist")
         exit()
     # Number of files in the folder
     txt_files = glob.glob(os.path.join(folder_path, '*.txt'))
     num_txt_files = len(txt_files)
-    print(f"Number of files in the folder {foldername}: ", num_txt_files, "\n")
+    print("Simulation completed successfully:\n")
+    print("Number of boats: ", num_txt_files, ", number of links: ",
+           boom_params['num_links'], "\n")
+    # print running time with two decimal points
+    print(f"Running time: {running_time:.2f} [s]\n")
+    # print(f"Number of files in the folder {foldername}: ", num_txt_files, "\n")
 
     # Import time parameters from params.json
     with open('params.json') as f:

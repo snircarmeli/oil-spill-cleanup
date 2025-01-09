@@ -583,6 +583,8 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
 
     if (integration_method == "RK4") {
         state_new = RK4_integration(control1, control2, state, dt, *this);
+        }  else if (integration_method == "RK45") {
+            state_new = RK45_integration(control1, control2, state, dt, *this);
         } else if (integration_method == "Euler") {
         state_new = Euler_integration(state, this->state_der(control1, control2, state), dt);
     } else {
@@ -634,6 +636,23 @@ MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
 
     return state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
 }
+
+// Runge-Kutta 4-5 integration
+MatrixXf RK45_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2,
+     state + (dt / 4) * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2,
+     state + (3 * dt / 8) * k1 + (9 * dt / 32) * k2);
+    MatrixXf k4 = boom_boats_duo.state_der(control1, control2,
+    state + (12 * dt / 13) * k1 - (63 * dt / 64) * k2 + (81 * dt / 64) * k3);
+    MatrixXf k5 = boom_boats_duo.state_der(control1, control2,
+    state + (dt) * k1 + (13 * dt / 64) * k2 - (81 * dt / 64) * k3 + (81 * dt / 64) * k4);
+    MatrixXf k6 = boom_boats_duo.state_der(control1, control2,
+    state + (dt) * k1 + (3 * dt / 32) * k2 + (9 * dt / 16) * k3 + (3 * dt / 8) * k4);
+    return 
+ }
 
 
 // Already defined in generic-boat.cpp
