@@ -25,11 +25,11 @@ command = "make"
 print("Compiling the code...\n")
 start_time = time.time()
 subprocess.run(command, shell=True, text=True, capture_output=True)
-print(f"Compilation time: {time.time() - start_time} seconds\n")
+print(f"Compilation time: {time.time() - start_time:.2f} seconds\n")
 
-command = "make clean"
-# print("Removing object files ...\n")
-subprocess.run(command, shell=True, text=True, capture_output=True)
+# command = "make clean"
+# # print("Removing object files ...\n")
+# subprocess.run(command, shell=True, text=True, capture_output=True)
 
 command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe"
 # print("Running the main.exe file...\n")
@@ -45,6 +45,8 @@ if out_code == 0:
     # Path to the file
     file_management_params = json.load(open('params.json'))['file_management']
     boom_params = json.load(open('params.json'))['boom']
+    simulation_params = json.load(open('params.json'))['simulation']
+    generic_boat_params = json.load(open('params.json'))['generic_boat']
 
     foldername = file_management_params['output_folder']
     folder_path = r'/mnt/c/Users/snir2/OneDrive - Technion/Msc. Electrical Engineering/Thesis/code/' + foldername
@@ -61,14 +63,12 @@ if out_code == 0:
     num_txt_files = len(txt_files)
     print("Simulation completed successfully:\n")
     print("Number of boats: ", num_txt_files, ", number of links: ",
-           boom_params['num_links'], "\n")
+           boom_params['num_links'])
     # print running time with two decimal points
-    print(f"Running time: {running_time:.2f} [s]\n")
+    print(f"Computation time: {running_time:.2f} [s]\n")
     # print(f"Number of files in the folder {foldername}: ", num_txt_files, "\n")
 
     # Import time parameters from params.json
-    with open('params.json') as f:
-        simulation_params = json.load(f)["simulation"]
     T = simulation_params['time_duration']
     dt = simulation_params['time_step']
     time_vec = np.arange(0, T, dt)
@@ -103,7 +103,8 @@ if out_code == 0:
                     'boat2_control': [],
                     'num_links': 0,
                     'link_length': 0,
-                    'links_states': []
+                    'links_states': [],
+                    'time': 0
                 }
                 duo_boats_data[i].append([])
                 values = list(map(float, line.split()))
@@ -121,18 +122,28 @@ if out_code == 0:
                 for k in range(num_links): # Just location without velocity
                     duo_data['links_states'].append(values[18 + k * 6: 21 + k * 6])
 
+                #  Time step
+                duo_data['time'] = values[-1]
                 # print(duo_data)
                 duo_boats_data[i][j] = duo_data.copy()
                 
             # print(duo_boats_data[i][0]['links_states'])
             # print()
+    # Extract time vectors from each duo_boats_data[i] if integration method is not RK45
+    time_vecs = []
+    if simulation_params["integration_method"] == "RK45":
+        for i in range(len(duo_boats_data)):
+            time_vecs.append([duo_boats_data[i][j]['time'] for j in range(len(duo_boats_data[i]))])
+    else:
+        for i in range(len(duo_boats_data)):
+            time_vecs.append(time_vec)
                 
     
-    print("Data extraction completed successfully\n")
-    print("Animating the data...\n")
+    print("Data extraction completed successfully. Animating the data...")
 
     # Animation function to all the boats and links
-    animate_all_data.animate_all_data(duo_boats_data, time_vec)
+    size = generic_boat_params["ship_size"]
+    animate_all_data.animate_all_data(duo_boats_data, time_vecs,size)
     
 
 else:

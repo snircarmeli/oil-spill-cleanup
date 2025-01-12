@@ -114,8 +114,14 @@ int main(int argc, char* argv[]) {
     MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
     MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
     // set all forces to 1000 and all steering angles to 0
-    control1.col(0) = 1500 * VectorXf::Ones(numSteps);
-    control2.col(0) = 1500 * VectorXf::Ones(numSteps);
+    float force = 1000;
+    control1.col(0) = force * VectorXf::Ones(numSteps);
+    control2.col(0) = force * VectorXf::Ones(numSteps);  
+
+    float D2R = PI / 180.0;
+    float dir = 0.0 * D2R;
+    control1.col(1) = dir * VectorXf::Ones(numSteps);
+    control2.col(1) = -dir * VectorXf::Ones(numSteps);
 
     MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
     string foldername = file_management_params["output_folder"];
@@ -123,6 +129,7 @@ int main(int argc, char* argv[]) {
 
     // Print time every k iterations
     int k_itr = simulation_params["print_interval"];
+    int check_valid_interval = simulation_params["check_valid_interval"];
     
     std::string integration_method = simulation_params["integration_method"];
 
@@ -131,17 +138,26 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < numSteps; i++) {
         if (i % k_itr == 0) {
-
-            std::cout << "Simulation time: " 
+            cout << "Simulation time: " 
                     << std::fixed << std::setprecision(2) 
                     << std::setw(6) << i * dt << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
-            std::cout.flush(); // Force flush the buffer
+            cout.flush(); // Force flush the buffer
         }
+        // cout << "Reached here" << endl;
+        // cout.flush();
 
         Vector2f control1_vec = control1.row(i);
         Vector2f control2_vec = control2.row(i);
         duo_arr[0]->propagate(dt, control1_vec, control2_vec, integration_method);
+        // Check validity of the state 
+        if (i % check_valid_interval == 0) {
+            if (!duo_arr[0]->is_valid_state()) {
+                cout << "Invalid state detected at time: " << i * dt << std::endl;
+                cout.flush();
+                break;
+            }
+        }
 
 
         // control(i,0) = 1000;
@@ -155,9 +171,10 @@ int main(int argc, char* argv[]) {
         //                     tmp_vel(0), tmp_vel(1), tmp_vel(2),  // Velocity X, Y, Angular velocity
         //                     t(i),                               // Time step
         //                     control(i, 0), control(i, 1);       // Control inputs (force, eta)
-        
-        for (int j = 0; j < num_duos; ++j) {
+        for (int j = 0; j < num_duos; j++) {
             string filename = "Duo" + std::to_string(j) + ".txt";
+            // cout << "Printing to file: " << filename << endl;
+            // cout.flush();
             duo_arr[j]->print_to_file(filename, foldername);
         }
     }

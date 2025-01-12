@@ -12,6 +12,7 @@ using json = nlohmann::json;
 using Eigen::VectorXf;
 using Eigen::Vector2f;
 using Eigen::MatrixXf;
+using Eigen::Matrix2f;
 using std::cout;
 using std::endl;
 using std::string;
@@ -149,48 +150,96 @@ void Boom::print_links_states() const {
 
 // Functions to check if two line segments intersect
 
-    // Helper function to calculate the direction
-    float direction(float xi, float yi, float xj, float yj, float xk, float yk) {
-        return (xk - xi) * (yj - yi) - (yk - yi) * (xj - xi);
-    }
-    
-    // Helper function to check if a point is on a segment
-    bool on_segment(float xi, float yi, float xj, float yj, float xk, float yk) {
-        return std::min(xi, xj) <= xk && xk <= std::max(xi, xj) && std::min(yi, yj) <= yk && yk <= std::max(yi, yj);
-    }
+// Helper function to calculate the direction
+float direction(float xi, float yi, float xj, float yj, float xk, float yk) {
+    return (xk - xi) * (yj - yi) - (yk - yi) * (xj - xi);
+}
 
-    bool check_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
-        // Calculate the direction of the lines
-        float d1 = direction(x3, y3, x4, y4, x1, y1);
-        float d2 = direction(x3, y3, x4, y4, x2, y2);
-        float d3 = direction(x1, y1, x2, y2, x3, y3);
-        float d4 = direction(x1, y1, x2, y2, x4, y4);
-    
-        // Check if the line segments intersect
-        if (( d1 * d2 < 0 ) && ( d3 * d4 < 0 )) {
+// Helper function to check if a point is on a segment
+bool on_segment(float xi, float yi, float xj, float yj, float xk, float yk) {
+    return std::min(xi, xj) <= xk && xk <= std::max(xi, xj) && std::min(yi, yj) <= yk && yk <= std::max(yi, yj);
+}
+
+bool check_intersection(float x_11, float y_11, float x_12, float y_12,
+ float x_21, float y_21, float x_22, float y_22, float L) {
+    // normalized direction vectors
+    Vector2f m1 = Vector2f(x_12 - x_11, y_12 - y_11).normalized();
+    Vector2f m2 = Vector2f(x_22 - x_21, y_22 - y_21).normalized();
+
+    // Check if the two segments are parallel
+    if (m1 == m2 || m1 == -m2) {
+        // check if either point on the second segment is on the first segment
+        // check if (x11, y11) is on the second segment
+        float s1 = (x_11 - x_21) / m2.x();
+        float s2 = (y_11 - y_21) / m2.y();
+        if (s1 == s2 && s1 >= 0 && s1 <= L) {
+            // cout << "Two segments parallel" << endl;
+            // cout.flush();
             return true;
         }
-    
-        // Check if the points are collinear and on the segment
-        if (d1 == 0 && on_segment(x3, y3, x4, y4, x1, y1)) return true;
-        if (d2 == 0 && on_segment(x3, y3, x4, y4, x2, y2)) return true;
-        if (d3 == 0 && on_segment(x1, y1, x2, y2, x3, y3)) return true;
-        if (d4 == 0 && on_segment(x1, y1, x2, y2, x4, y4)) return true;
-    
-        return false;
+        // check if (x12, y12) is on the second segment
+        s1 = (x_12 - x_21) / m2.x();
+        s2 = (y_12 - y_21) / m2.y();
+        if (s1 == s2 && s1 >= 0 && s1 <= L) {
+            // cout << "Two segments parallel" << endl;
+            // cout.flush();
+            return true;
+        }
     }
-    
+    // If not, the determinant of the matrix A should be non-zero
+    Matrix2f A;
+    A << m1.x(), -m2.x(), m1.y(), -m2.y();
+    Vector2f b = Vector2f(x_21 - x_11, y_21 - y_11);
+    // s = inv(A) * b
+    Vector2f s = A.inverse() * b;
+    // Check if the intersection point is on both segments
+    if (s.x() >= 0 && s.x() <= L && s.y() >= 0 && s.y() <= L) {
+        // Calculate the intersection point
+        // float x = x_11 + s.x() * m1.x();
+        // float y = y_11 + s.x() * m1.y();
+        // cout << "Two segments intersect at (" << x << ", " << y << ")" << endl;
+        // // print the two segments coordinates
+        // cout << "Segment 1: (" << x_11 << ", " << y_11 << ") to (" << x_12 << ", " << y_12 << ")" << endl;
+        // cout << "Segment 2: (" << x_21 << ", " << y_21 << ") to (" << x_22 << ", " << y_22 << ")\n" << endl;
+        // cout.flush();
+        return true;
+    }
+    return false;
+}
+
+// bool check_intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+//     // Calculate the direction of the lines
+//     float d1 = direction(x3, y3, x4, y4, x1, y1);
+//     float d2 = direction(x3, y3, x4, y4, x2, y2);
+//     float d3 = direction(x1, y1, x2, y2, x3, y3);
+//     float d4 = direction(x1, y1, x2, y2, x4, y4);
+
+//     // Check if the line segments intersect
+//     if ((d1 * d2 > 0) && (d3 * d4 < 0)) {
+//         cout << "Reached here" << endl;
+//         cout.flush();
+//         return true;
+//     }
+
+//     // Check if the points are collinear and on the segment
+//     if (d1 == 0 && on_segment(x3, y3, x4, y4, x1, y1)) return true;
+//     if (d2 == 0 && on_segment(x3, y3, x4, y4, x2, y2)) return true;
+//     if (d3 == 0 && on_segment(x1, y1, x2, y2, x3, y3)) return true;
+//     if (d4 == 0 && on_segment(x1, y1, x2, y2, x4, y4)) return true;
+
+//     return false;
+// }
+
 
 
 bool Boom::is_valid_state() const {
     // Check if boom doesn't intersect itself
+    float L = this->get_L();
+    for (int i = 0; i < this->get_num_links(); i++) {
 
-    for (int i = 0; i < get_num_links(); ++i) {
-
-        float x_i = links_states(i, 1);
-        float y_i = links_states(i, 2);
-        float theta_i = links_states(i, 3);
-        float L = get_L();
+        float x_i = links_states(i, 0);
+        float y_i = links_states(i, 1);
+        float theta_i = links_states(i, 2);
 
         // Coordinates of boom link i
         float x_11 = x_i + 0.5 * L * cos(theta_i);
@@ -200,11 +249,10 @@ bool Boom::is_valid_state() const {
 
         // Starting from the second next link. Every two adjacent links can
         // intersect because of the spring-damper model.
-        for (int j = i + 2; j < get_num_links(); ++j) {
-            float x_j = links_states(j, 1);
-            float y_j= links_states(j, 2);
-            float theta_j = links_states(j, 3);
-            L = get_L();
+        for (int j = this->get_num_links() - 1; j >= i + 2; j--) {
+            float x_j = links_states(j, 0);
+            float y_j= links_states(j, 1);
+            float theta_j = links_states(j, 2);
             // Coordinates of boom link j
             float x_21 = x_j + 0.5 * L * cos(theta_j);
             float y_21 = y_j + 0.5 * L * sin(theta_j);
@@ -212,15 +260,18 @@ bool Boom::is_valid_state() const {
             float y_22 = y_j - 0.5 * L * sin(theta_j);
 
             // Check if the two links intersect
-            if ( j == i + 1) {
-                // Check if the two links completely overlap
-                if (x_11 == x_21 && y_11 == y_21 && x_22 == x_12 && y_22 == y_12) {
-                    return false;
-                }
-            } else {
-                return !check_intersection(x_11, y_11, x_12, y_12, x_21, y_21, x_22, y_22);
+            // if ( j == i + 1) {
+            //     // Check if the two links completely overlap
+            //     if (x_11 == x_21 && y_11 == y_21 && x_22 == x_12 && y_22 == y_12) {
+            //         return false;
+            //     }
+            // } else {
+            if (check_intersection(x_11, y_11, x_12, y_12, x_21, y_21, x_22,
+             y_22, L)) {
+                // cout << "Link " << i << " and Link " << j << " intersect" << endl;
+                // cout.flush();
+                return false;
             }
-
         }
     }
     return true;
@@ -301,7 +352,28 @@ MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
         // Calculate the torques on the link 
         // (Cross product of the force and the position vector)
         float torque = 0.5 * L * (e.x() * (F1 - F0).y() - e.y() * (F1 - F0).x());
-
+        // cout << "Torque: " << torque << endl;
+        // cout.flush();
+        // print if F0 and F1 are not Nan
+        // if (isnan(F0.x()) || isnan(F0.y()) || isnan(F1.x()) || isnan(F1.y())) {
+            // cout << "F0 or F1 is Nan" << endl;
+            // cout.flush();
+        // } else {
+        //     cout << "Link " << i << " Forces: \n";
+        //     cout.flush();
+        //     cout << "F0_x: " << F0.x() << endl;
+        //     cout.flush();
+        //     cout << "F0_y: " << F0.y() << endl;
+        //     cout.flush();
+        //     cout << "F1_x: " << F1.x() << endl;
+        //     cout.flush();
+        //     cout << "F1_y: " << F1.y() << endl;
+        //     cout.flush();
+        // }
+       
+        // cout << "e1: " << e.x() << endl;
+        // cout.flush();
+        // cout << "e2: " << e.y() << endl;
         // Calculate the state derivatives
         // Rotate to n and e frame
         float vel_e = link_vel.dot(e);
@@ -339,7 +411,7 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
             b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(), b1.get_F_max(), b1.get_eta_max()),
       boat2(b2.get_radius(), b2.get_mass(), b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
             b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(), b2.get_F_max(), b2.get_eta_max()),
-            boom(num_links, L, mu_l, mu_ct, mu_r, I, m, k, c) {
+            boom(num_links, L, mu_l, mu_ct, mu_r, I, m, k, c), t(0) {
 
         // Place boats at the center with the given orientation of the line 
         // connecting the boats
@@ -363,7 +435,7 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
     }
 
 BoomBoatsDuo:: BoomBoatsDuo(Vector2f center,  float orientation,
- size_t num_links, float L) {
+ size_t num_links, float L) : t(0) {
     Boom boom(num_links, L);
     this->boom = boom;
     Vector3f boat1_pos = Vector3f(center(0) - L * num_links * cos(orientation), 
@@ -388,6 +460,7 @@ BoomBoatsDuo& BoomBoatsDuo::operator=(const BoomBoatsDuo &other) {
         boat1 = other.boat1;
         boat2 = other.boat2;
         boom = other.boom;
+        t = other.t;
     }
     return *this;
 }
@@ -456,6 +529,10 @@ void BoomBoatsDuo::print_to_file(const string &filename,
         VectorXf link_state = boom.get_link_state(i);
         ss << link_state.transpose() << " ";
     }
+
+    // input the time
+    ss << t << " ";
+
     // Write the collected string to the file
     file << ss.str() << std::endl;
 
@@ -466,7 +543,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
 bool BoomBoatsDuo::is_valid_state() const {
     // Check if the boom doesn't intersect itself
     if (!this->boom.is_valid_state()) {
-        cout << "Boom intersects itself" << endl;
+        cout << "Boom intersects itself at time " << this->t << " [s]" << endl;
         cout.flush();
         return false;
     }
@@ -481,7 +558,8 @@ bool BoomBoatsDuo::is_valid_state() const {
     json params;
     file >> params;
     file.close();
-    float min_distance = params["boom_boats_duo"]["minimum_distance"];
+    
+    float min_distance = params["generic_boat"]["shi"];
     Vector2f boat1_pos = boat1.get_pos().head(2);
     Vector2f boat2_pos = boat2.get_pos().head(2);
     float distance = (boat1_pos - boat2_pos).norm();
@@ -511,7 +589,7 @@ MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
 
     Vector2f boat1_pos = Vector2f(state(0, 0), state(0, 1));
     Vector2f boat1_vel = Vector2f(state(0, 3), state(0, 4));
-    // P0: left end of link 1 - closest link to boat1
+    // P0: left end of link 0 - closest link to boat1
     float theta_link = state(2, 2);
     Vector2f P0 = Vector2f(state(2, 0), state(2, 1)) - (L / 2) * Vector2f(cos(theta_link), sin(theta_link));
     Vector2f P0_dot = Vector2f(state(2, 3), state(2, 4)) - (L / 2) * state(2, 5) * Vector2f(-sin(theta_link), cos(theta_link));
@@ -538,6 +616,17 @@ MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
     Vector2f e2 = (P1 - boat2_pos).normalized();
     Vector2f F_damp2 = this->boom.get_c() * ((P1_dot - boat2_vel).dot(e2)) * e2;
     Vector2f boom_force2 = F_spring2 + F_damp2;
+    // print F_spring2 and F_damp2 if they are not Nan
+    // if (isnan(F_spring2.x()) || isnan(F_spring2.y()) || isnan(F_damp2.x()) || isnan(F_damp2.y())) {
+    //     // cout << "F_spring2 or F_damp2 is Nan" << endl;
+    //     // cout.flush();
+    // } else {
+    // cout << "F_spring2: " << F_spring2.x() << ", " << F_spring2.y() << endl;
+    // cout.flush();
+    // cout << "F_damp2: " << F_damp2.x() << ", " << F_damp2.y() << endl;
+    // cout.flush();
+    // }
+
 
     VectorXf boat2_state_der = this->boat2.state_der(VectorXf(state.row(1)),
      control2, boom_force2);
@@ -575,18 +664,27 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(1).head(3) = this->boat2.get_pos().transpose();
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
 
+    this->boat1.set_control(control1);
+    this->boat2.set_control(control2);
+
     MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {
         state.row(i + 2) = this->boom.get_link_state(i).transpose();
     }
-
+    // float t = this->t;
+    // cout << "Reached here at time: " << this->t << " [s]" << endl;
+    // cout.flush();
     if (integration_method == "RK4") {
         state_new = RK4_integration(control1, control2, state, dt, *this);
+        this->t += dt;
         }  else if (integration_method == "RK45") {
-            state_new = RK45_integration(control1, control2, state, dt, *this);
+            std::pair<MatrixXf, float> result = RK45_integration(control1, control2, state, dt, *this);
+            state_new = result.first;
+            this->t += result.second;
         } else if (integration_method == "Euler") {
         state_new = Euler_integration(state, this->state_der(control1, control2, state), dt);
+        this->t += dt;
     } else {
         throw std::runtime_error("Invalid integration method: " + integration_method);
     }
@@ -638,22 +736,69 @@ MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
 }
 
 // Runge-Kutta 4-5 integration
-MatrixXf RK45_integration(const Vector2f& control1, const Vector2f& control2,
- const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
-    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
-    MatrixXf k2 = boom_boats_duo.state_der(control1, control2,
-     state + (dt / 4) * k1);
-    MatrixXf k3 = boom_boats_duo.state_der(control1, control2,
-     state + (3 * dt / 8) * k1 + (9 * dt / 32) * k2);
-    MatrixXf k4 = boom_boats_duo.state_der(control1, control2,
-    state + (12 * dt / 13) * k1 - (63 * dt / 64) * k2 + (81 * dt / 64) * k3);
-    MatrixXf k5 = boom_boats_duo.state_der(control1, control2,
-    state + (dt) * k1 + (13 * dt / 64) * k2 - (81 * dt / 64) * k3 + (81 * dt / 64) * k4);
-    MatrixXf k6 = boom_boats_duo.state_der(control1, control2,
-    state + (dt) * k1 + (3 * dt / 32) * k2 + (9 * dt / 16) * k3 + (3 * dt / 8) * k4);
-    return 
- }
+std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vector2f& control2,
+                                            const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    // Define constants for RK45 coefficients
+    // a not necessary since state derivative function is time independent
+    // const float a[] = {0.0f, 0.25f, 0.375f, 12.0f / 13.0f, 1.0f, 0.5f};
+    const float b[6][5] = {
+        {},
+        {0.25f},
+        {3.0f / 32.0f, 9.0f / 32.0f},
+        {1932.0f / 2197.0f, -7200.0f / 2197.0f, 7296.0f / 2197.0f},
+        {439.0f / 216.0f, -8.0f, 3680.0f / 513.0f, -845.0f / 4104.0f},
+        {-8.0f / 27.0f, 2.0f, -3544.0f / 2565.0f, 1859.0f / 4104.0f, -11.0f / 40.0f}};
+    const float c4[] = {25.0f / 216.0f, 0.0f, 1408.0f / 2565.0f, 2197.0f / 4104.0f, -1.0f / 5.0f};
+    const float c5[] = {16.0f / 135.0f, 0.0f, 6656.0f / 12825.0f, 28561.0f / 56430.0f, -9.0f / 50.0f, 2.0f / 55.0f};
 
+    std::string params_file = "params.json";
+    std::ifstream file(params_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file");
+    }
+    json params;
+    file >> params;
+    file.close();
+
+    float current_dt = dt;
+    int cnt = 0;
+    MatrixXf def_state = RK4_integration(control1, control2, state, current_dt, boom_boats_duo);
+    MatrixXf state_5th = MatrixXf::Zero(state.rows(), state.cols());
+    while (cnt < params["simulation"]["RK45_max_iterations"]) {
+        // Initialize RK stages (k1 to k6)
+        MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+        MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + current_dt * b[1][0] * k1);
+        MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + current_dt * (b[2][0] * k1 + b[2][1] * k2));
+        MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + current_dt * (b[3][0] * k1 + b[3][1] * k2 + b[3][2] * k3));
+        MatrixXf k5 = boom_boats_duo.state_der(control1, control2, state + current_dt * (b[4][0] * k1 + b[4][1] * k2 + b[4][2] * k3 + b[4][3] * k4));
+        MatrixXf k6 = boom_boats_duo.state_der(control1, control2, state + current_dt * (b[5][0] * k1 + b[5][1] * k2 + b[5][2] * k3 + b[5][3] * k4 + b[5][4] * k5));
+
+        // Compute the RK45 fourth-order and fifth-order solutions
+        MatrixXf state_4th = state + current_dt * (c4[0] * k1 + c4[1] * k2 + c4[2] * k3 + c4[3] * k4 + c4[4] * k5);
+        MatrixXf state_5th = state + current_dt * (c5[0] * k1 + c5[1] * k2 + c5[2] * k3 + c5[3] * k4 + c5[4] * k5 + c5[5] * k6);
+
+        // Compute the error
+        MatrixXf error = state_5th - state_4th;
+        float TE = error.norm(); // Total error magnitude
+
+        // Check if the error is within the tolerance
+        float tolerance = params["simulation"]["RK45_tolerance"];
+        if (TE <= tolerance) {
+            // Accept the step and return the fifth-order solution
+            return std::make_pair(state_5th, current_dt);
+        } else {
+            // Reject the step and reduce the step size
+            current_dt = 0.9f * current_dt * std::pow(tolerance / TE, 1.0f / 5.0f);
+
+            // Ensure the step size is not too small
+            if (current_dt < 1e-6f) {
+            throw std::runtime_error("Step size too small");
+            }
+        }
+        cnt++;
+    }
+    return std::make_pair(state_5th, current_dt);
+}
 
 // Already defined in generic-boat.cpp
 // float wrap_theta(float theta) {

@@ -2,11 +2,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from math import sin, cos, pi
+import json
 
-def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
+def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
     fig, ax = plt.subplots()
-    ax.set_xlim(-7.5, 7.5)  
-    ax.set_ylim(-2.5, 7.5)
+    # Find the maximum and minimum values of x and y for all boats
+    x_max1 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat1_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    x_max2 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat2_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    x_min1 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat1_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    x_min2 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat2_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    y_max1 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat1_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    y_max2 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat2_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    y_min1 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat1_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    y_min2 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat2_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
+    
+    # Set limits according to maximum and minimum values of x and y
+    x_min = np.min([x_min1, x_min2])
+    x_max = np.max([x_max1, x_max2])
+    y_min = np.min([y_min1, y_min2])
+    y_max = np.max([y_max1, y_max2])
+
+    ax.set_xlim(x_min - 2, x_max + 2)
+    ax.set_ylim(y_min - 2, y_max + 2)
+
+    # ax.set_xlim(-20, 20)
+    # ax.set_ylim(-20, 20)
+
+    
+    # ax.set_xlim(-7.5, 7.5)  
+    # ax.set_ylim(-2.5, 7.5)
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
     ax.set_title("Duo Boats with Dynamic Rudder Animation")
@@ -67,8 +91,8 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
             dots.set_data([], [])
         return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
 
+    L = json.load(open('params.json'))['boom']['link_length']
     def update(frame):
-        L = duo_boats_data[0][frame]['link_length']
         for i, (line_boat1, line_boat2) in enumerate(boat_lines):
             if frame < len(duo_boats_data[i]):
                 boat1_pos = duo_boats_data[i][frame]['boat1_pos'][:2]
@@ -78,6 +102,8 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
                 boat2_pos = duo_boats_data[i][frame]['boat2_pos'][:2]
                 boat2_angle = duo_boats_data[i][frame]['boat2_pos'][2]
                 boat2_eta = duo_boats_data[i][frame]['boat2_control'][1]  # Steering angle
+
+                time = duo_boats_data[i][frame]['time']
 
                 transformed_boat1 = transform_vertices(boat1_pos, boat1_angle, boat1_eta, rudder_L)
                 transformed_boat2 = transform_vertices(boat2_pos, boat2_angle, boat2_eta, rudder_L)
@@ -117,14 +143,21 @@ def animate_all_data(duo_boats_data, time_vec, size=1.0, rudder_L=0.4):
                     link_dots[i].set_data([], [])
 
         return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
-
-    interval = 1000 * time_vec[-1] / len(time_vec)  # Interval in milliseconds
+    # Set interval for real-time simulation based on integration method
+    simulation_params = json.load(open('params.json'))['simulation']
+    dt = simulation_params["time_step"]
+    if simulation_params["integration_method"] == "RK45":
+        # Calculate average time interval between each time step for all duos
+        interval = 1000 * np.mean([np.mean(np.diff(time_vecs[i])) for i in range(len(duo_boats_data))])  # Interval in milliseconds
+    else:
+        interval = 1000 * (time_vecs[0][1] - time_vecs[0][0]) # Interval in milliseconds
     time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
-
+    
+    # interval = 0.1e3
     def update_with_time(frame):
         artists = update(frame)
-        time_text.set_text(f'Time: {time_vec[frame]:.2f}s')
+        time_text.set_text(f'Time: {time_vecs[0][frame]:.2f}s')
         return artists + [time_text]
 
-    ani = FuncAnimation(fig, update_with_time, frames=len(time_vec), init_func=init, blit=True, interval=interval)
+    ani = FuncAnimation(fig, update_with_time, frames=len(time_vecs[0]), init_func=init, blit=True, interval=interval)
     plt.show()

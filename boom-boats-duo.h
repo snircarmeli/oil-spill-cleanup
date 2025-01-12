@@ -57,7 +57,6 @@ public:
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself
-
     // State derivative function
     MatrixXf state_der(const MatrixXf &state, const Vector2f Boom_force1,
      const Vector2f Boom_force2) const;
@@ -71,6 +70,7 @@ private:
     BoomBoat boat1;
     BoomBoat boat2;
     Boom boom;
+    float t; // Time [s]
 
 public:
     // Constructor
@@ -91,7 +91,7 @@ public:
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and
-    // if the boats are not colliding with each other or with the boom
+    // bool are_boats_close() const ;// if the boats are not colliding
 
     // Propagation function
     MatrixXf state_der(const Vector2f &control1, const Vector2f &control2,
@@ -110,9 +110,9 @@ MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2,
  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
 // Runge-Kutta 4-5 adaptive integration
-MatrixXf RK45_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
-
+std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
+ const Vector2f& control2, const MatrixXf& state, float dt,
+  BoomBoatsDuo boom_boats_duo);
 // These functions are already defined in generic-boat.h 
 // float wrap_theta(float theta);
 // int sign(float x);
