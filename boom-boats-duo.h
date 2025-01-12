@@ -91,7 +91,7 @@ public:
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and
-    // bool are_boats_close() const ;// if the boats are not colliding
+    bool are_boats_close() const ;// if the boats are not colliding
 
     // Propagation function
     MatrixXf state_der(const Vector2f &control1, const Vector2f &control2,

@@ -17,13 +17,13 @@ def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
     y_min2 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat2_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
     
     # Set limits according to maximum and minimum values of x and y
-    x_min = np.min([x_min1, x_min2])
-    x_max = np.max([x_max1, x_max2])
-    y_min = np.min([y_min1, y_min2])
-    y_max = np.max([y_max1, y_max2])
+    x_min = np.min([x_min1, x_min2]) - 2 * size
+    x_max = np.max([x_max1, x_max2]) + 2 * size
+    y_min = np.min([y_min1, y_min2]) - 2 * size
+    y_max = np.max([y_max1, y_max2]) + 2 * size
 
-    ax.set_xlim(x_min - 2, x_max + 2)
-    ax.set_ylim(y_min - 2, y_max + 2)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
 
     # ax.set_xlim(-20, 20)
     # ax.set_ylim(-20, 20)

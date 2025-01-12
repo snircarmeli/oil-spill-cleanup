@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
     control2.col(0) = force * VectorXf::Ones(numSteps);  
 
     float D2R = PI / 180.0;
-    float dir = 0.0 * D2R;
+    float dir = 0 * D2R;
     control1.col(1) = dir * VectorXf::Ones(numSteps);
     control2.col(1) = -dir * VectorXf::Ones(numSteps);
 
@@ -143,14 +143,15 @@ int main(int argc, char* argv[]) {
                     << std::setw(6) << i * dt << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
             cout.flush(); // Force flush the buffer
+            
         }
-        // cout << "Reached here" << endl;
-        // cout.flush();
 
         Vector2f control1_vec = control1.row(i);
         Vector2f control2_vec = control2.row(i);
+    
         duo_arr[0]->propagate(dt, control1_vec, control2_vec, integration_method);
         // Check validity of the state 
+        
         if (i % check_valid_interval == 0) {
             if (!duo_arr[0]->is_valid_state()) {
                 cout << "Invalid state detected at time: " << i * dt << std::endl;

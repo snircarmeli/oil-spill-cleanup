@@ -558,18 +558,104 @@ bool BoomBoatsDuo::is_valid_state() const {
     json params;
     file >> params;
     file.close();
-    
-    float min_distance = params["generic_boat"]["shi"];
-    Vector2f boat1_pos = boat1.get_pos().head(2);
-    Vector2f boat2_pos = boat2.get_pos().head(2);
-    float distance = (boat1_pos - boat2_pos).norm();
-    if (distance < min_distance) {
-        cout << "Boats are too close" << endl;
+
+    // float min_distance = params["generic_boat"]["shi"];
+    // Vector2f boat1_pos = boat1.get_pos().head(2);
+    // Vector2f boat2_pos = boat2.get_pos().head(2);
+    // float distance = (boat1_pos - boat2_pos).norm();
+    // if (distance < min_distance) {
+    //     cout << "Boats are too close" << endl;
+    //     cout.flush();
+    //     return false;
+    //     }
+
+    // Check if the boats are close
+    if (this->are_boats_close()) {
+        cout << "Boats intercept boom or themselves at time: " << this->t << " [s]" << endl;
         cout.flush();
         return false;
-        }
+    }
     return true;
 
+}
+
+bool BoomBoatsDuo::are_boats_close() const {
+    // Check if the boats are too close or intersect The boom
+    std::string params_file = "params.json";
+    std::ifstream file(params_file);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file");
+    }
+    json params;
+    file >> params;
+    file.close();
+
+    float size = params["generic_boat"]["ship_size"];
+    float min_dist = params["boom_boats_duo"]["minimal_distance_size_ratio"];
+    min_dist *= size;
+    // Create two matrices to store the points of the boats
+    MatrixXf boat1_points = MatrixXf::Zero(5, 2);
+    MatrixXf boat2_points = MatrixXf::Zero(5, 2);
+    // 5 points of boat structure
+
+    Vector3f boat1_pos = this->boat1.get_pos();
+    Vector3f boat2_pos = this->boat2.get_pos();
+
+    MatrixXf boat = MatrixXf::Zero(5,2);
+    boat << -size/2, 0,
+           size/2, 0,
+           size/2, size,
+           -size/2, size,
+           0, 1.5*size;
+    
+    // Rotate the boat points clockwise by the orientation of the boat
+    Matrix2f R1;
+    Matrix2f R2;
+    R1 << cos(boat1_pos(2)), sin(boat1_pos(2)),
+          -sin(boat1_pos(2)), cos(boat1_pos(2));
+    R2 << cos(boat2_pos(2)), sin(boat2_pos(2)),
+          -sin(boat2_pos(2)), cos(boat2_pos(2));
+    
+    boat1_points = (boat * R1.transpose()).rowwise() + boat1_pos.head(2).transpose();
+    boat2_points = (boat * R2.transpose()).rowwise() + boat2_pos.head(2).transpose();
+
+    // Check if the boats are close
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            if ((boat1_points.row(i) - boat2_points.row(j)).norm() < min_dist) {
+                return true;
+            }
+        }
+    }
+
+    // Check if the boats intersect the boom
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < boom.get_num_links(); ++j) {
+            Vector2f P0 = Vector2f(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) - (boom.get_L() / 2) * Vector2f(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
+            Vector2f P1 = Vector2f(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) + (boom.get_L() / 2) * Vector2f(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
+            if (j == 0) {
+                if (check_intersection(boat2_points(i, 0), boat2_points(i, 1), boat2_pos(0), boat2_pos(1), P0.x(), P0.y(), P1.x(), P1.y(), boom.get_L())) {
+                    cout << "Boat 2 intersects the boom at time: " << this->t << " [s]" << endl;
+                    cout.flush();
+                    return true;
+                }
+            } else if (j == boom.get_num_links() - 1) {
+                if (check_intersection(boat1_points(i, 0), boat1_points(i, 1), boat1_pos(0), boat1_pos(1), P0.x(), P0.y(), P1.x(), P1.y(), boom.get_L())) {
+                    cout << "Boat 1 intersects the boom at time: " << this->t << " [s]" << endl;
+                    cout.flush();
+                    return true;
+                }
+            } else {
+                if (check_intersection(boat1_points(i, 0), boat1_points(i, 1), boat1_pos(0), boat1_pos(1), P0.x(), P0.y(), P1.x(), P1.y(), boom.get_L()) ||
+                    check_intersection(boat2_points(i, 0), boat2_points(i, 1), boat2_pos(0), boat2_pos(1), P0.x(), P0.y(), P1.x(), P1.y(), boom.get_L())) {
+                    cout << "One of the boats intersect the boom at time: " << this->t << " [s]" << endl;
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 // Propagation function
@@ -666,6 +752,16 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
 
     this->boat1.set_control(control1);
     this->boat2.set_control(control2);
+
+    // Check validity of the control inputs
+    if (!this->boat1.is_valid_control(control1)) {
+        cout << "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
+        cout.flush();
+    }
+    if (!this->boat2.is_valid_control(control2)) {
+        cout << "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
+        cout.flush();
+    }
 
     MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
     // set states of links: rows 2-end
