@@ -3,6 +3,9 @@
 
 #include "boom-boat.h"
 #include <Eigen/Dense>
+// For JSON parameters parsing
+#include "json/json.hpp"
+using json = nlohmann::json;
 
 using Eigen::MatrixXf;
 using Eigen::Vector2f;
@@ -23,7 +26,8 @@ private:
     float k; // Spring constant
     float c; // Damping coefficient
 
-    
+    json boom_params;
+
 
 public:
     // Constructor
@@ -51,6 +55,8 @@ public:
     float get_k() const;
     float get_c() const;   
 
+    void load_boom_params(std::string filename);
+
     // Utility
     int get_num_links() const;
     void print_links_states() const;
@@ -71,6 +77,9 @@ private:
     BoomBoat boat2;
     Boom boom;
     float t; // Time [s]
+    
+    json boom_boats_duo_params;
+    json simulation_params;
 
 public:
     // Constructor
@@ -88,6 +97,9 @@ public:
     // Utility functions
     void print_status() const;
     void print_to_file(const string &filename, const string &foldername) const;
+
+    void load_boom_boats_duo_params(std::string filename);
+    json get_simulation_params() const;
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and

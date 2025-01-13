@@ -4,6 +4,11 @@
 #include <vector>
 #include <Eigen/Dense>
 
+#include <fstream> // For file I/O
+// Parsing json parameters
+#include "json/json.hpp"
+using json = nlohmann::json;
+
 using namespace std;
 using std::vector;
 
@@ -32,6 +37,8 @@ class GenericBoat {
         // EOM for the propogate function (RK4)
         Matrix2x3f state_der(Matrix2x3f state, Vector2f control);
 
+        
+
     protected:
         // State variables
         Vector3f pos; // Position [m], [m], [rad]
@@ -41,6 +48,7 @@ class GenericBoat {
         float F; // Force applied by engine [N]
         float eta; // Steering angle [rad]
 
+        json generic_boat_params;
         
 
     public:
@@ -71,6 +79,7 @@ class GenericBoat {
         float get_mu_r() const;
         float get_F_max() const;
         float get_eta_max() const;
+        float get_ship_size() const;
         void print_params();
 
         // Setters
@@ -79,6 +88,8 @@ class GenericBoat {
         void set_control(Vector2f control);
 
         bool is_valid_control(Vector2f control) const;
+
+        void load_params(std::string filename);
     
 };
 // Helper functions

@@ -29,23 +29,16 @@ Boom::Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
  float I, float m, float k, float c)
     : L(L), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), I(I), m(m), k(k), c(c) {
        links_states = MatrixXf::Zero(num_links, 6);
+       this->load_boom_params("params.json");
     }
 
 Boom::Boom(size_t num_links, float L) {
-    // Read parameters from JSON file
-    std::string params_file = "params.json";
-    std::ifstream file(params_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params file");
-    }
-    json params;
-    file >> params;
-    file.close();
+    this->load_boom_params("params.json");
 
     links_states = MatrixXf::Zero(num_links, 6);
     this->L = L;
     
-    json boom_params = params["boom"];
+    json boom_params = this->boom_params;
     json drag_params = boom_params["drag_coefficients"];
     // Extract parameters from JSON
     this->mu_l = drag_params["linear"].get<float>();
@@ -55,26 +48,18 @@ Boom::Boom(size_t num_links, float L) {
     this->m = boom_params["mass"].get<float>();
     this->k = boom_params["spring_constant"].get<float>();
     this->c = boom_params["damping_coefficient"].get<float>();
+    // this->t = 0;
 
     links_states = MatrixXf::Zero(num_links, 6);
 }
 
 // Default Constructor
 Boom::Boom() {
-    // Read parameters from JSON file
-    std::string params_file = "params.json";
-    std::ifstream file(params_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params file");
-    }
-    json params;
-    file >> params;
-    file.close();
+    this->load_boom_params("params.json");
+    json boom_params = this->boom_params;
 
-    json boom_params = params["boom"];
     json drag_params = boom_params["drag_coefficients"];
     
-    // Extract parameters from JSON
     this->L = boom_params["link_length"].get<float>();
     this->mu_l = drag_params["linear"].get<float>();
     this->mu_ct = drag_params["cross_track"].get<float>();
@@ -103,6 +88,7 @@ Boom& Boom::operator=(const Boom& other) {
         k = other.k;
         c = other.c;
         links_states = other.links_states;
+        boom_params = other.boom_params;
     }
     return *this;
 }
@@ -137,6 +123,18 @@ float Boom::get_mu_r() const { return mu_r; }
 float Boom::get_k() const { return k; }
 
 float Boom::get_c() const { return c; }
+
+void Boom::load_boom_params(std::string filename) {
+    // Read parameters from JSON file
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file at Boom::load_boom_params");
+    }
+    json params;
+    file >> params;
+    file.close();
+    this->boom_params = params["boom"];
+}
 
 int Boom::get_num_links() const {
     return static_cast<int>(links_states.rows());
@@ -409,6 +407,8 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
             b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(), b2.get_F_max(), b2.get_eta_max()),
             boom(num_links, L, mu_l, mu_ct, mu_r, I, m, k, c), t(0) {
 
+        this->load_boom_boats_duo_params("params.json");
+
         // Place boats at the center with the given orientation of the line 
         // connecting the boats
 
@@ -444,6 +444,7 @@ BoomBoatsDuo:: BoomBoatsDuo(Vector2f center,  float orientation,
     this->boat1 = boat1;
     this->boat2 = boat2;
 
+    this->load_boom_boats_duo_params("params.json");
 }
 
 
@@ -457,6 +458,7 @@ BoomBoatsDuo& BoomBoatsDuo::operator=(const BoomBoatsDuo &other) {
         boat2 = other.boat2;
         boom = other.boom;
         t = other.t;
+        boom_boats_duo_params = other.boom_boats_duo_params;
     }
     return *this;
 }
@@ -477,7 +479,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     // Check if the folder exists
     if (!fs::exists(foldername)) {
         if (!fs::create_directory(foldername)) {
-            std::cerr << "Failed to create directory" << std::endl;
+            throw std::runtime_error("Failed to create directory");
             return;
         }
     }
@@ -486,7 +488,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     // Open the file in append mode
     std::ofstream file(filepath, std::ios_base::app);
     if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filepath << std::endl;
+        throw std::runtime_error("Failed to open file: " + filepath);
         return;
     }
 
@@ -535,6 +537,23 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     file.close();
 }
 
+void BoomBoatsDuo::load_boom_boats_duo_params(std::string filename){
+    // Read parameters from JSON file
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file at BoomBoatsDuo::load_boom_boats_duo_params");
+    }
+    json params;
+    file >> params;
+    file.close();
+    this->boom_boats_duo_params = params["boom_boats_duo"];
+    this->simulation_params = params["simulation"];
+}
+
+json BoomBoatsDuo::get_simulation_params() const {
+    return this->simulation_params;
+}
+
 // Validation of states
 bool BoomBoatsDuo::is_valid_state() const {
     // Check if the boom doesn't intersect itself
@@ -544,16 +563,6 @@ bool BoomBoatsDuo::is_valid_state() const {
         return false;
     }
 
-    // Check if the boats don't intersect each other
-    // Load parameter ["boom_boats_duo"]["minimum_distance"]
-    std::string params_file = "params.json";
-    std::ifstream file(params_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params file");
-    }
-    json params;
-    file >> params;
-    file.close();
 
     // float min_distance = params["generic_boat"]["shi"];
     // Vector2f boat1_pos = boat1.get_pos().head(2);
@@ -577,17 +586,10 @@ bool BoomBoatsDuo::is_valid_state() const {
 
 bool BoomBoatsDuo::are_boats_close() const {
     // Check if the boats are too close or intersect The boom
-    std::string params_file = "params.json";
-    std::ifstream file(params_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params file");
-    }
-    json params;
-    file >> params;
-    file.close();
 
-    float size = params["generic_boat"]["ship_size"];
-    float min_dist = params["boom_boats_duo"]["minimal_distance_size_ratio"];
+
+    float size = this->boat1.get_ship_size();
+    float min_dist = this->boom_boats_duo_params["minimal_distance_size_ratio"];
     min_dist *= size;
     // Create two matrices to store the points of the boats
     MatrixXf boat1_points = MatrixXf::Zero(5, 2);
@@ -657,6 +659,12 @@ bool BoomBoatsDuo::are_boats_close() const {
 // Propagation function
 MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
  const Vector2f &control2, MatrixXf state) const {
+    // print both control inputs
+    // cout << "Control1: " << control1.x() << ", " << control1.y() << endl;
+    // cout.flush();
+    // cout << "Control2: " << control2.x() << ", " << control2.y() << endl;
+    // cout.flush();
+
     // Model the dynamics of the boom links as spring and dampers
     int num_links = boom.get_num_links();
     float L = this->boom.get_L();
@@ -747,12 +755,12 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
 
     // Check validity of the control inputs
-    if (!this->boat1.is_valid_control(control1)) {
+    if (!this->boat1.is_valid_control(control1) && this->t > 0) {
         cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
         cout.flush();
         std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
     }
-    if (!this->boat2.is_valid_control(control2)) {
+    if (!this->boat2.is_valid_control(control2) && this->t > 0) {
         cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
         cout.flush();
         std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
@@ -846,20 +854,11 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vect
     const float c4[] = {25.0f / 216.0f, 0.0f, 1408.0f / 2565.0f, 2197.0f / 4104.0f, -1.0f / 5.0f};
     const float c5[] = {16.0f / 135.0f, 0.0f, 6656.0f / 12825.0f, 28561.0f / 56430.0f, -9.0f / 50.0f, 2.0f / 55.0f};
 
-    std::string params_file = "params.json";
-    std::ifstream file(params_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params file");
-    }
-    json params;
-    file >> params;
-    file.close();
-
     float current_dt = dt;
     int cnt = 0;
     MatrixXf def_state = RK4_integration(control1, control2, state, current_dt, boom_boats_duo);
     MatrixXf state_5th = MatrixXf::Zero(state.rows(), state.cols());
-    while (cnt < params["simulation"]["RK45_max_iterations"]) {
+    while (cnt < boom_boats_duo.get_simulation_params()["RK45_max_iterations"]) {
         // Initialize RK stages (k1 to k6)
         MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
         MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + current_dt * b[1][0] * k1);
@@ -877,7 +876,7 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vect
         float TE = error.norm(); // Total error magnitude
 
         // Check if the error is within the tolerance
-        float tolerance = params["simulation"]["RK45_tolerance"];
+        float tolerance = boom_boats_duo.get_simulation_params()["RK45_tolerance"];
         if (TE <= tolerance) {
             // Accept the step and return the fifth-order solution
             return std::make_pair(state_5th, current_dt);

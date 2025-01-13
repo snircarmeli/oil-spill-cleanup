@@ -4,6 +4,10 @@
 #include "generic-boat.h"
 #include <iostream>
 
+// Parsing json parameters
+#include "json/json.hpp"
+using json = nlohmann::json;
+
 using Eigen::Vector3f;
 using Eigen::Vector2f;
 using Eigen::VectorXf;
@@ -17,6 +21,8 @@ private:
     float cap; // Waste oil capacity [L]
     // const float F_max; // Maximum force applied by engine [N]
     // const float eta_max; // Maximum steering angle [rad]
+
+    json boom_boat_params;
 
 public:
     // Constructors
@@ -39,6 +45,8 @@ public:
     float get_tank_curr() const;
     
     void set_fuel(float fuel);
+
+    void load_boom_boat_params(std::string filename);
 
     // bool is_valid_control(Vector2f control) const;
     

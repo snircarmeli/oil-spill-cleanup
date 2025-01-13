@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
     MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
     // set all forces to 1000 and all steering angles to 0
-    float force = 100001;
+    float force = 1000;
     control1.col(0) = force * VectorXf::Ones(numSteps);
     control2.col(0) = force * VectorXf::Ones(numSteps);  
 
@@ -149,6 +149,14 @@ int main(int argc, char* argv[]) {
         Vector2f control1_vec = control1.row(i);
         Vector2f control2_vec = control2.row(i);
     
+        // print initial state before propagation
+        for (int j = 0; j < num_duos; j++) {
+            string filename = "Duo" + std::to_string(j) + ".txt";
+            // cout << "Printing to file: " << filename << endl;
+            // cout.flush();
+            duo_arr[j]->print_to_file(filename, foldername);
+        }
+        
         duo_arr[0]->propagate(dt, control1_vec, control2_vec, integration_method);
         // Check validity of the state 
         

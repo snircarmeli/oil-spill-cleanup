@@ -27,12 +27,12 @@
         "lipschitz_cont_eta_deg": 1 
     },
     "boom": {
-        "num_links": 20,
-        "link_length": 12,
-        "inertia": 1500.0,
+        "num_links": 10,
+        "link_length": 10.0,
+        "inertia": 150.0,
         "mass": 100.0,
         "spring_constant": 1200.0,
-        "damping_coefficient": 80,
+        "damping_coefficient": 8.0,
         "drag_coefficients": {
             "linear": 20,
             "cross_track": 500.0,
@@ -44,7 +44,7 @@
         "waste_tank_capacity": 100.0
     },
     "simulation": {
-        "time_duration": 30.0,
+        "time_duration": 15.0,
         "time_step": 0.1,
         "print_interval": 10,
         "integration_method": "RK4",

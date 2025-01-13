@@ -27,15 +27,10 @@ const double PI = 3.141592653589793;
 // radius - 2 mass - 600 inertia - 50 mu_l - 1 mu_ct - 100 mu_r - 1 F_max - 100 eta_max - pi/2
 GenericBoat::GenericBoat() {
     // Load parameters from params.json
-    std::ifstream file("params.json");
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params.json");
-    }
+    this->load_params("params.json");
 
-    json params;
-    file >> params;
+    json generic_boat_params = this->generic_boat_params;
 
-    json generic_boat_params = params["generic_boat"];
     this->radius = generic_boat_params["radius"].get<float>();
     this->mass = generic_boat_params["mass"].get<float>();
     this->inertia = generic_boat_params["inertia"].get<float>();
@@ -50,6 +45,9 @@ GenericBoat::GenericBoat() {
     this->vel << generic_boat_params["initial_velocity"][0].get<float>(),
      generic_boat_params["initial_velocity"][1].get<float>(), 
      generic_boat_params["initial_velocity"][2].get<float>();
+
+    this->F = 0;
+    this->eta = 0;
 }
 
 GenericBoat::GenericBoat(const GenericBoat &gen_boat) {
@@ -64,15 +62,24 @@ GenericBoat::GenericBoat(const GenericBoat &gen_boat) {
     this->vel = gen_boat.vel;
     this->F_max = gen_boat.F_max;
     this->eta_max = gen_boat.eta_max;
+
+    this->F = gen_boat.F;
+    this->eta = gen_boat.eta;
+
+    this->load_params("params.json");
 }
 GenericBoat::GenericBoat(float radius, float mass, float inertia, float mu_l, 
         float mu_ct, float mu_r, Vector3f pos, Vector3f vel, float F_max,
          float eta_max) : 
         radius(radius), mass(mass), 
-inertia(inertia), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), F_max(F_max), 
-eta_max(eta_max) {
+         inertia(inertia), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), F_max(F_max), 
+         eta_max(eta_max) {
     this->pos = pos;
     this->vel = vel;
+
+    this->F = 0;
+    this->eta = 0;
+    this->load_params("params.json");
 }
 
 // Destructor
@@ -92,6 +99,10 @@ GenericBoat& GenericBoat::operator=(const GenericBoat &gen_boat) {
     this->vel = gen_boat.vel;
     this->F_max = gen_boat.F_max;
     this->eta_max = gen_boat.eta_max;
+    this->F = gen_boat.F;
+    this->eta = gen_boat.eta;
+
+    this->load_params("params.json");
     return *this;
 }
 
@@ -202,7 +213,9 @@ float GenericBoat::get_mu_r() const { return this->mu_r; }
 
 float GenericBoat::get_F_max() const { return this->F_max; }
 
-float GenericBoat::get_eta_max() const { return this->eta_max; }    
+float GenericBoat::get_eta_max() const { return this->eta_max; }  
+
+float GenericBoat::get_ship_size() const { return this->generic_boat_params["ship_size"]; }
 
 void GenericBoat::print_params() {
     std::cout << "Radius: " << this->radius << " m\n" << endl;
@@ -211,6 +224,11 @@ void GenericBoat::print_params() {
     std::cout << "Mu_l (Linear Drag): " << this->mu_l << " kg/m\n" << endl;
     std::cout << "Mu_ct (Cross Track Drag): " << this->mu_ct << " kg/m\n" << endl;
     std::cout << "Mu_r (Rotational Drag): " << this->mu_r << " kg*m^2\n" << endl;
+    std::cout << "F_max (Max Force): " << this->F_max << " N\n" << endl;
+    std::cout << "Eta_max (Max Steering Angle): " << this->eta_max << " rad\n" << endl;
+    std::cout << "Initial Position: " << this->pos.transpose() << endl;
+    std::cout << "Initial Velocity: " << this->vel.transpose() << endl;
+    std::cout << "Current Control: " << this->F << " N, " << this->eta << " rad" << endl;
 }
 
 void GenericBoat::set_pos(Vector3f pos) {
@@ -233,7 +251,7 @@ bool GenericBoat::is_valid_control(Vector2f control) const {
     // cout.flush();
     // cout << this->get_F_max() << endl;
     // cout.flush();
-    
+
     if (abs(control(0)) > this->get_F_max()) {
         std::cerr << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << std::endl;
         return false;
@@ -244,24 +262,24 @@ bool GenericBoat::is_valid_control(Vector2f control) const {
         return false;
     }
 
-    // Load Lipschitz continuity parameters
-    std::string file_path = "params.json";
+    // // Load Lipschitz continuity parameters
+    // std::string file_path = "params.json";
 
-    // Open the file and parse it
-    std::ifstream file(file_path);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open parameters file " << file_path << std::endl;
-        return 1;
-    }
-    json params;
-    file >> params;
+    // // Open the file and parse it
+    // std::ifstream file(file_path);
+    // if (!file.is_open()) {
+    //     std::cerr << "Failed to open parameters file " << file_path << std::endl;
+    //     return 1;
+    // }
+    // json params;
+    // file >> params;
 
-    float Lips_F = params["generic_boat"]["lipschitz_cont_F"];
-    float Lips_eta = params["generic_boat"]["lipschitz_cont_eta_deg"];
+    float Lips_F = this->generic_boat_params["lipschitz_cont_F"];
+    float Lips_eta = this->generic_boat_params["lipschitz_cont_eta_deg"];
     Lips_eta = Lips_eta * PI / 180.0;
 
     // Check Lipschitz continuity
-    if (abs(control(0) - this->get_control()(0)) > Lips_F) {
+    if (abs(control(0) - this->get_control()(0)) > Lips_F ) {
         std::cerr << "Lipschitz continuity violated for force control." << std::endl;
         return false;
     }
@@ -271,6 +289,20 @@ bool GenericBoat::is_valid_control(Vector2f control) const {
     }
 
     return true;
+}
+
+void GenericBoat::load_params(std::string filename) {
+    // std::string file_path = "params.json";
+
+    // Open the file and parse it
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open parameters file in GenericBoat load_params(). ");
+        return;
+    }
+    this->generic_boat_params= json();
+    file >> this->generic_boat_params;
+    this->generic_boat_params = this->generic_boat_params["generic_boat"];
 }
 
 float wrap_theta(float theta) {

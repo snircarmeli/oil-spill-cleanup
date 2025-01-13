@@ -21,16 +21,16 @@ const float PI = 3.141592653589793;
 
 // Default constructor
 BoomBoat::BoomBoat() : GenericBoat() {
-    // Load parameters from params.json
-    std::ifstream file("params.json");
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params.json");
-    }
-    json params;
-    file >> params;
-    json boom_boat_params = params["boom_boat"];
-    this->fuel = boom_boat_params["initial_fuel"].get<float>();
-    this->cap = boom_boat_params["waste_tank_capacity"].get<float>();
+    // // Load parameters from params.json
+    // std::ifstream file("params.json");
+    // if (!file.is_open()) {
+    //     throw std::runtime_error("Could not open params.json");
+    // }
+    // json params;
+    // file >> params;
+    this->load_boom_boat_params("params.json");
+    this->fuel = this->boom_boat_params["initial_fuel"].get<float>();
+    this->cap = this->boom_boat_params["waste_tank_capacity"].get<float>();
     this->tank_curr = 0.0;
     this->pos << 0, 0, 0;
     this->vel << 0, 0, 0;
@@ -39,16 +39,16 @@ BoomBoat::BoomBoat() : GenericBoat() {
 
 // Constructor with position
 BoomBoat::BoomBoat(Vector3f pos) : GenericBoat() {
-    // Load parameters from params.json
-    std::ifstream file("params.json");
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open params.json");
-    }
-    json params;
-    file >> params;
-    json boom_boat_params = params["boom_boat"];
-    this->fuel = boom_boat_params["initial_fuel"].get<float>();
-    this->cap = boom_boat_params["waste_tank_capacity"].get<float>();
+    // // Load parameters from params.json
+    // std::ifstream file("params.json");
+    // if (!file.is_open()) {
+    //     throw std::runtime_error("Could not open params.json");
+    // }
+    // json params;
+    // file >> params;
+    this->load_boom_boat_params("params.json");
+    this->fuel = this->boom_boat_params["initial_fuel"].get<float>();
+    this->cap = this->boom_boat_params["waste_tank_capacity"].get<float>();
     this->tank_curr = 0.0;
     this->pos = pos;
     this->vel << 0, 0, 0;
@@ -59,6 +59,7 @@ BoomBoat::BoomBoat(Vector3f pos) : GenericBoat() {
 BoomBoat::BoomBoat(const BoomBoat &boom_boat) : GenericBoat(boom_boat),
  fuel(boom_boat.fuel), tank_curr(boom_boat.tank_curr), cap(boom_boat.cap) {
     this->set_control(Vector2f(0.0, 0.0));
+    this->boom_boat_params = boom_boat.boom_boat_params;
  }
 
 
@@ -68,6 +69,7 @@ BoomBoat::BoomBoat(float radius, float mass, float inertia, float mu_l,
   float F_max, float eta_max) : GenericBoat(radius, mass, inertia, mu_l, mu_ct,
    mu_r, pos, vel, F_max, eta_max), fuel(fuel), tank_curr(fuel), cap(cap) {
     this->set_control(Vector2f(0.0, 0.0));
+    this->load_boom_boat_params("params.json");
 }
 
 
@@ -82,6 +84,7 @@ BoomBoat &BoomBoat::operator=(const BoomBoat &boom_boat) {
         this->fuel = boom_boat.fuel;
         this->tank_curr = boom_boat.tank_curr;
         this->cap = boom_boat.cap;
+        this->boom_boat_params = boom_boat.boom_boat_params;
         }
     return *this;
 }
@@ -103,6 +106,18 @@ void BoomBoat::set_fuel(float fuel) {
         return;
     }
     this->fuel = fuel;
+}
+
+// Load parameters from the json file
+void BoomBoat::load_boom_boat_params(std::string filename) {
+    // Read parameters from JSON file
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open params file at BoomBoat::load_boom_boat_params");
+    }
+    json params;
+    file >> params;
+    this->boom_boat_params = params["boom_boat"];
 }
 
 // Check if the control is valid
@@ -147,7 +162,7 @@ void BoomBoat::set_fuel(float fuel) {
 //     return true;
 // }
 
-// Example specialized function
+// Print the status of the boat
 void BoomBoat::print_status() const {
     std::cout << "Fuel: " << this->fuel << " kg\n" << std::endl;
     std::cout << "Tank Current: " << this->tank_curr << " kg\n"
@@ -197,6 +212,10 @@ VectorXf BoomBoat::state_der(VectorXf state, Vector2f control,
     float u_dot = (F * cos(eta) - mu_l * u * u * sign(u) + F_boom_u) / mass;
     float v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v) + F_boom_v) / mass;
     float omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega) - r * F_boom_v) / I;
+
+    // // print u_dot
+    // cout << "u_dot: " << u_dot << endl;
+    // cout.flush();
     // cout << "F_boom_v: " << F_boom_v << endl;
     // cout.flush();
 
@@ -207,4 +226,4 @@ VectorXf BoomBoat::state_der(VectorXf state, Vector2f control,
     VectorXf state_dot(6);
     state_dot << x_dot, y_dot, omega, x_dotdot, y_dotdot, omega_dot;
     return state_dot;
-     }
+    }
