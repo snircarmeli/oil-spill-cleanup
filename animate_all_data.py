@@ -6,24 +6,13 @@ import json
 
 def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
     fig, ax = plt.subplots()
-    # Find the maximum and minimum values of x and y for all boats
-    x_max1 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat1_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    x_max2 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat2_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    x_min1 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat1_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    x_min2 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat2_pos'][0]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    y_max1 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat1_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    y_max2 = np.max([np.max([np.max(duo_boats_data[i][frame]['boat2_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    y_min1 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat1_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    y_min2 = np.min([np.min([np.min(duo_boats_data[i][frame]['boat2_pos'][1]) for frame in range(len(duo_boats_data[i]))]) for i in range(len(duo_boats_data))])
-    
-    # Set limits according to maximum and minimum values of x and y
-    x_min = np.min([x_min1, x_min2]) - 2 * size
-    x_max = np.max([x_max1, x_max2]) + 2 * size
-    y_min = np.min([y_min1, y_min2]) - 2 * size
-    y_max = np.max([y_max1, y_max2]) + 2 * size
-
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
+    # Find the maximum and minimum values of x and y for all boats, ignoring nan values
+    x_vals = np.array([pos[0] for duo in duo_boats_data for pos in [duo[0]['boat1_pos'][:2], duo[0]['boat2_pos'][:2]]])
+    y_vals = np.array([pos[1] for duo in duo_boats_data for pos in [duo[0]['boat1_pos'][:2], duo[0]['boat2_pos'][:2]]])
+    x_min, x_max = np.nanmin(x_vals), np.nanmax(x_vals)
+    y_min, y_max = np.nanmin(y_vals), np.nanmax(y_vals)
+    ax.set_xlim(x_min - 5 * size, x_max + 5 * size)
+    ax.set_ylim(y_min - 5 * size, y_max + 5 * size)
 
     # ax.set_xlim(-20, 20)
     # ax.set_ylim(-20, 20)
@@ -153,7 +142,7 @@ def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
         interval = 1000 * (time_vecs[0][1] - time_vecs[0][0]) # Interval in milliseconds
     time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
     
-    # interval = 0.1e3
+    # interval = 1e3
     def update_with_time(frame):
         artists = update(frame)
         time_text.set_text(f'Time: {time_vecs[0][frame]:.2f}s')

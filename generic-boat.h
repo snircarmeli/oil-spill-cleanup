@@ -29,7 +29,6 @@ class GenericBoat {
         float F_max; // Maximum force applied by engine [N]
         float eta_max; // Maximum steering angle [rad]
 
-
         // EOM for the propogate function (RK4)
         Matrix2x3f state_der(Matrix2x3f state, Vector2f control);
 
@@ -78,6 +77,8 @@ class GenericBoat {
         void set_pos(Vector3f pos);
         void set_vel(Vector3f vel);
         void set_control(Vector2f control);
+
+        bool is_valid_control(Vector2f control) const;
     
 };
 // Helper functions

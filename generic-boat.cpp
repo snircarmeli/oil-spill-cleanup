@@ -226,6 +226,53 @@ void GenericBoat::set_control(Vector2f control) {
     this->eta = control[1];
 }
 
+bool GenericBoat::is_valid_control(Vector2f control) const {
+
+    // Check if the abs(force) is within the limits
+    // cout << control(0) << "\n" << endl;
+    // cout.flush();
+    // cout << this->get_F_max() << endl;
+    // cout.flush();
+    
+    if (abs(control(0)) > this->get_F_max()) {
+        std::cerr << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << std::endl;
+        return false;
+    }
+    // Check if the steering angle is within the limits
+    if (abs(control(1)) > this->get_eta_max()) {
+        std::cerr << "Steering angle exceeds the maximum limit: " << this->get_eta_max() << " [rad]" << std::endl;
+        return false;
+    }
+
+    // Load Lipschitz continuity parameters
+    std::string file_path = "params.json";
+
+    // Open the file and parse it
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open parameters file " << file_path << std::endl;
+        return 1;
+    }
+    json params;
+    file >> params;
+
+    float Lips_F = params["generic_boat"]["lipschitz_cont_F"];
+    float Lips_eta = params["generic_boat"]["lipschitz_cont_eta_deg"];
+    Lips_eta = Lips_eta * PI / 180.0;
+
+    // Check Lipschitz continuity
+    if (abs(control(0) - this->get_control()(0)) > Lips_F) {
+        std::cerr << "Lipschitz continuity violated for force control." << std::endl;
+        return false;
+    }
+    if (abs(control(1) - this->get_control()(1)) > Lips_eta) {
+        std::cerr << "Lipschitz continuity violated for steering angle control." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 float wrap_theta(float theta) {
     theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
     if (theta > PI) {

@@ -2,7 +2,7 @@
     "generic_boat": {
         "radius": 2.0,
         "mass": 600.0,
-        "inertia": 50.0,
+        "inertia": 500.0,
         "drag_coefficients": {
             "linear": 100.0,
             "cross_track": 10000.0,
@@ -27,16 +27,16 @@
         "lipschitz_cont_eta_deg": 1 
     },
     "boom": {
-        "num_links": 100,
-        "link_length": 5.0,
-        "inertia": 1.0,
-        "mass": 20.0,
+        "num_links": 20,
+        "link_length": 12,
+        "inertia": 1500.0,
+        "mass": 100.0,
         "spring_constant": 1200.0,
-        "damping_coefficient": 8.0,
+        "damping_coefficient": 80,
         "drag_coefficients": {
-            "linear": 20.0,
+            "linear": 20,
             "cross_track": 500.0,
-            "rotational": 200.0
+            "rotational": 2000.0
         }
     },
     "boom_boat": {
@@ -44,12 +44,12 @@
         "waste_tank_capacity": 100.0
     },
     "simulation": {
-        "time_duration": 15.0,
-        "time_step": 0.01,
-        "print_interval": 50,
+        "time_duration": 30.0,
+        "time_step": 0.1,
+        "print_interval": 10,
         "integration_method": "RK4",
-        "RK45_tolerance": 1e-2,
-        "RK45_max_iterations": 100,
+        "RK45_tolerance": 1e-1,
+        "RK45_max_iterations": 10,
         "check_valid_interval": 100
     },
     "boom_boats_duo": {
@@ -58,7 +58,7 @@
             1.0,
             1.0
         ],
-        "initial_orientation": 1.0471975512,
+        "initial_orientation": 0,
         "minimal_distance_size_ratio": 1.5,
         "minimal_distance_comment": "minimal distance should be 3 times the ship size"
     },

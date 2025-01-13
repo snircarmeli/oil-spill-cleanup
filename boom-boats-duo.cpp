@@ -356,8 +356,8 @@ MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
         // cout.flush();
         // print if F0 and F1 are not Nan
         // if (isnan(F0.x()) || isnan(F0.y()) || isnan(F1.x()) || isnan(F1.y())) {
-            // cout << "F0 or F1 is Nan" << endl;
-            // cout.flush();
+        //     // cout << "F0 or F1 is Nan" << endl;
+        //     // cout.flush();
         // } else {
         //     cout << "Link " << i << " Forces: \n";
         //     cout.flush();
@@ -371,10 +371,6 @@ MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
         //     cout.flush();
         // }
        
-        // cout << "e1: " << e.x() << endl;
-        // cout.flush();
-        // cout << "e2: " << e.y() << endl;
-        // Calculate the state derivatives
         // Rotate to n and e frame
         float vel_e = link_vel.dot(e);
         float vel_n = link_vel.dot(n);
@@ -750,18 +746,21 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(1).head(3) = this->boat2.get_pos().transpose();
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
 
+    // Check validity of the control inputs
+    if (!this->boat1.is_valid_control(control1)) {
+        cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
+        cout.flush();
+        std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
+    }
+    if (!this->boat2.is_valid_control(control2)) {
+        cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
+        cout.flush();
+        std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
+    }
+
     this->boat1.set_control(control1);
     this->boat2.set_control(control2);
 
-    // Check validity of the control inputs
-    if (!this->boat1.is_valid_control(control1)) {
-        cout << "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
-        cout.flush();
-    }
-    if (!this->boat2.is_valid_control(control2)) {
-        cout << "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
-        cout.flush();
-    }
 
     MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
     // set states of links: rows 2-end

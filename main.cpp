@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
     MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
     // set all forces to 1000 and all steering angles to 0
-    float force = 1000;
+    float force = 100001;
     control1.col(0) = force * VectorXf::Ones(numSteps);
     control2.col(0) = force * VectorXf::Ones(numSteps);  
 

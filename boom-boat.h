@@ -40,7 +40,7 @@ public:
     
     void set_fuel(float fuel);
 
-    bool is_valid_control(Vector2f control) const;
+    // bool is_valid_control(Vector2f control) const;
     
     // Utility function to display BoomBoat status
     void print_status() const;
