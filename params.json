@@ -57,7 +57,7 @@
         "time_duration": 10.0,
         "time_step": 0.01,
         "print_interval": 50,
-        "integration_method": "RK2",
+        "integration_method": "RK4",
         "check_valid_interval": 50
     },
     "integration": {

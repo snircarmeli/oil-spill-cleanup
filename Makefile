@@ -2,7 +2,7 @@
 CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3 -I/usr/include/json
 
 # Object files
-OBJS = main.o generic-boat.o boom-boat.o boom-boats-duo.o
+OBJS = main.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o
 RM = rm -rf
 
 # Executable name
