@@ -143,7 +143,7 @@ if out_code == 0:
 
     # Animation function to all the boats and links
     size = generic_boat_params["ship_size"]
-    animate_all_data.animate_all_data(duo_boats_data, time_vecs,size)
+    animate_all_data.animate_all_data(duo_boats_data, time_vecs, size)
     
 
 else:

@@ -3,6 +3,7 @@
 
 #include "boom-boat.h"
 #include <Eigen/Dense>
+
 // For JSON parameters parsing
 #include "json/json.hpp"
 using json = nlohmann::json;
@@ -100,6 +101,7 @@ public:
 
     void load_boom_boats_duo_params(std::string filename);
     json get_simulation_params() const;
+    float get_time() const;
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and
@@ -124,7 +126,7 @@ MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2,
 // Runge-Kutta 4-5 adaptive integration
 std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
  const Vector2f& control2, const MatrixXf& state, float dt,
-  BoomBoatsDuo boom_boats_duo);
+  BoomBoatsDuo boom_boats_duo, json simulation_params);
 // These functions are already defined in generic-boat.h 
 // float wrap_theta(float theta);
 // int sign(float x);

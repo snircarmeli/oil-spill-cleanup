@@ -1,12 +1,5 @@
-# Compiler
-CXX = g++
-
 # Compiler flags
-CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3
-
-# -I/usr/include/json
-# -I/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/include \
-# -I/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/include/json
+CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3 -I/usr/include/json
 
 # Object files
 OBJS = main.o generic-boat.o boom-boat.o boom-boats-duo.o
@@ -22,18 +15,8 @@ all: $(EXEC)
 $(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-# Compile main.o 
-main.o: main.cpp generic-boat.h boom-boat.h boom-boats-duo.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compile generic-boat.o
-generic-boat.o: generic-boat.cpp generic-boat.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-boom-boat.o: boom-boat.cpp boom-boat.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-boom-boats-duo.o: boom-boats-duo.cpp boom-boats-duo.h
+# Compile individual .o files
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Clean target to remove object files and executable

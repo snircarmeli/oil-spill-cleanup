@@ -77,7 +77,6 @@ int main(int argc, char* argv[]) {
     json simulation_params = params["simulation"];
     json file_management_params = params["file_management"];
 
-
     //Simulation parameters
     float T = simulation_params["time_duration"];
     float dt = simulation_params["time_step"];
@@ -98,12 +97,12 @@ int main(int argc, char* argv[]) {
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
      mu_ct, mu_r, I, m, k, c, Vector2f(1.0, 1.0), orientation);
     // duo->print_status();
-
     int num_duos = 1;
 
-    BoomBoatsDuo** duo_arr = new BoomBoatsDuo*[num_duos];
-    duo_arr[0] = duo;
+    // BoomBoatsDuo** duo_arr = new BoomBoatsDuo*[num_duos];
+    // duo_arr[0] = duo;
     // duo_arr[0]->print_status();
+
 
     
     // float T = 30;
@@ -130,62 +129,40 @@ int main(int argc, char* argv[]) {
     // Print time every k iterations
     int k_itr = simulation_params["print_interval"];
     int check_valid_interval = simulation_params["check_valid_interval"];
-    
     std::string integration_method = simulation_params["integration_method"];
 
     std::cout << "Running simulation..." << std::endl << std::endl;
     std::cout.flush(); // Force immediate display of the output
+    int cnt = 0;
 
-    for (int i = 0; i < numSteps; i++) {
-        if (i % k_itr == 0) {
+    while (duo->get_time() < T) {
+        if (cnt % k_itr == 0) {
             cout << "Simulation time: " 
                     << std::fixed << std::setprecision(2) 
-                    << std::setw(6) << i * dt << " [s] out of "
+                    << std::setw(6) << duo->get_time() << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
             cout.flush(); // Force flush the buffer
             
         }
 
-        Vector2f control1_vec = control1.row(i);
-        Vector2f control2_vec = control2.row(i);
-    
-        // print initial state before propagation
-        for (int j = 0; j < num_duos; j++) {
-            string filename = "Duo" + std::to_string(j) + ".txt";
-            // cout << "Printing to file: " << filename << endl;
-            // cout.flush();
-            duo_arr[j]->print_to_file(filename, foldername);
-        }
-        
-        duo_arr[0]->propagate(dt, control1_vec, control2_vec, integration_method);
+        Vector2f control1_vec = control1.row(0); // zero just for testing
+        Vector2f control2_vec = control2.row(0); // zero just for testing
+        string filename = "Duo0.txt";
+        duo->print_to_file(filename, foldername);
+
+        duo->propagate(dt, control1_vec, control2_vec,
+         integration_method);
+
         // Check validity of the state 
-        
-        if (i % check_valid_interval == 0) {
-            if (!duo_arr[0]->is_valid_state()) {
-                cout << "Invalid state detected at time: " << i * dt << std::endl;
-                cout.flush();
-                break;
+        if (cnt % check_valid_interval == 0) {
+            if (!duo->is_valid_state()) {
+                // cout << "Invalid state detected at time: " << duo_arr[0]->get_time() << std::endl;
+                // cout.flush();
+                // break;
             }
         }
+        cnt++;
 
-
-        // control(i,0) = 1000;
-        // control(i, 1) = -1 * PI / 9;
-
-        // boat->propogate(control.row(i), dt);
-        // Vector3f tmp_pos = boat->get_pos();
-        // Vector3f tmp_vel = boat->get_vel();
-        
-        // boat_data.row(i) << tmp_pos(0), tmp_pos(1), tmp_pos(2),  // Position X, Y, Theta
-        //                     tmp_vel(0), tmp_vel(1), tmp_vel(2),  // Velocity X, Y, Angular velocity
-        //                     t(i),                               // Time step
-        //                     control(i, 0), control(i, 1);       // Control inputs (force, eta)
-        for (int j = 0; j < num_duos; j++) {
-            string filename = "Duo" + std::to_string(j) + ".txt";
-            // cout << "Printing to file: " << filename << endl;
-            // cout.flush();
-            duo_arr[j]->print_to_file(filename, foldername);
-        }
     }
     std::cout << std::endl; // Going down a line
     std::cout.flush(); // Force immediate display of the output
@@ -209,5 +186,5 @@ int main(int argc, char* argv[]) {
     
     delete boat;
     delete duo;
-    delete duo_arr;
+    
 }

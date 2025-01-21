@@ -99,6 +99,8 @@ GenericBoat& GenericBoat::operator=(const GenericBoat &gen_boat) {
     this->vel = gen_boat.vel;
     this->F_max = gen_boat.F_max;
     this->eta_max = gen_boat.eta_max;
+    this->pos = gen_boat.pos;
+    this->vel = gen_boat.vel;
     this->F = gen_boat.F;
     this->eta = gen_boat.eta;
 
@@ -247,32 +249,18 @@ void GenericBoat::set_control(Vector2f control) {
 bool GenericBoat::is_valid_control(Vector2f control) const {
 
     // Check if the abs(force) is within the limits
-    // cout << control(0) << "\n" << endl;
-    // cout.flush();
-    // cout << this->get_F_max() << endl;
-    // cout.flush();
-
     if (abs(control(0)) > this->get_F_max()) {
-        std::cerr << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << std::endl;
+        cout << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << endl;
+        cout.flush();
         return false;
     }
     // Check if the steering angle is within the limits
     if (abs(control(1)) > this->get_eta_max()) {
-        std::cerr << "Steering angle exceeds the maximum limit: " << this->get_eta_max() << " [rad]" << std::endl;
+        cout << "Steering angle exceeds the maximum limit: " << this->get_eta_max() << " [rad]" << endl;
+        cout.flush();
         return false;
     }
 
-    // // Load Lipschitz continuity parameters
-    // std::string file_path = "params.json";
-
-    // // Open the file and parse it
-    // std::ifstream file(file_path);
-    // if (!file.is_open()) {
-    //     std::cerr << "Failed to open parameters file " << file_path << std::endl;
-    //     return 1;
-    // }
-    // json params;
-    // file >> params;
 
     float Lips_F = this->generic_boat_params["lipschitz_cont_F"];
     float Lips_eta = this->generic_boat_params["lipschitz_cont_eta_deg"];
@@ -280,11 +268,13 @@ bool GenericBoat::is_valid_control(Vector2f control) const {
 
     // Check Lipschitz continuity
     if (abs(control(0) - this->get_control()(0)) > Lips_F ) {
-        std::cerr << "Lipschitz continuity violated for force control." << std::endl;
+        cout << "Lipschitz continuity violated for force control." << endl;
+        cout.flush();
         return false;
     }
     if (abs(control(1) - this->get_control()(1)) > Lips_eta) {
-        std::cerr << "Lipschitz continuity violated for steering angle control." << std::endl;
+        cout << "Lipschitz continuity violated for force control." << endl;
+        cout.flush();
         return false;
     }
 

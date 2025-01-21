@@ -27,12 +27,12 @@
         "lipschitz_cont_eta_deg": 1 
     },
     "boom": {
-        "num_links": 10,
-        "link_length": 10.0,
+        "num_links": 20,
+        "link_length": 1.0,
         "inertia": 150.0,
         "mass": 100.0,
-        "spring_constant": 1200.0,
-        "damping_coefficient": 8.0,
+        "spring_constant": 1600.0,
+        "damping_coefficient": 4.0,
         "drag_coefficients": {
             "linear": 20,
             "cross_track": 500.0,
@@ -43,15 +43,6 @@
         "initial_fuel": 100.0,
         "waste_tank_capacity": 100.0
     },
-    "simulation": {
-        "time_duration": 15.0,
-        "time_step": 0.1,
-        "print_interval": 10,
-        "integration_method": "RK4",
-        "RK45_tolerance": 1e-1,
-        "RK45_max_iterations": 10,
-        "check_valid_interval": 100
-    },
     "boom_boats_duo": {
         "num_duos": 1,
         "initial_center": [
@@ -59,8 +50,19 @@
             1.0
         ],
         "initial_orientation": 0,
-        "minimal_distance_size_ratio": 1.5,
-        "minimal_distance_comment": "minimal distance should be 3 times the ship size"
+        "minimal_distance_size_ratio": 10,
+        "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
+    },
+    "simulation": {
+        "time_duration": 10.0,
+        "time_step": 0.01,
+        "print_interval": 50,
+        "integration_method": "RK4",
+        "check_valid_interval": 50
+    },
+    "integration": {
+        "RK45_tolerance": 1e-3,
+        "RK45_max_iterations": 100
     },
     "file_management": {
         "output_folder": "DuosData"

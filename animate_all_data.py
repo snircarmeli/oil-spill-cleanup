@@ -14,12 +14,6 @@ def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
     ax.set_xlim(x_min - 5 * size, x_max + 5 * size)
     ax.set_ylim(y_min - 5 * size, y_max + 5 * size)
 
-    # ax.set_xlim(-20, 20)
-    # ax.set_ylim(-20, 20)
-
-    
-    # ax.set_xlim(-7.5, 7.5)  
-    # ax.set_ylim(-2.5, 7.5)
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
     ax.set_title("Duo Boats with Dynamic Rudder Animation")
@@ -49,7 +43,7 @@ def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
     def transform_vertices(position, angle, eta, rudder_l=0.4):
         angle = angle - pi / 2  # Rotate 90 degrees to align with the boat
         rotation_matrix = np.array([
-            [sin(angle ), cos(angle)],
+            [sin(angle), cos(angle)],
             [cos(angle), -sin(angle)]
         ])
 
@@ -132,21 +126,18 @@ def animate_all_data(duo_boats_data, time_vecs, size, rudder_L=0.4):
                     link_dots[i].set_data([], [])
 
         return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
-    # Set interval for real-time simulation based on integration method
-    simulation_params = json.load(open('params.json'))['simulation']
-    dt = simulation_params["time_step"]
-    if simulation_params["integration_method"] == "RK45":
-        # Calculate average time interval between each time step for all duos
-        interval = 1000 * np.mean([np.mean(np.diff(time_vecs[i])) for i in range(len(duo_boats_data))])  # Interval in milliseconds
-    else:
-        interval = 1000 * (time_vecs[0][1] - time_vecs[0][0]) # Interval in milliseconds
+
     time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
-    
-    # interval = 1e3
     def update_with_time(frame):
         artists = update(frame)
         time_text.set_text(f'Time: {time_vecs[0][frame]:.2f}s')
         return artists + [time_text]
-
-    ani = FuncAnimation(fig, update_with_time, frames=len(time_vecs[0]), init_func=init, blit=True, interval=interval)
+    interval = np.mean(np.diff(time_vecs[0])) * 1000  # Interval in milliseconds
+    # print interval 
+    print(f'Interval: {interval:.2f}ms')
+    ani = FuncAnimation(fig, update_with_time, frames=len(time_vecs[0]), init_func=init, interval=interval, blit=True)
     plt.show()
+
+
+
+

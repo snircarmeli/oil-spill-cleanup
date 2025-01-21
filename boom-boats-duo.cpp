@@ -1,5 +1,6 @@
 #include "boom-boats-duo.h"
 #include "boom-boat.h"
+// #include "integrator.h"
 #include <iostream>
 #include <Eigen/Dense>
 #include <fstream>
@@ -16,6 +17,8 @@ using Eigen::Matrix2f;
 using std::cout;
 using std::endl;
 using std::string;
+using std::pair;
+using std::tie;
 
 namespace fs = std::filesystem;
 
@@ -415,6 +418,10 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
         Vector3f b1_pos = Vector3f(center(0) - 0.5 * num_links * L * cos(orientation), center(1) - 0.5 * num_links * L * sin(orientation), orientation);
         Vector3f b2_pos = Vector3f(center(0) + 0.5 * num_links * L * cos(orientation), center(1) + 0.5 * num_links * L * sin(orientation), orientation);
 
+        // print both positions
+        // cout << "Boat 1 position: (" << b1_pos(0) << ", " << b1_pos(1) << ", " << b1_pos(2) << ")" << endl;
+        // cout << "Boat 2 position: (" << b2_pos(0) << ", " << b2_pos(1) << ", " << b2_pos(2) << ")" << endl;
+
         // Vector3f b1_stern = Vector3f(b1_pos(0) - b1.get_radius() * sin(b1_pos(2)), b1_pos(1) - b1.get_radius() * cos(b1_pos(2)), b1_pos(2));
         // Vector3f b2_stern = Vector3f(b2_pos(0) - b2.get_radius() * sin(b2_pos(2)), b2_pos(1) - b2.get_radius() * cos(b2_pos(2)), b2_pos(2));
 
@@ -529,7 +536,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     }
 
     // input the time
-    ss << t << " ";
+    ss << this->t << " ";
 
     // Write the collected string to the file
     file << ss.str() << std::endl;
@@ -554,6 +561,10 @@ json BoomBoatsDuo::get_simulation_params() const {
     return this->simulation_params;
 }
 
+float BoomBoatsDuo::get_time() const {
+    return this->t;
+}
+
 // Validation of states
 bool BoomBoatsDuo::is_valid_state() const {
     // Check if the boom doesn't intersect itself
@@ -563,21 +574,9 @@ bool BoomBoatsDuo::is_valid_state() const {
         return false;
     }
 
-
-    // float min_distance = params["generic_boat"]["shi"];
-    // Vector2f boat1_pos = boat1.get_pos().head(2);
-    // Vector2f boat2_pos = boat2.get_pos().head(2);
-    // float distance = (boat1_pos - boat2_pos).norm();
-    // if (distance < min_distance) {
-    //     cout << "Boats are too close" << endl;
-    //     cout.flush();
-    //     return false;
-    //     }
-
     // Check if the boats are close
     if (this->are_boats_close()) {
-        cout << "Boats intercept boom or themselves at time: " << this->t << " [s]" << endl;
-        cout.flush();
+        // Function prints the error message
         return false;
     }
     return true;
@@ -586,7 +585,6 @@ bool BoomBoatsDuo::is_valid_state() const {
 
 bool BoomBoatsDuo::are_boats_close() const {
     // Check if the boats are too close or intersect The boom
-
 
     float size = this->boat1.get_ship_size();
     float min_dist = this->boom_boats_duo_params["minimal_distance_size_ratio"];
@@ -598,6 +596,12 @@ bool BoomBoatsDuo::are_boats_close() const {
 
     Vector3f boat1_pos = this->boat1.get_pos();
     Vector3f boat2_pos = this->boat2.get_pos();
+
+    // print both boats positions
+    // cout << "Boat1 position: " << boat1_pos(0) << ", " << boat1_pos(1) << endl;
+    // cout.flush();
+    // cout << "Boat2 position: " << boat2_pos(0) << ", " << boat2_pos(1) << endl;
+    // cout.flush();
 
     MatrixXf boat = MatrixXf::Zero(5,2);
     boat << -size/2, 0,
@@ -621,6 +625,13 @@ bool BoomBoatsDuo::are_boats_close() const {
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 5; ++j) {
             if ((boat1_points.row(i) - boat2_points.row(j)).norm() < min_dist) {
+                cout << "Boats are too close at time: " << this->t << " [s]" << endl;
+                cout.flush();
+                // cout << "Minimal distance was: " << min_dist << endl;
+                // cout.flush();
+                // // print distance between the two points
+                // cout << "Distance between the two points: " << (boat1_points.row(i) - boat2_points.row(j)).norm() << endl;
+                // cout.flush();
                 return true;
             }
         }
@@ -706,17 +717,6 @@ MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
     Vector2f e2 = (P1 - boat2_pos).normalized();
     Vector2f F_damp2 = this->boom.get_c() * ((P1_dot - boat2_vel).dot(e2)) * e2;
     Vector2f boom_force2 = F_spring2 + F_damp2;
-    // print F_spring2 and F_damp2 if they are not Nan
-    // if (isnan(F_spring2.x()) || isnan(F_spring2.y()) || isnan(F_damp2.x()) || isnan(F_damp2.y())) {
-    //     // cout << "F_spring2 or F_damp2 is Nan" << endl;
-    //     // cout.flush();
-    // } else {
-    // cout << "F_spring2: " << F_spring2.x() << ", " << F_spring2.y() << endl;
-    // cout.flush();
-    // cout << "F_damp2: " << F_damp2.x() << ", " << F_damp2.y() << endl;
-    // cout.flush();
-    // }
-
 
     VectorXf boat2_state_der = this->boat2.state_der(VectorXf(state.row(1)),
      control2, boom_force2);
@@ -755,76 +755,68 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
 
     // Check validity of the control inputs
-    if (!this->boat1.is_valid_control(control1) && this->t > 0) {
-        cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
-        cout.flush();
-        std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
-    }
-    if (!this->boat2.is_valid_control(control2) && this->t > 0) {
-        cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
-        cout.flush();
-        std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
-    }
+    // if (!this->boat1.is_valid_control(control1) && this->t > 0) {
+    //     cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
+    //     cout.flush();
+    //     std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl;
+    //     std::cerr.flush();
+    // }
+    // if (!this->boat2.is_valid_control(control2) && this->t > 0) {
+    //     cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
+    //     cout.flush();
+    //     std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
+    //     std::cerr.flush();
+    // }
 
     this->boat1.set_control(control1);
     this->boat2.set_control(control2);
 
 
-    MatrixXf state_new = MatrixXf::Zero(state.rows(), state.cols());
+    MatrixXf state_new = MatrixXf::Zero(2 + this->boom.get_num_links(), 6);
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {
         state.row(i + 2) = this->boom.get_link_state(i).transpose();
     }
-    // float t = this->t;
-    // cout << "Reached here at time: " << this->t << " [s]" << endl;
-    // cout.flush();
-    if (integration_method == "RK4") {
+
+    if (integration_method == "Euler") {
+        MatrixXf state_der = this->state_der(control1, control2, state);
+
+        state_new = Euler_integration(state, state_der, dt);
+        this->t += dt;
+    } else if (integration_method == "RK4") {
         state_new = RK4_integration(control1, control2, state, dt, *this);
         this->t += dt;
-        }  else if (integration_method == "RK45") {
-            std::pair<MatrixXf, float> result = RK45_integration(control1, control2, state, dt, *this);
-            state_new = result.first;
-            this->t += result.second;
-        } else if (integration_method == "Euler") {
-        state_new = Euler_integration(state, this->state_der(control1, control2, state), dt);
-        this->t += dt;
+
+    } else if (integration_method == "RK45") {
+        pair<MatrixXf, float> result = RK45_integration(control1, control2, state, dt, *this, simulation_params);
+        state_new = result.first;
+        this->t += result.second;
     } else {
         throw std::runtime_error("Invalid integration method: " + integration_method);
     }
-
-    // Update the state using Runge-Kutta 4
-    // MatrixXf k1 = this->state_der(control1, control2, state);
-    // MatrixXf k2 = this->state_der(control1, control2, state + (dt / 2) * k1);
-    // MatrixXf k3 = this->state_der(control1, control2, state + (dt / 2) * k2);
-    // MatrixXf k4 = this->state_der(control1, control2, state + dt * k3);
-    // state_new = state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
-    
-    // // Update the state using forward Euler
-    // MatrixXf state_der = this->state_der(control1, control2, state);
-    // state_new = state + dt * state_der;
 
     // wrap theta for all states, third column
     for (int i = 0; i < state_new.rows(); i++) {
         state_new(i, 2) = wrap_theta(state_new(i, 2));
     }
 
+
     this->boat1.set_pos(state_new.row(0).head(3).transpose());
     this->boat1.set_vel(state_new.row(0).tail(3).transpose());
     this->boat2.set_pos(state_new.row(1).head(3).transpose());
     this->boat2.set_vel(state_new.row(1).tail(3).transpose());
+
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {
         this->boom.set_link_state(i, state_new.row(i + 2).transpose());
     }
 }
 
+// Integration methods
 
-
-// Helper functions 
 // Euler integration
-MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
- float dt) {
-    return state + dt * state_der;
+MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, float dt) {
+    return (state + dt * state_der);
 }
 
 // Runge-Kutta 4 integration
@@ -839,8 +831,9 @@ MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
 }
 
 // Runge-Kutta 4-5 integration
-std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vector2f& control2,
-                                            const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
+ const Vector2f& control2, const MatrixXf& state, float dt,
+  BoomBoatsDuo boom_boats_duo, json simulation_params) {
     // Define constants for RK45 coefficients
     // a not necessary since state derivative function is time independent
     // const float a[] = {0.0f, 0.25f, 0.375f, 12.0f / 13.0f, 1.0f, 0.5f};
@@ -856,9 +849,11 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vect
 
     float current_dt = dt;
     int cnt = 0;
-    MatrixXf def_state = RK4_integration(control1, control2, state, current_dt, boom_boats_duo);
+    // MatrixXf def_state = RK4_integration(control1, control2, state, current_dt, boom_boats_duo);
     MatrixXf state_5th = MatrixXf::Zero(state.rows(), state.cols());
-    while (cnt < boom_boats_duo.get_simulation_params()["RK45_max_iterations"]) {
+    int max_iterations = simulation_params["RK45_max_iterations"];
+    float tolerance = simulation_params["RK45_tolerance"];
+    while (cnt < max_iterations) {
         // Initialize RK stages (k1 to k6)
         MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
         MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + current_dt * b[1][0] * k1);
@@ -876,14 +871,12 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vect
         float TE = error.norm(); // Total error magnitude
 
         // Check if the error is within the tolerance
-        float tolerance = boom_boats_duo.get_simulation_params()["RK45_tolerance"];
         if (TE <= tolerance) {
             // Accept the step and return the fifth-order solution
             return std::make_pair(state_5th, current_dt);
         } else {
             // Reject the step and reduce the step size
             current_dt = 0.9f * current_dt * std::pow(tolerance / TE, 1.0f / 5.0f);
-
             // Ensure the step size is not too small
             if (current_dt < 1e-6f) {
             throw std::runtime_error("Step size too small");
@@ -893,21 +886,3 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1, const Vect
     }
     return std::make_pair(state_5th, current_dt);
 }
-
-// Already defined in generic-boat.cpp
-// float wrap_theta(float theta) {
-//     theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
-//     if (theta > PI) {
-//         theta -= 2 * PI; // Adjust if theta is in (PI, 2PI]
-//     } else if (theta < -PI) {
-//         theta += 2 * PI; // Adjust if theta is in [-2PI, -PI)
-//     }
-//     // cout << theta << endl;
-//     return theta;
-// }
-
-// int sign(float x) {
-//     if (x > 0) return 1;
-//     else if (x < 0) return -1;
-//     return 0;
-// }

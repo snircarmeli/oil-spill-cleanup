@@ -1,4 +1,5 @@
 #include "boom-boat.h"
+#include "integrator.h"
 #include <iostream>
 #include <Eigen/Dense>
 #include <fstream>
