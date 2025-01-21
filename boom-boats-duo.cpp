@@ -18,7 +18,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::pair;
-using std::tie;
+using std::make_pair;
 
 namespace fs = std::filesystem;
 
@@ -783,10 +783,21 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
 
         state_new = Euler_integration(state, state_der, dt);
         this->t += dt;
+    } else if (integration_method == "RK2") {
+        state_new = RK2_integration(control1, control2, state, dt, *this);
+        this->t += dt;
+    } else if (integration_method == "RK3") {
+        state_new = RK3_integration(control1, control2, state, dt, *this);
+        this->t += dt;
     } else if (integration_method == "RK4") {
         state_new = RK4_integration(control1, control2, state, dt, *this);
         this->t += dt;
-
+    } else if (integration_method == "RK5") {
+        state_new = RK5_integration(control1, control2, state, dt, *this);
+        this->t += dt;
+    } else if (integration_method == "RK6") {
+        state_new = RK6_integration(control1, control2, state, dt, *this);
+        this->t += dt;
     } else if (integration_method == "RK45") {
         pair<MatrixXf, float> result = RK45_integration(control1, control2, state, dt, *this, simulation_params);
         state_new = result.first;
@@ -819,18 +830,118 @@ MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, flo
     return (state + dt * state_der);
 }
 
-// Runge-Kutta 4 integration
-MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
- const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
-    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
-    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + (dt / 2) * k1);
-    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + (dt / 2) * k2);
-    MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + dt * k3);
+// Runge-Kutta methods
 
-    return state + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+// RK2 integration
+MatrixXf RK2_integration(const Vector2f& control1,
+ const Vector2f& control2, const MatrixXf& state, float dt,
+  BoomBoatsDuo boom_boats_duo) {
+    // Define constants for RK2 coefficients
+    const float a[] = {0.0f, 0.5f};
+    const float b[] = {0.0f, 1.0f};
+    // State derucation functions does not depend on time
+    // const float c[] = {0.5f, 0.5f};
+
+    // Initialize RK stages (k1 and k2)
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + dt * a[1] * k1);
+
+    // Compute the RK2 solution
+    MatrixXf state_new = state + dt * (b[0] * k1 + b[1] * k2);
+
+    return state_new;
 }
 
-// Runge-Kutta 4-5 integration
+// RK3 integration
+MatrixXf RK3_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    // Define constants for RK3 coefficients
+    const float a[] = {0.0f, 0.5f, 1.0f};
+    const float b[] = {1.0f / 6.0f, 2.0f / 3.0f, 1.0f / 6.0f};
+    // State derivation functions does not depend on time
+    // const float c[] = {1.0f / 6.0f, 2.0f / 3.0f, 1.0f / 6.0f};
+
+    // Initialize RK stages (k1, k2, and k3)
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + dt * a[1] * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + dt * (a[2] * k1 + a[3] * k2));
+
+    // Compute the RK3 solution
+    MatrixXf state_new = state + dt * (b[0] * k1 + b[1] * k2 + b[2] * k3);
+
+    return state_new;
+}
+
+// RK4 integration
+MatrixXf RK4_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    // Define constants for RK4 coefficients
+    const float a[] = {0.0f, 0.5f, 0.5f, 1.0f};
+    const float b[] = {1.0f / 6.0f, 1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 6.0f};
+    // State derivation functions does not depend on time
+    // const float c[] = {1.0f / 6.0f, 1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 6.0f};
+
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + dt * a[1] * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + dt * a[2] * k2);
+    MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + dt * a[3] * k3);
+
+    return state + dt * (b[0] * k1 + b[1] * k2 + b[2] * k3 + b[3] * k4);
+}
+
+// RK5 integration
+MatrixXf RK5_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    // Define constants for RK5 coefficients
+    const float a[] = {0.25f, 0.0f, 0.25f, 0.125f, 0.0f, 0.375f, 0.5f, 0.0f, -1.5f, 2.0f};
+    const float b[] = {7.0f / 90.0f, 0.0f, 16.0f / 45.0f, 2.0f / 15.0f, 1.0f / 10.0f};
+    // State derivation functions does not depend on time
+    // const float c[] = {};
+
+    // Initialize RK stages (k1 to k5)
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + dt * a[0] * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + dt * (a[1] * k1 + a[2] * k2));
+    MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + dt * (a[3] * k1 + a[4] * k2 + a[5] * k3));
+    MatrixXf k5 = boom_boats_duo.state_der(control1, control2, state + dt * (a[6] * k1 + a[7] * k2 + a[8] * k3 + a[9] * k4));
+
+    // Compute the RK5 solution
+    MatrixXf state_new = state + dt * (b[0] * k1 + b[1] * k2 + b[2] * k3 + b[3] * k4 + b[4] * k5);
+    
+    return state_new;
+}
+
+// RK6 integration
+MatrixXf RK6_integration(const Vector2f& control1, const Vector2f& control2,
+ const MatrixXf& state, float dt, BoomBoatsDuo boom_boats_duo) {
+    // Note: Apparently, there are many RK6 methods. This is one of the methods
+    // working with 6 stages and a fixed time step
+    // Define constants for RK6 coefficients
+    const float a[] = {0.210312f,
+        0.115470f, 0.293846f,
+        0.063382f, 0.0f, 0.551618f,
+        0.010161f, 0.0f, 0.234853f, 0.561986f, 
+        0.002773f, 0.0f, 0.0f, 0.289325f, 0.431902f};
+    const float b[] = {0.020151f, 0.0f, 0.237139f, 0.327040f, 0.265617f, 0.150053f};
+    
+    // State derivation functions does not depend on time
+    // const float c[] = {};
+
+    // Initialize RK stages (k1 to k6)
+    MatrixXf k1 = boom_boats_duo.state_der(control1, control2, state);
+    MatrixXf k2 = boom_boats_duo.state_der(control1, control2, state + dt * a[0] * k1);
+    MatrixXf k3 = boom_boats_duo.state_der(control1, control2, state + dt * (a[1] * k1 + a[2] * k2));
+    MatrixXf k4 = boom_boats_duo.state_der(control1, control2, state + dt * (a[3] * k1 + a[4] * k2 + a[5] * k3));
+    MatrixXf k5 = boom_boats_duo.state_der(control1, control2, state + dt * (a[6] * k1 + a[7] * k2 + a[8] * k3 + a[9] * k4));
+    MatrixXf k6 = boom_boats_duo.state_der(control1, control2, state + dt * (a[10] * k1 + a[11] * k2 + a[12] * k3 + a[13] * k4 + a[14] * k5));
+
+    // Compute the RK6 solution
+    MatrixXf state_new = state + dt * (b[0] * k1 + b[1] * k2 + b[2] * k3 + b[3] * k4 + b[4] * k5 + b[5] * k6);
+
+    return state_new;
+}
+
+// Runge-Kutta 4-5 integration - Adaptive time step
 std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
  const Vector2f& control2, const MatrixXf& state, float dt,
   BoomBoatsDuo boom_boats_duo, json simulation_params) {
@@ -873,7 +984,7 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
         // Check if the error is within the tolerance
         if (TE <= tolerance) {
             // Accept the step and return the fifth-order solution
-            return std::make_pair(state_5th, current_dt);
+            return make_pair(state_5th, current_dt);
         } else {
             // Reject the step and reduce the step size
             current_dt = 0.9f * current_dt * std::pow(tolerance / TE, 1.0f / 5.0f);
@@ -884,5 +995,5 @@ std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
         }
         cnt++;
     }
-    return std::make_pair(state_5th, current_dt);
+    return make_pair(state_5th, current_dt);
 }

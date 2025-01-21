@@ -50,14 +50,14 @@
             1.0
         ],
         "initial_orientation": 0,
-        "minimal_distance_size_ratio": 10,
+        "minimal_distance_size_ratio": 2,
         "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
     },
     "simulation": {
         "time_duration": 10.0,
         "time_step": 0.01,
         "print_interval": 50,
-        "integration_method": "RK4",
+        "integration_method": "RK2",
         "check_valid_interval": 50
     },
     "integration": {
