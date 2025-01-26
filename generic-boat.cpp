@@ -244,6 +244,7 @@ void GenericBoat::set_vel(Vector3f vel) {
 void GenericBoat::set_control(Vector2f control) {
     this->F = control[0];
     this->eta = control[1];
+    
 }
 
 bool GenericBoat::is_valid_control(Vector2f control) const {
@@ -267,14 +268,18 @@ bool GenericBoat::is_valid_control(Vector2f control) const {
     Lips_eta = Lips_eta * PI / 180.0;
 
     // Check Lipschitz continuity
-    if (abs(control(0) - this->get_control()(0)) > Lips_F ) {
-        cout << "Lipschitz continuity violated for force control." << endl;
-        cout.flush();
+    if (abs(control(0) - this->F) > Lips_F ) {
+        // cout << "Lipschitz continuity violated for force control." << endl;
+        // cout.flush();
+        // cout << "Force: " << control(0) << " " << this->get_control()(0) << endl;
+        // cout.flush();
         return false;
     }
-    if (abs(control(1) - this->get_control()(1)) > Lips_eta) {
-        cout << "Lipschitz continuity violated for force control." << endl;
-        cout.flush();
+    if (abs(control(1) - this->eta) > Lips_eta) {
+        // cout << "Lipschitz continuity violated for steering control." << endl;
+        // cout.flush();
+        // cout << "Steering: " << control(1) * 180 / PI << " " << this->get_control()(1) * 180 / PI << endl;
+        // cout.flush();
         return false;
     }
 
@@ -308,7 +313,7 @@ float wrap_theta(float theta) {
 
 int sign(float x) {
     if (x > 0) return 1;
-    else if (x < 0) return -1;
+    if (x < 0) return -1;
     return 0;
 }
 

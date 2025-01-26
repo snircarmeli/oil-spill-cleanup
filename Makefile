@@ -2,11 +2,11 @@
 CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3 -I/usr/include/json
 
 # Object files
-OBJS = main.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o
+OBJS = main_dubin_check.o dubin.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o dubin.o PID_controller.o # main.o
 RM = rm -rf
 
 # Executable name
-EXEC = main.exe
+EXEC = main_dubin_check.exe # main.exe
 
 # Default target
 all: $(EXEC)
@@ -18,6 +18,10 @@ $(EXEC): $(OBJS)
 # Compile individual .o files
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Ensure that boom-boats-duo.o knows it needs integrator.h
+# boom-boats-duo.o: boom-boats-duo.cpp integrator.h
+# 	$(CXX) $(CXXFLAGS) -c boom-boats-duo.cpp -o boom-boats-duo.o
 
 # Clean target to remove object files and executable
 clean:

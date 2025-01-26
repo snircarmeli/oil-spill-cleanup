@@ -17,9 +17,7 @@ using std::endl;
 using std::make_pair;
 
 // Euler integration
-MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, float dt) {
-    return (state + dt * state_der);
-}
+MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, float dt);
 
 // Runge-Kutta methods
 

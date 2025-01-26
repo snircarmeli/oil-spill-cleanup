@@ -112,6 +112,11 @@ public:
      MatrixXf state) const;
     void propagate(float dt, const Vector2f &control1,
      const Vector2f &control2, std::string integration_method);
+
+    // Getters
+    BoomBoat get_boat1() const;
+    BoomBoat get_boat2() const;
+    Boom get_boom() const;
 };
 
 // Helper functions
@@ -121,30 +126,30 @@ MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
 
 // Runge-Kutta methods
 
-// Runge-Kutta 2nd order integration
-MatrixXf RK2_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// // Runge-Kutta 2nd order integration
+// MatrixXf RK2_integration(const Vector2f &control1, const Vector2f &control2, 
+//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
-// Runge-Kutta 3rd order integration
-MatrixXf RK3_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// // Runge-Kutta 3rd order integration
+// MatrixXf RK3_integration(const Vector2f &control1, const Vector2f &control2, 
+//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
-// Runge-Kutta 4th order integration
-MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// // Runge-Kutta 4th order integration
+// MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2, 
+//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
-// Runge-Kutta 5th order integration
-MatrixXf RK5_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// // Runge-Kutta 5th order integration
+// MatrixXf RK5_integration(const Vector2f &control1, const Vector2f &control2, 
+//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
-// Runge-Kutta 6th order integration
-MatrixXf RK6_integration(const Vector2f &control1, const Vector2f &control2, 
- const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// // Runge-Kutta 6th order integration
+// MatrixXf RK6_integration(const Vector2f &control1, const Vector2f &control2, 
+//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
 
-// Runge-Kutta 4-5 integration. Adaptive time step
-std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
- const Vector2f& control2, const MatrixXf& state, float dt,
-  BoomBoatsDuo boom_boats_duo, json simulation_params);
+// // Runge-Kutta 4-5 integration. Adaptive time step
+// std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
+//  const Vector2f& control2, const MatrixXf& state, float dt,
+//   BoomBoatsDuo boom_boats_duo, json simulation_params);
   
 // These functions are already defined in generic-boat.h 
 // float wrap_theta(float theta);

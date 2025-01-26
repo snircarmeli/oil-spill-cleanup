@@ -70,6 +70,7 @@ int main(int argc, char* argv[]) {
 
     json params;
     file >> params;
+    file.close();
 
     json generic_boat_params = params["generic_boat"];
     json boom_params = params["boom"];
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
     json simulation_params = params["simulation"];
     json file_management_params = params["file_management"];
 
-    //Simulation parameters
+    // Simulation parameters
     float T = simulation_params["time_duration"];
     float dt = simulation_params["time_step"];
     // Boom parameters
@@ -93,11 +94,12 @@ int main(int argc, char* argv[]) {
 
     BoomBoat *boat = new BoomBoat();
     // cout << "Managed to create boat" << endl;
-    float orientation = 0.0;
+    float orientation = duo_params["initial_orientation"];
+    Vector2f center = Vector2f(duo_params["initial_center"][0], duo_params["initial_center"][1]);
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
-     mu_ct, mu_r, I, m, k, c, Vector2f(1.0, 1.0), orientation);
+     mu_ct, mu_r, I, m, k, c, center, orientation);
     // duo->print_status();
-    int num_duos = 1;
+    // int num_duos = 1;
 
     // BoomBoatsDuo** duo_arr = new BoomBoatsDuo*[num_duos];
     // duo_arr[0] = duo;
@@ -141,8 +143,7 @@ int main(int argc, char* argv[]) {
                     << std::fixed << std::setprecision(2) 
                     << std::setw(6) << duo->get_time() << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
-            cout.flush(); // Force flush the buffer
-            
+            cout.flush(); // Force flush the buffer  
         }
 
         Vector2f control1_vec = control1.row(0); // zero just for testing

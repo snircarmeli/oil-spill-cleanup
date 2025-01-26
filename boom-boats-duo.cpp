@@ -756,18 +756,18 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     state.row(1).tail(3) = this->boat2.get_vel().transpose();
 
     // Check validity of the control inputs
-    // if (!this->boat1.is_valid_control(control1) && this->t > 0) {
-    //     cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
-    //     cout.flush();
-    //     std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl;
-    //     std::cerr.flush();
-    // }
-    // if (!this->boat2.is_valid_control(control2) && this->t > 0) {
-    //     cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
-    //     cout.flush();
-    //     std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
-    //     std::cerr.flush();
-    // }
+    if (!this->boat1.is_valid_control(control1) && this->t > 0) {
+        // cout<< "Invalid control input for boat 1 at time: " << this->t << " [s]" << endl;
+        // cout.flush();
+        // std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl;
+        // std::cerr.flush();
+    }
+    if (!this->boat2.is_valid_control(control2) && this->t > 0) {
+        // cout<< "Invalid control input for boat 2 at time: " << this->t << " [s]" << endl;
+        // cout.flush();
+        // std::cerr << "Check size of control inputs or check whether the control inputs are Lipschitz continuous" << endl; 
+        // std::cerr.flush();
+    }
 
     this->boat1.set_control(control1);
     this->boat2.set_control(control2);
@@ -822,4 +822,17 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     for (int i = 0; i < this->boom.get_num_links(); i++) {
         this->boom.set_link_state(i, state_new.row(i + 2).transpose());
     }
+}
+
+// Getters
+BoomBoat BoomBoatsDuo::get_boat1() const { // return copy of boat1
+    return this->boat1;
+}
+
+BoomBoat BoomBoatsDuo::get_boat2() const { // return copy of boat2
+    return this->boat2;
+}
+
+Boom BoomBoatsDuo::get_boom() const { // return copy of boom
+    return this->boom;
 }
