@@ -92,7 +92,5 @@ class GenericBoat {
         void load_params(std::string filename);
     
 };
-// Helper functions
-float wrap_theta(float theta);
-int sign(float x);
+
 #endif

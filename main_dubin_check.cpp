@@ -1,6 +1,7 @@
 #include "PID_controller.h"
 #include "boom-boats-duo.h"
 #include "dubin.h"
+#include "helper_funcs.h"
 
 #include <vector>
 #include <iostream>

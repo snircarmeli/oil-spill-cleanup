@@ -51,14 +51,14 @@
             1.0
         ],
         "initial_orientation": 0,
-        "minimal_distance_size_ratio": 2,
+        "minimal_distance_size_ratio": 1,
         "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
     },
     "simulation": {
         "time_duration": 15.0,
         "time_step": 0.01,
         "print_interval": 50,
-        "integration_method": "RK2",
+        "integration_method": "RK3",
         "check_valid_interval": 50
     },
     "integration": {
@@ -78,8 +78,8 @@
         ],
         "final_position": [
             60.0,
-            0.0,
-            0.0
+            10.0,
+            1.57079632679
         ],
         "sample_step_size": 0.02,
         "dist_from_center_ratio": 0.7
@@ -87,15 +87,15 @@
     "PID": {
         "Kp": [
             700,
-            0.01
+            0.015
         ],
         "Ki": [
-            120.0,
-            0.0003
+            140.0,
+            0.0
         ],
         "Kd": [
-            2.0,
-            0.3
+            0.0,
+            0.45
         ],
         "output_F_max": 100000.0,
         "output_eta_max": 1.57079632679,

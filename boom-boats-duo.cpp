@@ -1,6 +1,7 @@
 #include "boom-boats-duo.h"
 #include "boom-boat.h"
 #include "integrator.h"
+#include "helper_funcs.h"
 // #include "integrator.h"
 #include <iostream>
 #include <Eigen/Dense>
@@ -23,7 +24,7 @@ using std::make_pair;
 
 namespace fs = std::filesystem;
 
-const float PI = 3.141592653589793;
+// const float PI = 3.141592653589793;
 
 float K_deault = 10000000000000;
 float C_default = 1000000;

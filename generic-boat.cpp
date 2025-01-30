@@ -1,6 +1,7 @@
 #include "generic-boat.h"
 #include "boom-boat.h"
 #include "container-boat.h"
+#include "helper_funcs.h"
 #include <cmath>
 #include <iostream>
 #include <cstdio>
@@ -21,7 +22,7 @@ using Eigen::Vector2f;
 using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
 
 
-const double PI = 3.141592653589793;
+// const double PI = 3.141592653589793;
 
 // Constructors
 // radius - 2 mass - 600 inertia - 50 mu_l - 1 mu_ct - 100 mu_r - 1 F_max - 100 eta_max - pi/2
@@ -300,22 +301,22 @@ void GenericBoat::load_params(std::string filename) {
     this->generic_boat_params = this->generic_boat_params["generic_boat"];
 }
 
-float wrap_theta(float theta) {
-    theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
-    if (theta > PI) {
-        theta -= 2 * PI; // Adjust if theta is in (PI, 2PI]
-    } else if (theta < -PI) {
-        theta += 2 * PI; // Adjust if theta is in [-2PI, -PI)
-    }
-    // cout << theta << endl;
-    return theta;
-}
+// float wrap_theta(float theta) {
+//     theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
+//     if (theta > PI) {
+//         theta -= 2 * PI; // Adjust if theta is in (PI, 2PI]
+//     } else if (theta < -PI) {
+//         theta += 2 * PI; // Adjust if theta is in [-2PI, -PI)
+//     }
+//     // cout << theta << endl;
+//     return theta;
+// }
 
-int sign(float x) {
-    if (x > 0) return 1;
-    if (x < 0) return -1;
-    return 0;
-}
+// int sign(float x) {
+//     if (x > 0) return 1;
+//     if (x < 0) return -1;
+//     return 0;
+// }
 
 
 

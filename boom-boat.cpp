@@ -1,5 +1,6 @@
 #include "boom-boat.h"
 #include "integrator.h"
+#include "helper_funcs.h"
 #include <iostream>
 #include <Eigen/Dense>
 #include <fstream>
@@ -18,7 +19,7 @@ using Eigen::VectorXf;
 // const float DEFAULT_INITIAL_FUEL = DEFAULT_CAPACITY;
 
 
-const float PI = 3.141592653589793;
+// const float PI = 3.141592653589793;
 
 // Default constructor
 BoomBoat::BoomBoat() : GenericBoat() {

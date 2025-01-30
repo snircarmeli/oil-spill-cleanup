@@ -2,7 +2,7 @@
 CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/eigen3 -I/usr/include/json
 
 # Object files
-OBJS = main_dubin_check.o dubin.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o dubin.o PID_controller.o # main.o
+OBJS = main_dubin_check.o dubin.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o dubin.o PID_controller.o helper_funcs.o # main.o
 RM = rm -rf
 
 # Executable name
