@@ -67,7 +67,9 @@
     },
     "file_management": {
         "output_folder": "DuosData",
-        "dubin_folder": "DubinPath"
+        "dubin_folder": "DubinPath",
+        "spills_folder": "spills",
+        "spills_convex_folder": "spills_convexed"
     },
     "dubin": {
         "min_turning_radius": 5.0,
@@ -101,5 +103,8 @@
         "output_eta_max": 1.57079632679,
         "jump_index": 1,
         "print_PID": false
+    },
+    "oil_spill": {
+        "attack_distance": 5.0
     }
 }

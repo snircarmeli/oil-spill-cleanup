@@ -2,6 +2,7 @@
 #define BOOM_BOATS_DUO_H
 
 #include "boom-boat.h"
+#include "helper_funcs.h"
 #include <Eigen/Dense>
 
 // For JSON parameters parsing
@@ -68,8 +69,6 @@ public:
     MatrixXf state_der(const MatrixXf &state, const Vector2f Boom_force1,
      const Vector2f Boom_force2) const;
 
-    // // Propagation function
-    // void propagate();
 };
 
 class BoomBoatsDuo {
@@ -119,10 +118,6 @@ public:
     Boom get_boom() const;
 };
 
-// Helper functions
-// Euler integration
-MatrixXf Euler_integration(const MatrixXf &state, const MatrixXf &state_der,
- float dt);
 
 // Runge-Kutta methods
 

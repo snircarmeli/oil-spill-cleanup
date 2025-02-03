@@ -5,3 +5,4 @@ using Eigen::MatrixXf;
 MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, float dt) {
     return (state + dt * state_der);
 }
+

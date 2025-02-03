@@ -2,6 +2,7 @@
 #include "boom-boats-duo.h"
 #include "dubin.h"
 #include "helper_funcs.h"
+#include "oil-spill.h"
 
 #include <vector>
 #include <iostream>
@@ -115,6 +116,62 @@ int main(int argc, char* argv[]) {
     float mu_ct = boom_params["drag_coefficients"]["cross_track"];
     float mu_r = boom_params["drag_coefficients"]["rotational"];
 
+    // Oil spill parameters
+    float attack_dist = params["oil_spill"]["attack_distance"];
+
+    // Set an oil spill - read from spills folder
+    string spill_folder = file_management_params["spills_folder"];
+    // Print convex hull to file
+    string convex_hull_folder = file_management_params["spills_convex_folder"];
+
+    // Get the file "oilspill_001.txt" from the spills folder
+    string filename_spill = spill_folder + "/oilspill_001.txt";
+    OilSpill oil_spill(filename_spill);
+    if (!oil_spill.is_valid_sequence()) {
+        std::cerr << "Invalid sequence of points in file: " << filename_spill << std::endl;
+        return 1;
+    }
+    // Get convex hull of the oil spill and print it to file
+    oil_spill.calculate_convex_hull();
+    float convex_hull_radius = oil_spill.get_convex_hull_radius();
+    Vector2f convex_hull_centroid = oil_spill.get_convex_hull_centroid();
+    // Get the file name without the ".txt" extension, adjust it
+    string convex_file_name = "oilspill_001_convex.txt";
+    oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
+
+    // // Iterate over the files in the spills folder
+    // for (const auto &entry : fs::directory_iterator(spill_folder)) {
+    //     // Check if the file is a regular file
+    //     if (entry.is_regular_file()) {
+    //         string filename = entry.path().string();
+    //         try {
+    //             OilSpill oil_spill(filename);
+    //             if (!oil_spill.is_valid_sequence()) {
+    //                 cout << "Invalid sequence of points in file: " << filename << endl;
+    //                 cout << endl;
+    //                 cout.flush();
+    //             }
+    //             else {
+    //                 // Get convex hull of the oil spill and print it to file
+    //                 oil_spill.calculate_convex_hull();
+    //                 // Get the file name without the ".txt" extension, adjust it
+    //                 string convex_file_name = entry.path().stem().string() + "_convex";
+    //                 oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
+    //             }
+    //         } catch (const std::exception &e) {
+    //             cout << "Error processing file: " << filename << ". Error: " << e.what() << endl;
+    //             cout << endl;
+    //             cout.flush();
+    //             // Delete the file
+    //             if (!fs::remove(filename)) {
+    //                 cout << "Failed to delete file: " << filename << endl;
+    //                 cout << endl;
+    //                 cout.flush();
+    //             }
+    //         }
+    //     }
+    // }
+
     // Boundry conditions
     float qi[3];
     qi[0] = dubin_params["initial_position"][0];
@@ -122,9 +179,15 @@ int main(int argc, char* argv[]) {
     qi[2] = dubin_params["initial_position"][2];
 
     float qf[3];
-    qf[0] = dubin_params["final_position"][0];
-    qf[1] = dubin_params["final_position"][1];
-    qf[2] = dubin_params["final_position"][2];
+    // Get spill angle of attack
+    float attack_angle = oil_spill.angle_of_attack().first;
+    qf[0] = convex_hull_centroid[0] - (convex_hull_radius + attack_dist) * cos(attack_angle);
+    qf[1] = convex_hull_centroid[1] - (convex_hull_radius + attack_dist) * sin(attack_angle);
+    qf[2] = attack_angle;
+    
+    // qf[0] = dubin_params["final_position"][0];
+    // qf[1] = dubin_params["final_position"][1];
+    // qf[2] = dubin_params["final_position"][2];
 
     // Create duo
     BoomBoat *boat = new BoomBoat();
@@ -194,6 +257,10 @@ int main(int argc, char* argv[]) {
     std::string folder_name = "DubinPath";
     std::string file_name = "dubin_path";
     save_to_file(file_name, folder_name, path_points, path_R, path_L);
+
+    
+
+
 
     // Start tracking problem
     int numSteps = static_cast<int>(T / dt) + 1;

@@ -7,6 +7,8 @@ import subprocess
 import numpy as np
 from matplotlib.animation import FuncAnimation
 
+################################################################################
+
 # Clear the console in a cross-platform way
 import platform
 def clear_console():
@@ -34,19 +36,21 @@ if out_code != 0:
     print(f"Error in the code. Return code: {out_code}")
     exit()
 
+params = json.load(open('params.json'))
 
-# Open data from file "DubinData/dubin_path.txt"
-foldername_dubin = json.load(open('params.json'))['file_management']['dubin_folder']
+################################################################################
+
+# Extract dubin path from the file
+foldername_dubin = params['file_management']['dubin_folder']
 filename_dubin = "dubin_path.txt"
 filename_dubin_R = "dubin_path_R.txt"
 filename_dubin_L = "dubin_path_L.txt"
 
 folder_exists = os.path.exists(foldername_dubin)
-if folder_exists:
-    # print(f"Data is in the folder {foldername}\n")
-    pass
-else:
+if not folder_exists:
     print(f"Dubin folder does not exist")
+    exit()
+    
 # Check if all files exist
 file_exists = os.path.exists(os.path.join(foldername_dubin, filename_dubin))
 file_exists_dubin_R = os.path.exists(os.path.join(foldername_dubin, filename_dubin_R))
@@ -62,15 +66,29 @@ if not file_exists_dubin_L:
     print(f"{filename_dubin_L} file does not exist")
     exit()
 
-# Open data from the boats file
-foldername_boats = json.load(open('params.json'))['file_management']['output_folder']
+# Extract boats data from the file
+foldername_boats = params['file_management']['output_folder']
 filename = "Duo0.txt"
 folder_exists = os.path.exists(foldername_boats)
-if folder_exists:
-    # print(f"Data is in the folder {foldername}\n")
-    pass
-else:
+if not folder_exists:
     print(f"Boats folder does not exist")
+    exit()
+
+# Extract spill data and convex hull data from the files
+foldername_spills = params['file_management']['spills_folder']
+foldername_spills_convex = params['file_management']['spills_convex_folder']
+
+folder_exists = os.path.exists(foldername_spills)
+if not folder_exists:
+    print(f"Spills folder does not exist")
+    exit()
+
+folder_exists = os.path.exists(foldername_spills_convex)
+if not folder_exists:
+    print(f"Spills convex folder does not exist")
+    exit()
+
+################################################################################
 
 # Load the data from the dubin files
 dubin_path = []
@@ -98,6 +116,7 @@ with open(os.path.join(foldername_dubin, filename_dubin_L), 'r') as file:
         # If line is empty, 
         dubin_path_L.append([float(x) for x in line.split()])
 
+################################################################################
 # Load the data from the boats file
 duo_boats_data = []
 with open(os.path.join(foldername_boats, filename), 'r') as file:
@@ -146,9 +165,65 @@ with open(os.path.join(foldername_boats, filename), 'r') as file:
 
         duo_boats_data.append(duo_data)
 
+################################################################################
 
+# Load the data from the spills file
+spills_data = []
+# Iterate over all spill files
+for spill_file in os.listdir(foldername_spills):
+    with open(os.path.join(foldername_spills, spill_file), 'r') as file:
+        # Variables to hold the data for each spill for a single time step
+        spill_data = {
+            'mass': 0,
+            'num_points': 0,
+            'spill': [],
+            'spill_lines': []
+        }
+        # mass of spill
+        values = list(map(float, file.readline().split()))
+        spill_data['mass'] = values[0]
+        # num of points
+        values = list(map(float, file.readline().split()))
+        spill_data['num_points'] = int(values[0])
+        # points
+        for k in range(spill_data['num_points']):
+            values = list(map(float, file.readline().split()))
+            spill_data['spill'].append([values[0], values[1]])
+        # Add lines between every two points
+        for k in range(spill_data['num_points']):
+            spill_data['spill_lines'].append([spill_data['spill'][k], spill_data['spill'][(k + 1) % spill_data['num_points']]])
+        spills_data.append(spill_data)
 
-# find minimal distance between points
+# Load the data from the spills convex file
+spills_convex_data = []
+# Iterate over all spill convex files
+for spill_convex_file in os.listdir(foldername_spills_convex):
+    with open(os.path.join(foldername_spills_convex, spill_convex_file), 'r') as file:
+        # Variables to hold the data for each spill for a single time step
+        spill_convex_data = {
+            'mass': 0,
+            'num_points': 0,
+            'spill_convex': [],
+            'spill_convex_lines': []
+        }
+        # mass of spill
+        values = list(map(float, file.readline().split()))
+        spill_convex_data['mass'] = values[0]
+        # num of points
+        values = list(map(float, file.readline().split()))
+        spill_convex_data['num_points'] = int(values[0])
+        # points
+        for k in range(spill_convex_data['num_points']):
+            values = list(map(float, file.readline().split()))
+            spill_convex_data['spill_convex'].append([values[0], values[1]])
+        # Add lines between every two points
+        for k in range(spill_convex_data['num_points']):
+            spill_convex_data['spill_convex_lines'].append([spill_convex_data['spill_convex'][k], spill_convex_data['spill_convex'][(k + 1) % spill_convex_data['num_points']]])
+        spills_convex_data.append(spill_convex_data)
+
+################################################################################
+
+# find minimal distance between points - for the arrows
 if len(dubin_path) > 1:
     min_dist = ((dubin_path[0][0] - dubin_path[1][0])**2 + (dubin_path[0][1] - dubin_path[1][1])**2)**0.5
     for i in range(len(dubin_path)-2):
@@ -161,18 +236,21 @@ arrow_length = min_dist / 2
 
 
 
-
 ################################################################################
-# Plot the points
+
+# Plot all the data
+fig, ax = plt.subplots()
+ax.set_aspect('equal', 'box')
+
+########################################
+
 # Plot all 3 dubin paths, and update the plot with the boats data every time step
 
 # print the points on figure, with small arrows using the third number (orientation)
 marker_size = 1.5
-fig, ax = plt.subplots()
-ax.set_aspect('equal', 'box')
 for i in range(len(dubin_path) - 1):
     # Print middle path
-    ax.plot(dubin_path[i][0], dubin_path[i][1], 'ro', markersize=marker_size)
+    ax.plot(dubin_path[i][0], dubin_path[i][1], 'go', markersize=marker_size)
     ax.arrow(dubin_path[i][0], dubin_path[i][1],
      arrow_length * cos(dubin_path[i][2]), arrow_length * sin(dubin_path[i][2]),
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
@@ -184,11 +262,12 @@ for i in range(len(dubin_path) - 1):
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
     
     # Print left path
-    ax.plot(dubin_path_L[i][0], dubin_path_L[i][1], 'go', markersize=marker_size)
+    ax.plot(dubin_path_L[i][0], dubin_path_L[i][1], 'ro', markersize=marker_size)
     ax.arrow(dubin_path_L[i][0], dubin_path_L[i][1],
      arrow_length * cos(dubin_path_L[i][2]), arrow_length * sin(dubin_path_L[i][2]),
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
 
+########################################
 
 # Plot the boats
 
@@ -210,11 +289,31 @@ link_lines.append(links)
 dots, = ax.plot([], [], 'ko', markersize=1.5)  # Small black dots
 link_dots.append(dots)  
 
+########################################
+
+# Plot the spills
+for spill in spills_data:
+    spill_points = np.array(spill['spill'])
+    ax.plot(spill_points[:, 0], spill_points[:, 1], 'r.')
+    for spill_line in spill['spill_lines']:
+        ax.plot([spill_line[0][0], spill_line[1][0]], [spill_line[0][1], spill_line[1][1]], 'r--')
+
+
+
+for spill_convex in spills_convex_data:
+    spill_points = np.array(spill_convex['spill_convex'])
+    ax.plot(spill_points[:, 0], spill_points[:, 1], 'c--')
+    for spill_line in spill_convex['spill_convex_lines']:
+        ax.plot([spill_line[0][0], spill_line[1][0]], [spill_line[0][1], spill_line[1][1]], 'c--')
+
+
+########################################
+
 # Set the limits of the plot
 ax.set_xlim(-10, 70)
 ax.set_ylim(-30, 30)
 
-size = json.load(open('params.json'))['generic_boat']['ship_size']
+size = params['generic_boat']['ship_size']
 def transform_vertices(position, angle, eta, rudder_L=0.4):
     angle = angle - pi / 2  # Rotate 90 degrees to align with the boat
     rotation_matrix = np.array([
@@ -250,8 +349,10 @@ def init():
     return [line for pair in boat_lines for line in pair] + [link for links in link_lines for link in links] + link_dots
 
 
-L = json.load(open('params.json'))['boom']['link_length']
-rudder_L = json.load(open('params.json'))['generic_boat']['rudder_L']
+L = params['boom']['link_length']
+rudder_L = params['generic_boat']['rudder_L']
+
+################################################################################
 
 def update(frame):
     for i, (line_boat1, line_boat2) in enumerate(boat_lines):
