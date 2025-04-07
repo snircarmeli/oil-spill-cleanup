@@ -1,6 +1,5 @@
 #include "generic-boat.h"
 #include "boom-boat.h"
-#include "container-boat.h"
 #include "helper_funcs.h"
 #include <cmath>
 #include <iostream>
@@ -17,9 +16,9 @@ using std::sin;
 using std::cos;
 using std::abs;
 
-using Eigen::Vector3f;
-using Eigen::Vector2f;
-using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
+// using Eigen::Vector3d;
+// using Eigen::Vector2d;
+// using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
 
 
 // const double PI = 3.141592653589793;
@@ -32,20 +31,20 @@ GenericBoat::GenericBoat() {
 
     json generic_boat_params = this->generic_boat_params;
 
-    this->radius = generic_boat_params["radius"].get<float>();
-    this->mass = generic_boat_params["mass"].get<float>();
-    this->inertia = generic_boat_params["inertia"].get<float>();
-    this->mu_l = generic_boat_params["drag_coefficients"]["linear"].get<float>();
-    this->mu_ct = generic_boat_params["drag_coefficients"]["cross_track"].get<float>();
-    this->mu_r = generic_boat_params["drag_coefficients"]["rotational"].get<float>();
-    this->F_max = generic_boat_params["max_controls"]["force"].get<float>();
-    this->eta_max = generic_boat_params["max_controls"]["steering_angle"].get<float>();
-    this->pos << generic_boat_params["initial_position"][0].get<float>(),
-     generic_boat_params["initial_position"][1].get<float>(),
-     generic_boat_params["initial_position"][2].get<float>();
-    this->vel << generic_boat_params["initial_velocity"][0].get<float>(),
-     generic_boat_params["initial_velocity"][1].get<float>(), 
-     generic_boat_params["initial_velocity"][2].get<float>();
+    this->radius = generic_boat_params["radius"].get<double>();
+    this->mass = generic_boat_params["mass"].get<double>();
+    this->inertia = generic_boat_params["inertia"].get<double>();
+    this->mu_l = generic_boat_params["drag_coefficients"]["linear"].get<double>();
+    this->mu_ct = generic_boat_params["drag_coefficients"]["cross_track"].get<double>();
+    this->mu_r = generic_boat_params["drag_coefficients"]["rotational"].get<double>();
+    this->F_max = generic_boat_params["max_controls"]["force"].get<double>();
+    this->eta_max = generic_boat_params["max_controls"]["steering_angle"].get<double>();
+    this->pos << generic_boat_params["initial_position"][0].get<double>(),
+     generic_boat_params["initial_position"][1].get<double>(),
+     generic_boat_params["initial_position"][2].get<double>();
+    this->vel << generic_boat_params["initial_velocity"][0].get<double>(),
+     generic_boat_params["initial_velocity"][1].get<double>(), 
+     generic_boat_params["initial_velocity"][2].get<double>();
 
     this->F = 0;
     this->eta = 0;
@@ -69,9 +68,9 @@ GenericBoat::GenericBoat(const GenericBoat &gen_boat) {
 
     this->load_params("params.json");
 }
-GenericBoat::GenericBoat(float radius, float mass, float inertia, float mu_l, 
-        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, float F_max,
-         float eta_max) : 
+GenericBoat::GenericBoat(double radius, double mass, double inertia, double mu_l, 
+        double mu_ct, double mu_r, Vector3d pos, Vector3d vel, double F_max,
+         double eta_max) : 
         radius(radius), mass(mass), 
          inertia(inertia), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), F_max(F_max), 
          eta_max(eta_max) {
@@ -110,42 +109,42 @@ GenericBoat& GenericBoat::operator=(const GenericBoat &gen_boat) {
 }
 
 //EOM
- Matrix2x3f GenericBoat::state_der(Matrix2x3f state, Vector2f control) {
-    float F = control[0]; // F is 10
-    float eta = control[1]; // 
+ Matrix2x3d GenericBoat::state_der(Matrix2x3d state, Vector2d control) {
+    double F = control[0]; // F is 10
+    double eta = control[1]; // 
     // State: x, y, theta, x_dot, y_dot, omega
-    float theta = wrap_theta(state(0, 2));
+    double theta = wrap_theta(state(0, 2));
   
-    float x_dot = state(1, 0);
-    float y_dot = state(1, 1);
-    float omega = state(1, 2);
+    double x_dot = state(1, 0);
+    double y_dot = state(1, 1);
+    double omega = state(1, 2);
 
-    float r = this->radius;
-    float mass = this->mass;
-    float I = this->inertia;
-    float mu_r = this->mu_r;
-    float mu_l = this->mu_l;
-    float mu_ct = this->mu_ct;
+    double r = this->radius;
+    double mass = this->mass;
+    double I = this->inertia;
+    double mu_r = this->mu_r;
+    double mu_l = this->mu_l;
+    double mu_ct = this->mu_ct;
     
     // Rotation to local frame
-    float u = x_dot * sin(theta) + y_dot * cos(theta);
-    float v = x_dot * cos(theta) - y_dot * sin(theta);
+    double u = x_dot * sin(theta) + y_dot * cos(theta);
+    double v = x_dot * cos(theta) - y_dot * sin(theta);
     // EOM
-    float u_dot = (F * cos(eta) - mu_l * u * u * sign(u)) / mass;
-    float v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v)) / mass;
-    float omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega)) / I;
+    double u_dot = (F * cos(eta) - mu_l * u * u * sign(u)) / mass;
+    double v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v)) / mass;
+    double omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega)) / I;
     // Rotation backward to global frame
-    float x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);
-    float y_dotdot = u_dot * cos(theta) - v_dot * sin(theta);
+    double x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);
+    double y_dotdot = u_dot * cos(theta) - v_dot * sin(theta);
 
-    Matrix2x3f state_dot;
+    Matrix2x3d state_dot;
     state_dot << x_dot, y_dot, omega, x_dotdot, y_dotdot, omega_dot;
     return state_dot;
 }
 
-void GenericBoat::propogate(Vector2f control, float dt) {
-    float F = control[0];
-    float eta = control[1];
+void GenericBoat::propogate(Vector2d control, double dt) {
+    double F = control[0];
+    double eta = control[1];
     // cout << eta << endl;
     if (abs(F) > this->F_max || abs(eta) > this->eta_max) {
         throw std::runtime_error("Force or steering angle exceeds maximum allowed values");
@@ -153,33 +152,33 @@ void GenericBoat::propogate(Vector2f control, float dt) {
 
 
     // Runge-Kutta 4
-    Matrix2x3f y_n;
+    Matrix2x3d y_n;
     y_n << this->pos[0], this->pos[1], wrap_theta(this->pos[2]), 
         this->vel[0], this->vel[1], this->vel[2];
 
-    Matrix2x3f k1 = this->state_der(y_n, control);
+    Matrix2x3d k1 = this->state_der(y_n, control);
 
     // Vectorized operations to update y_tmp
-    Matrix2x3f y_tmp = y_n + (dt / 2.0f) * k1;
+    Matrix2x3d y_tmp = y_n + (dt / 2.0f) * k1;
 
-    Matrix2x3f k2 = this->state_der(y_tmp, control);
+    Matrix2x3d k2 = this->state_der(y_tmp, control);
     y_tmp = y_n + (dt / 2.0f) * k2;
 
-    Matrix2x3f k3 = this->state_der(y_tmp, control);
+    Matrix2x3d k3 = this->state_der(y_tmp, control);
     y_tmp = y_n + dt * k3;
 
-    Matrix2x3f k4 = this->state_der(y_tmp, control);
+    Matrix2x3d k4 = this->state_der(y_tmp, control);
 
     // Compute y_(n+1) using vectorized operations
-    Matrix2x3f y_next = y_n + (dt / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
+    Matrix2x3d y_next = y_n + (dt / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
     // Runge-Kutta 4
     
     // // Forward euler
-    // Matrix2x3f y_n;
+    // Matrix2x3d y_n;
     // y_n << this->pos[0], this->pos[1], wrap_theta(this->pos[2]),
     //        this->vel[0], this->vel[1], this->vel[2];
-    // Matrix2x3f state_dot = this->state_der(y_n, control);
-    // Matrix2x3f y_next = y_n + dt * state_dot;
+    // Matrix2x3d state_dot = this->state_der(y_n, control);
+    // Matrix2x3d y_next = y_n + dt * state_dot;
 
     this->pos = y_next.row(0);  // Takes the first 3 elements from y_next
 
@@ -196,29 +195,43 @@ void GenericBoat::propogate(Vector2f control, float dt) {
 
 
 // Accessors
-Vector3f GenericBoat::get_pos() const { return this->pos; }
+Vector3d GenericBoat::get_pos() const { return this->pos; }
 
-Vector3f GenericBoat::get_vel() const { return this->vel; }
+Vector3d GenericBoat::get_vel() const { return this->vel; }
 
-Vector2f GenericBoat::get_control() const { return Vector2f(this->F, this->eta); }
+Vector3d GenericBoat::get_frame_vel() const {
+    Vector3d global_vel = this->get_vel();
+    double theta = this->get_pos()[2];
+    double x_dot = global_vel[0];
+    double y_dot = global_vel[1];
+    double omega = global_vel[2];
 
-float GenericBoat::get_radius() const { return this->radius; }
+    double u = x_dot * sin(theta) + y_dot * cos(theta);
+    double v = x_dot * cos(theta) - y_dot * sin(theta);
+    double omega_local = omega;
 
-float GenericBoat::get_mass() const { return this->mass; }
+    return Vector3d(u, v, omega_local);
+}
 
-float GenericBoat::get_inertia() const { return this->inertia; }
+Vector2d GenericBoat::get_control() const { return Vector2d(this->F, this->eta); }
 
-float GenericBoat::get_mu_l() const { return this->mu_l; }
+double GenericBoat::get_radius() const { return this->radius; }
 
-float GenericBoat::get_mu_ct() const { return this->mu_ct; }
+double GenericBoat::get_mass() const { return this->mass; }
 
-float GenericBoat::get_mu_r() const { return this->mu_r; }
+double GenericBoat::get_inertia() const { return this->inertia; }
 
-float GenericBoat::get_F_max() const { return this->F_max; }
+double GenericBoat::get_mu_l() const { return this->mu_l; }
 
-float GenericBoat::get_eta_max() const { return this->eta_max; }  
+double GenericBoat::get_mu_ct() const { return this->mu_ct; }
 
-float GenericBoat::get_ship_size() const { return this->generic_boat_params["ship_size"]; }
+double GenericBoat::get_mu_r() const { return this->mu_r; }
+
+double GenericBoat::get_F_max() const { return this->F_max; }
+
+double GenericBoat::get_eta_max() const { return this->eta_max; }  
+
+double GenericBoat::get_ship_size() const { return this->generic_boat_params["ship_size"]; }
 
 void GenericBoat::print_params() {
     std::cout << "Radius: " << this->radius << " m\n" << endl;
@@ -234,38 +247,39 @@ void GenericBoat::print_params() {
     std::cout << "Current Control: " << this->F << " N, " << this->eta << " rad" << endl;
 }
 
-void GenericBoat::set_pos(Vector3f pos) {
+void GenericBoat::set_pos(Vector3d pos) {
     this->pos = pos;
 }
 
-void GenericBoat::set_vel(Vector3f vel) {
+void GenericBoat::set_vel(Vector3d vel) {
     this->vel = vel;
 }
 
-void GenericBoat::set_control(Vector2f control) {
-    this->F = control[0];
-    this->eta = control[1];
-    
+void GenericBoat::set_control(Vector2d control) {
+    if (abs(control(0)) > this->F_max) {
+        control(0) = this->F_max * sign(control(0));
+    }
+    this->eta = wrap_eta(control[1]);
 }
 
-bool GenericBoat::is_valid_control(Vector2f control) const {
+bool GenericBoat::is_valid_control(Vector2d control) const {
 
     // Check if the abs(force) is within the limits
     if (abs(control(0)) > this->get_F_max()) {
-        cout << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << endl;
+        // cout << "Force exceeds the maximum limit: " << this->get_F_max() << " [N]" << endl;
         cout.flush();
         return false;
     }
     // Check if the steering angle is within the limits
     if (abs(control(1)) > this->get_eta_max()) {
-        cout << "Steering angle exceeds the maximum limit: " << this->get_eta_max() << " [rad]" << endl;
+        // cout << "Steering angle exceeds the maximum limit: " << this->get_eta_max() << " [rad]" << endl;
         cout.flush();
         return false;
     }
 
 
-    float Lips_F = this->generic_boat_params["lipschitz_cont_F"];
-    float Lips_eta = this->generic_boat_params["lipschitz_cont_eta_deg"];
+    double Lips_F = this->generic_boat_params["lipschitz_cont_F"];
+    double Lips_eta = this->generic_boat_params["lipschitz_cont_eta_deg"];
     Lips_eta = Lips_eta * PI / 180.0;
 
     // Check Lipschitz continuity
@@ -301,7 +315,7 @@ void GenericBoat::load_params(std::string filename) {
     this->generic_boat_params = this->generic_boat_params["generic_boat"];
 }
 
-// float wrap_theta(float theta) {
+// double wrap_theta(double theta) {
 //     theta = fmod(theta, 2 * PI); // Normalize theta within [-2PI, 2PI]
 //     if (theta > PI) {
 //         theta -= 2 * PI; // Adjust if theta is in (PI, 2PI]
@@ -312,7 +326,7 @@ void GenericBoat::load_params(std::string filename) {
 //     return theta;
 // }
 
-// int sign(float x) {
+// int sign(double x) {
 //     if (x > 0) return 1;
 //     if (x < 0) return -1;
 //     return 0;

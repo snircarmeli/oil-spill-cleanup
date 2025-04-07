@@ -9,32 +9,33 @@
 #include "json/json.hpp"
 using json = nlohmann::json;
 
-using Eigen::MatrixXf;
-using Eigen::Vector2f;
-using Eigen::VectorXf;
+using Eigen::MatrixXd;
+using Eigen::Vector2d;
+using Eigen::VectorXd;
+using Eigen::Matrix2d;
 using std::string;
 
 class Boom {
 private:
-    MatrixXf links_states; // Matrix representing all links and their states: N rows x 6 columns (length, x, y, theta, x_dot, y_dot, omega)
-    float L; // Default length of each link
-    float mu_l; // Linear drag coefficient
-    float mu_ct; // Cross-track drag coefficient
-    float mu_r; // Rotational drag coefficient
-    float I; // Moment of inertia of each link
-    float m; // Mass of each link
+    MatrixXd links_states; // Matrix representing all links and their states: N rows x 6 columns (length, x, y, theta, x_dot, y_dot, omega)
+    double L; // Default length of each link
+    double mu_l; // Linear drag coefficient
+    double mu_ct; // Cross-track drag coefficient
+    double mu_r; // Rotational drag coefficient
+    double I; // Moment of inertia of each link
+    double m; // Mass of each link
 
     // Parameters for the spring-damper model between links
-    float k; // Spring constant
-    float c; // Damping coefficient
+    double k; // Spring constant
+    double c; // Damping coefficient
 
     json boom_params;
 
 
 public:
     // Constructor
-    Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r, float I, float m, float k, float c);
-    Boom(size_t num_links, float L);
+    Boom(size_t num_links, double L, double mu_l, double mu_ct, double mu_r, double I, double m, double k, double c);
+    Boom(size_t num_links, double L);
     // Default constructor
     Boom();
     
@@ -45,29 +46,30 @@ public:
     Boom &operator=(const Boom &boom);
 
     // Accessors
-    void set_link_state(size_t index, const VectorXf &state); // sets the state of the link at the given index
-    VectorXf get_link_state(size_t index) const; // returns the state of the link at the given index
-    void set_links_states(MatrixXf &states); // set the state of all links
-    float get_L() const;
-    float get_I() const;
-    float get_m() const;
-    float get_mu_l() const;
-    float get_mu_ct() const;
-    float get_mu_r() const;
-    float get_k() const;
-    float get_c() const;   
+    void set_link_state(size_t index, const VectorXd &state); // sets the state of the link at the given index
+    VectorXd get_link_state(size_t index) const; // returns the state of the link at the given index
+    void set_links_states(MatrixXd &states); // set the state of all links
+    double get_L() const;
+    double get_I() const;
+    double get_m() const;
+    double get_mu_l() const;
+    double get_mu_ct() const;
+    double get_mu_r() const;
+    double get_k() const;
+    double get_c() const;   
 
     void load_boom_params(std::string filename);
 
     // Utility
     int get_num_links() const;
     void print_links_states() const;
+    void print_link_state(size_t index) const;
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself
     // State derivative function
-    MatrixXf state_der(const MatrixXf &state, const Vector2f Boom_force1,
-     const Vector2f Boom_force2) const;
+    MatrixXd state_der(const MatrixXd &state, const Vector2d Boom_force1,
+     const Vector2d Boom_force2) const;
 
 };
 
@@ -76,7 +78,7 @@ private:
     BoomBoat boat1;
     BoomBoat boat2;
     Boom boom;
-    float t; // Time [s]
+    double t; // Time [s]
     
     json boom_boats_duo_params;
     json simulation_params;
@@ -84,9 +86,9 @@ private:
 public:
     // Constructor
     BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2, size_t num_links,
-     float L, float mu_l, float mu_ct, float mu_r, float I, float m, float k,
-      float c, Vector2f center, float orientation);
-    BoomBoatsDuo(Vector2f center, float orientation, size_t num_links, float L);
+     double L, double mu_l, double mu_ct, double mu_r, double I, double m, double k,
+      double c, Vector2d center, double orientation);
+    BoomBoatsDuo(Vector2d center, double orientation, size_t num_links, double L);
 
     // Destructor
     ~BoomBoatsDuo();
@@ -100,17 +102,17 @@ public:
 
     void load_boom_boats_duo_params(std::string filename);
     json get_simulation_params() const;
-    float get_time() const;
+    double get_time() const;
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and
     bool are_boats_close() const ;// if the boats are not colliding
 
     // Propagation function
-    MatrixXf state_der(const Vector2f &control1, const Vector2f &control2,
-     MatrixXf state) const;
-    void propagate(float dt, const Vector2f &control1,
-     const Vector2f &control2, std::string integration_method);
+    MatrixXd state_der(const Vector2d &control1, const Vector2d &control2,
+     MatrixXd state) const;
+    void propagate(double dt, const Vector2d &control1,
+     const Vector2d &control2, std::string integration_method);
 
     // Getters
     BoomBoat get_boat1() const;
@@ -122,32 +124,32 @@ public:
 // Runge-Kutta methods
 
 // // Runge-Kutta 2nd order integration
-// MatrixXf RK2_integration(const Vector2f &control1, const Vector2f &control2, 
-//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// MatrixXd RK2_integration(const Vector2d &control1, const Vector2d &control2, 
+//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
 
 // // Runge-Kutta 3rd order integration
-// MatrixXf RK3_integration(const Vector2f &control1, const Vector2f &control2, 
-//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// MatrixXd RK3_integration(const Vector2d &control1, const Vector2d &control2, 
+//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
 
 // // Runge-Kutta 4th order integration
-// MatrixXf RK4_integration(const Vector2f &control1, const Vector2f &control2, 
-//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// MatrixXd RK4_integration(const Vector2d &control1, const Vector2d &control2, 
+//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
 
 // // Runge-Kutta 5th order integration
-// MatrixXf RK5_integration(const Vector2f &control1, const Vector2f &control2, 
-//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// MatrixXd RK5_integration(const Vector2d &control1, const Vector2d &control2, 
+//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
 
 // // Runge-Kutta 6th order integration
-// MatrixXf RK6_integration(const Vector2f &control1, const Vector2f &control2, 
-//  const MatrixXf &state, float dt, BoomBoatsDuo boom_boats_duo);
+// MatrixXd RK6_integration(const Vector2d &control1, const Vector2d &control2, 
+//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
 
 // // Runge-Kutta 4-5 integration. Adaptive time step
-// std::pair<MatrixXf, float> RK45_integration(const Vector2f& control1,
-//  const Vector2f& control2, const MatrixXf& state, float dt,
+// std::pair<MatrixXd, double> RK45_integration(const Vector2d& control1,
+//  const Vector2d& control2, const MatrixXd& state, double dt,
 //   BoomBoatsDuo boom_boats_duo, json simulation_params);
   
 // These functions are already defined in generic-boat.h 
-// float wrap_theta(float theta);
-// int sign(float x);
+// double wrap_theta(double theta);
+// int sign(double x);
 
 #endif

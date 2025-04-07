@@ -10,7 +10,7 @@
         },
         "max_controls": {
             "force": 100000.0,
-            "steering_angle": 1.57079632679
+            "steering_angle": 3.14159265359
         },
         "initial_position": [
             0.0,
@@ -28,7 +28,7 @@
         "lipschitz_cont_eta_deg": 1 
     },
     "boom": {
-        "num_links": 20,
+        "num_links": 40,
         "link_length": 1.0,
         "inertia": 150.0,
         "mass": 100.0,
@@ -47,18 +47,18 @@
     "boom_boats_duo": {
         "num_duos": 1,
         "initial_center": [
-            1.0,
-            1.0
+            -5.0,
+            -5.0
         ],
         "initial_orientation": 0,
         "minimal_distance_size_ratio": 1,
         "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
     },
     "simulation": {
-        "time_duration": 15.0,
+        "time_duration": 10.0,
         "time_step": 0.01,
         "print_interval": 50,
-        "integration_method": "RK3",
+        "integration_method": "RK4",
         "check_valid_interval": 50
     },
     "integration": {
@@ -83,13 +83,14 @@
             10.0,
             1.57079632679
         ],
-        "sample_step_size": 0.02,
-        "dist_from_center_ratio": 0.7
+        "sample_step_size": 0.1,
+        "dist_from_center_ratio": 0.7,
+        "max_jump": 100.0
     },
     "PID": {
         "Kp": [
-            700,
-            0.015
+            100,
+            0.01
         ],
         "Ki": [
             140.0,
@@ -101,8 +102,21 @@
         ],
         "output_F_max": 100000.0,
         "output_eta_max": 1.57079632679,
-        "jump_index": 1,
-        "print_PID": false
+        "use_next_setpoint": true,
+        "jump_index": 10,
+        "alpha": 0.05,
+        "print_PID": false,
+        "switch_tolerance_deg": 5
+    },
+    "NonLinearController": {
+        "k_u": 1.5,
+        "k_v": 0.5,
+        "k_theta": 45,
+        "gamma": 1.0,
+        "delta": 10.5,
+        "default_k_theta": 1.1,
+        "default_k_u": 1.1,
+        "epsilon": 0.1
     },
     "oil_spill": {
         "attack_distance": 5.0

@@ -12,10 +12,6 @@
 #include "json/json.hpp"
 using json = nlohmann::json;
 
-using Eigen::VectorXf;
-using Eigen::Vector2f;
-using Eigen::MatrixXf;
-using Eigen::Matrix2f;
 using std::cout;
 using std::endl;
 using std::string;
@@ -24,38 +20,38 @@ using std::make_pair;
 
 namespace fs = std::filesystem;
 
-// const float PI = 3.141592653589793;
+// const double PI = 3.141592653589793;
 
-float K_deault = 10000000000000;
-float C_default = 1000000;
+double K_deault = 10000000000000;
+double C_default = 1000000;
 
 // Boom Constructor
-Boom::Boom(size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
- float I, float m, float k, float c)
+Boom::Boom(size_t num_links, double L, double mu_l, double mu_ct, double mu_r,
+ double I, double m, double k, double c)
     : L(L), mu_l(mu_l), mu_ct(mu_ct), mu_r(mu_r), I(I), m(m), k(k), c(c) {
-       links_states = MatrixXf::Zero(num_links, 6);
+       links_states = MatrixXd::Zero(num_links, 6);
        this->load_boom_params("params.json");
     }
 
-Boom::Boom(size_t num_links, float L) {
+Boom::Boom(size_t num_links, double L) {
     this->load_boom_params("params.json");
 
-    links_states = MatrixXf::Zero(num_links, 6);
+    links_states = MatrixXd::Zero(num_links, 6);
     this->L = L;
     
     json boom_params = this->boom_params;
     json drag_params = boom_params["drag_coefficients"];
     // Extract parameters from JSON
-    this->mu_l = drag_params["linear"].get<float>();
-    this->mu_ct = drag_params["cross_track"].get<float>();
-    this->mu_r = drag_params["rotational"].get<float>();
-    this->I = boom_params["inertia"].get<float>();
-    this->m = boom_params["mass"].get<float>();
-    this->k = boom_params["spring_constant"].get<float>();
-    this->c = boom_params["damping_coefficient"].get<float>();
+    this->mu_l = drag_params["linear"].get<double>();
+    this->mu_ct = drag_params["cross_track"].get<double>();
+    this->mu_r = drag_params["rotational"].get<double>();
+    this->I = boom_params["inertia"].get<double>();
+    this->m = boom_params["mass"].get<double>();
+    this->k = boom_params["spring_constant"].get<double>();
+    this->c = boom_params["damping_coefficient"].get<double>();
     // this->t = 0;
 
-    links_states = MatrixXf::Zero(num_links, 6);
+    links_states = MatrixXd::Zero(num_links, 6);
 }
 
 // Default Constructor
@@ -65,17 +61,17 @@ Boom::Boom() {
 
     json drag_params = boom_params["drag_coefficients"];
     
-    this->L = boom_params["link_length"].get<float>();
-    this->mu_l = drag_params["linear"].get<float>();
-    this->mu_ct = drag_params["cross_track"].get<float>();
-    this->mu_r = drag_params["rotational"].get<float>();
-    this->I = boom_params["inertia"].get<float>();
-    this->m = boom_params["mass"].get<float>();
-    this->k = boom_params["spring_constant"].get<float>();
-    this->c = boom_params["damping_coefficient"].get<float>();
+    this->L = boom_params["link_length"].get<double>();
+    this->mu_l = drag_params["linear"].get<double>();
+    this->mu_ct = drag_params["cross_track"].get<double>();
+    this->mu_r = drag_params["rotational"].get<double>();
+    this->I = boom_params["inertia"].get<double>();
+    this->m = boom_params["mass"].get<double>();
+    this->k = boom_params["spring_constant"].get<double>();
+    this->c = boom_params["damping_coefficient"].get<double>();
     size_t num_links = boom_params["num_links"].get<size_t>();
 
-    links_states = MatrixXf::Zero(num_links, 6);
+    links_states = MatrixXd::Zero(num_links, 6);
 }
 
 // Boom Destructor
@@ -99,35 +95,35 @@ Boom& Boom::operator=(const Boom& other) {
 }
 
 // Accessors
-void Boom::set_link_state(size_t index, const VectorXf &state) {
+void Boom::set_link_state(size_t index, const VectorXd &state) {
     links_states.row(index) = state;
 }
 
-VectorXf Boom::get_link_state(size_t index) const {
+VectorXd Boom::get_link_state(size_t index) const {
     return links_states.row(index);
 }
 
-void Boom::set_links_states(MatrixXf &states) {
+void Boom::set_links_states(MatrixXd &states) {
     for (size_t i = 0; i < static_cast<size_t>(states.rows()); ++i) {
         this->links_states.row(i) = states.row(i);
     }
 }
 
-float Boom::get_L() const { return L; }
+double Boom::get_L() const { return L; }
 
-float Boom::get_I() const { return I; }
+double Boom::get_I() const { return I; }
 
-float Boom::get_m() const { return m; }
+double Boom::get_m() const { return m; }
 
-float Boom::get_mu_l() const { return mu_l; }
+double Boom::get_mu_l() const { return mu_l; }
 
-float Boom::get_mu_ct() const { return mu_ct; }
+double Boom::get_mu_ct() const { return mu_ct; }
 
-float Boom::get_mu_r() const { return mu_r; }
+double Boom::get_mu_r() const { return mu_r; }
 
-float Boom::get_k() const { return k; }
+double Boom::get_k() const { return k; }
 
-float Boom::get_c() const { return c; }
+double Boom::get_c() const { return c; }
 
 void Boom::load_boom_params(std::string filename) {
     // Read parameters from JSON file
@@ -151,39 +147,43 @@ void Boom::print_links_states() const {
     cout << "Links States: \n" << links_states << endl;
 }
 
+void Boom::print_link_state(size_t index) const {
+    cout << "Link " << index << " State: " << links_states.row(index) << endl;
+}
+
 // Functions to check if two line segments intersect
 
 // Helper function to calculate the direction
-float direction(float xi, float yi, float xj, float yj, float xk, float yk) {
+double direction(double xi, double yi, double xj, double yj, double xk, double yk) {
     return (xk - xi) * (yj - yi) - (yk - yi) * (xj - xi);
 }
 
 bool Boom::is_valid_state() const {
     // Check if boom doesn't intersect itself
-    float L = this->get_L();
+    double L = this->get_L();
     for (int i = 0; i < this->get_num_links(); i++) {
 
-        float x_i = links_states(i, 0);
-        float y_i = links_states(i, 1);
-        float theta_i = links_states(i, 2);
+        double x_i = links_states(i, 0);
+        double y_i = links_states(i, 1);
+        double theta_i = links_states(i, 2);
 
         // Coordinates of boom link i
-        float x_11 = x_i + 0.5 * L * cos(theta_i);
-        float y_11 = y_i + 0.5 * L * sin(theta_i);
-        float x_12 = x_i - 0.5 * L * cos(theta_i);
-        float y_12 = y_i - 0.5 * L * sin(theta_i); 
+        double x_11 = x_i + 0.5 * L * cos(theta_i);
+        double y_11 = y_i + 0.5 * L * sin(theta_i);
+        double x_12 = x_i - 0.5 * L * cos(theta_i);
+        double y_12 = y_i - 0.5 * L * sin(theta_i); 
 
         // Starting from the second next link. Every two adjacent links can
         // intersect because of the spring-damper model.
         for (int j = this->get_num_links() - 1; j >= i + 2; j--) {
-            float x_j = links_states(j, 0);
-            float y_j= links_states(j, 1);
-            float theta_j = links_states(j, 2);
+            double x_j = links_states(j, 0);
+            double y_j= links_states(j, 1);
+            double theta_j = links_states(j, 2);
             // Coordinates of boom link j
-            float x_21 = x_j + 0.5 * L * cos(theta_j);
-            float y_21 = y_j + 0.5 * L * sin(theta_j);
-            float x_22 = x_j - 0.5 * L * cos(theta_j);
-            float y_22 = y_j - 0.5 * L * sin(theta_j);
+            double x_21 = x_j + 0.5 * L * cos(theta_j);
+            double y_21 = y_j + 0.5 * L * sin(theta_j);
+            double x_22 = x_j - 0.5 * L * cos(theta_j);
+            double y_22 = y_j - 0.5 * L * sin(theta_j);
 
             // Check if the two links intersect
             // if ( j == i + 1) {
@@ -204,80 +204,89 @@ bool Boom::is_valid_state() const {
 }
 
 // State derivative function
-MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
- const Vector2f Boom_force2) const {
+MatrixXd Boom::state_der(const MatrixXd &state, const Vector2d Boom_force1,
+ const Vector2d Boom_force2) const {
     // Model the dynamics of the boom links as spring and dampers
     int num_links = this->get_num_links();
-    float L = this->get_L();
-    float mu_l = this->get_mu_l();
-    float mu_ct = this->get_mu_ct();
-    float mu_r = this->get_mu_r();
-    float I = this->get_I();
-    float m = this->get_m();
-    float k = this->get_k();
-    float c = this->get_c();
+    double L = this->get_L();
+    double mu_l = this->get_mu_l();
+    double mu_ct = this->get_mu_ct();
+    double mu_r = this->get_mu_r();
+    double I = this->get_I();
+    double m = this->get_m();
+    double k = this->get_k();
+    double c = this->get_c();
 
     // 2 boats and num_links links, 6 states each
-    MatrixXf state_der = MatrixXf::Zero(num_links, 6);
+    MatrixXd state_der = MatrixXd::Zero(num_links, 6);
 
     // state is of same order as state_der
+    // Declare variables for the calculations
+    double theta; double x_dot_i; double y_dot_i; double theta_dot_i; 
+    Vector2d link_vel; Vector2d P0; Vector2d P1; Vector2d P0_dot;
+    Vector2d P1_dot; Vector2d e; Vector2d n; Vector2d F0;
+    Vector2d F1; Vector2d M; Vector2d M_dot; Vector2d F_spring_0;
+    Vector2d e0; Vector2d F_damp_0; Vector2d N; Vector2d N_dot;
+    Vector2d F_spring_1; Vector2d e1; Vector2d F_damp_1; double torque;
+    double vel_e; double vel_n; double F_e; double F_n; double vel_e_dot;
+    double vel_n_dot; double omega_dot; double x_dotdot; double y_dotdot;
+    double theta_dotdot;
 
     for (int i = 0; i < num_links; ++i) {
+        // double x_i = state(i, 0);
+        // double y_i = state(i, 1);
+        theta = state(i, 2);
+        x_dot_i = state(i, 3);
+        y_dot_i = state(i, 4);
+        theta_dot_i = state(i, 5);
 
-        // float x_i = state(i, 0);
-        // float y_i = state(i, 1);
-        float theta = state(i, 2);
-        float x_dot_i = state(i, 3);
-        float y_dot_i = state(i, 4);
-        float theta_dot_i = state(i, 5);
-
-        Vector2f link_vel = Vector2f(x_dot_i, y_dot_i);
+        link_vel = Vector2d(x_dot_i, y_dot_i);
 
         // P0 - left enf of link i
         // P1 - right end of link i
-        Vector2f P0 = Vector2f(state(i, 0), state(i, 1)) - (L / 2) * Vector2f(cos(state(i, 2)), sin(state(i, 2)));
-        Vector2f P1 = Vector2f(state(i, 0), state(i, 1)) + (L / 2) * Vector2f(cos(state(i, 2)), sin(state(i, 2)));
-        Vector2f P0_dot = Vector2f(state(i, 3), state(i, 4)) - (L / 2) * state(i, 5) * Vector2f(-sin(state(i, 2)), cos(state(i, 2)));
-        Vector2f P1_dot = Vector2f(state(i, 3), state(i, 4)) + (L / 2) * state(i, 5) * Vector2f(-sin(state(i, 2)), cos(state(i, 2)));
+        P0 = Vector2d(state(i, 0), state(i, 1)) - (L / 2) * Vector2d(cos(state(i, 2)), sin(state(i, 2)));
+        P1 = Vector2d(state(i, 0), state(i, 1)) + (L / 2) * Vector2d(cos(state(i, 2)), sin(state(i, 2)));
+        P0_dot = Vector2d(state(i, 3), state(i, 4)) - (L / 2) * state(i, 5) * Vector2d(-sin(state(i, 2)), cos(state(i, 2)));
+        P1_dot = Vector2d(state(i, 3), state(i, 4)) + (L / 2) * state(i, 5) * Vector2d(-sin(state(i, 2)), cos(state(i, 2)));
 
         // Normalized vector in the direction of the link
-        Vector2f e = (P1 - P0).normalized();
+        e = (P1 - P0).normalized();
         // Normalized vector perpendicular to the link, rotate v by 90 degrees in the counter-clockwise direction   
-        Vector2f n = Vector2f(-e(1), e(0));
+        n = Vector2d(-e(1), e(0));
 
         // Calculate the forces on the link
         // F0 - force on the left end of the link
         // F1 - force on the right end of the link
-        Vector2f F0 = Vector2f(0, 0);
-        Vector2f F1 = Vector2f(0, 0);
+        F0 = Vector2d(0, 0);
+        F1 = Vector2d(0, 0);
 
         // M - right end of link i-1
         // N - left end of link i+1
         if (i != 0) {
-            Vector2f M = Vector2f(state(i - 1, 0), state(i - 1, 1)) + (L / 2) * Vector2f(cos(state(i - 1, 2)), sin(state(i - 1, 2)));
-            Vector2f M_dot = Vector2f(state(i - 1, 3), state(i - 1, 4)) + (L / 2) * state(i - 1, 5) * Vector2f(-sin(state(i - 1, 2)), cos(state(i - 1, 2)));
+            M = Vector2d(state(i - 1, 0), state(i - 1, 1)) + (L / 2) * Vector2d(cos(state(i - 1, 2)), sin(state(i - 1, 2)));
+            M_dot = Vector2d(state(i - 1, 3), state(i - 1, 4)) + (L / 2) * state(i - 1, 5) * Vector2d(-sin(state(i - 1, 2)), cos(state(i - 1, 2)));
 
-            Vector2f F_spring_0 = k * (M - P0);
+            F_spring_0 = k * (M - P0);
             // unit vector in the direction of (M-P0)
-            Vector2f e0 = (M-P0).normalized();
-            Vector2f F_damp_0 = c * (M_dot - P0_dot).dot(e0) * e0;
+            e0 = (M-P0).normalized();
+            F_damp_0 = c * (M_dot - P0_dot).dot(e0) * e0;
             F0 = F_spring_0 + F_damp_0;
         } else {F0 = Boom_force1;}
 
         if (i != num_links - 1) {
-            Vector2f N = Vector2f(state(i + 1, 0), state(i + 1, 1)) - (L / 2) * Vector2f(cos(state(i + 1, 2)), sin(state(i + 1, 2)));
-            Vector2f N_dot = Vector2f(state(i + 1, 3), state(i + 1, 4)) - (L / 2) * state(i + 1, 5) * Vector2f(-sin(state(i + 1, 2)), cos(state(i + 1, 2)));
+            N = Vector2d(state(i + 1, 0), state(i + 1, 1)) - (L / 2) * Vector2d(cos(state(i + 1, 2)), sin(state(i + 1, 2)));
+            N_dot = Vector2d(state(i + 1, 3), state(i + 1, 4)) - (L / 2) * state(i + 1, 5) * Vector2d(-sin(state(i + 1, 2)), cos(state(i + 1, 2)));
 
-            Vector2f F_spring_1 = k * (N -P1);
+            F_spring_1 = k * (N -P1);
             // unit vector in the direction of (N-P1)
-            Vector2f e1 = (N - P1).normalized();
-            Vector2f F_damp_1 = c * (N_dot - P1_dot).dot(e1) * e1;
+            e1 = (N - P1).normalized();
+            F_damp_1 = c * (N_dot - P1_dot).dot(e1) * e1;
             F1 = F_spring_1 + F_damp_1;
         } else {F1 = Boom_force2;}
 
         // Calculate the torques on the link 
         // (Cross product of the force and the position vector)
-        float torque = 0.5 * L * (e.x() * (F1 - F0).y() - e.y() * (F1 - F0).x());
+        torque = 0.5 * L * (e.x() * (F1 - F0).y() - e.y() * (F1 - F0).x());
         // cout << "Torque: " << torque << endl;
         // cout.flush();
         // print if F0 and F1 are not Nan
@@ -298,18 +307,18 @@ MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
         // }
        
         // Rotate to n and e frame
-        float vel_e = link_vel.dot(e);
-        float vel_n = link_vel.dot(n);
-        float F_e = (F0 + F1).dot(e);
-        float F_n = (F0 + F1).dot(n);
+        vel_e = link_vel.dot(e);
+        vel_n = link_vel.dot(n);
+        F_e = (F0 + F1).dot(e);
+        F_n = (F0 + F1).dot(n);
         // Calculate the state derivatives
-        float vel_e_dot = (1 / m) * (F_e - mu_l * (vel_e * vel_e) * sign(vel_e));
-        float vel_n_dot = (1 / m) * (F_n - mu_ct * (vel_n * vel_n) * sign(vel_n));
-        float omega_dot = (1 / I) * (torque - mu_r * (theta_dot_i * theta_dot_i) * sign(theta_dot_i));
+        vel_e_dot = (1 / m) * (F_e - mu_l * (vel_e * vel_e) * sign(vel_e));
+        vel_n_dot = (1 / m) * (F_n - mu_ct * (vel_n * vel_n) * sign(vel_n));
+        omega_dot = (1 / I) * (torque - mu_r * (theta_dot_i * theta_dot_i) * sign(theta_dot_i));
         // Rotate back to the global frame
-        float x_dotdot = vel_e_dot * cos(theta) - vel_n_dot * sin(theta);
-        float y_dotdot = vel_e_dot * sin(theta) + vel_n_dot * cos(theta);
-        float theta_dotdot = omega_dot;
+        x_dotdot = vel_e_dot * cos(theta) - vel_n_dot * sin(theta);
+        y_dotdot = vel_e_dot * sin(theta) + vel_n_dot * cos(theta);
+        theta_dotdot = omega_dot;
         // Store the state derivatives
         state_der(i, 0) = x_dot_i;  // x_dot
         state_der(i, 1) = y_dot_i;  // y_dot
@@ -327,8 +336,8 @@ MatrixXf Boom::state_der(const MatrixXf &state, const Vector2f Boom_force1,
 
 // BoomBoatsDuo Constructor
 BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
- size_t num_links, float L, float mu_l, float mu_ct, float mu_r,
-  float I, float m, float k, float c, Vector2f center, float orientation)
+ size_t num_links, double L, double mu_l, double mu_ct, double mu_r,
+  double I, double m, double k, double c, Vector2d center, double orientation)
     : boat1(b1.get_radius(), b1.get_mass(), b1.get_inertia(), b1.get_mu_l(), b1.get_mu_ct(), b1.get_mu_r(),
             b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(), b1.get_F_max(), b1.get_eta_max()),
       boat2(b2.get_radius(), b2.get_mass(), b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
@@ -339,36 +348,47 @@ BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
 
         // Place boats at the center with the given orientation of the line 
         // connecting the boats
+        
+        // b1 - left boat
+        // b2 - right boat
+        // Orientation is with respect to the y-axis
 
-        Vector3f b1_pos = Vector3f(center(0) - 0.5 * num_links * L * cos(orientation), center(1) - 0.5 * num_links * L * sin(orientation), orientation);
-        Vector3f b2_pos = Vector3f(center(0) + 0.5 * num_links * L * cos(orientation), center(1) + 0.5 * num_links * L * sin(orientation), orientation);
+        Vector3d b1_pos = Vector3d(center(0) - 0.5 * num_links * L * cos(orientation), center(1) + 0.5 * num_links * L * sin(orientation), orientation);
+        Vector3d b2_pos = Vector3d(center(0) + 0.5 * num_links * L * cos(orientation), center(1) - 0.5 * num_links * L * sin(orientation), orientation);
 
-        // print both positions
+        // // print both positions
         // cout << "Boat 1 position: (" << b1_pos(0) << ", " << b1_pos(1) << ", " << b1_pos(2) << ")" << endl;
         // cout << "Boat 2 position: (" << b2_pos(0) << ", " << b2_pos(1) << ", " << b2_pos(2) << ")" << endl;
 
-        // Vector3f b1_stern = Vector3f(b1_pos(0) - b1.get_radius() * sin(b1_pos(2)), b1_pos(1) - b1.get_radius() * cos(b1_pos(2)), b1_pos(2));
-        // Vector3f b2_stern = Vector3f(b2_pos(0) - b2.get_radius() * sin(b2_pos(2)), b2_pos(1) - b2.get_radius() * cos(b2_pos(2)), b2_pos(2));
+        // Vector3d b1_stern = Vector3d(b1_pos(0) - b1.get_radius() * sin(b1_pos(2)), b1_pos(1) - b1.get_radius() * cos(b1_pos(2)), b1_pos(2));
+        // Vector3d b2_stern = Vector3d(b2_pos(0) - b2.get_radius() * sin(b2_pos(2)), b2_pos(1) - b2.get_radius() * cos(b2_pos(2)), b2_pos(2));
 
         boat1.set_pos(b1_pos);
         boat2.set_pos(b2_pos);
+        VectorXd state(6);
         for (int i = 0; i < boom.get_num_links(); ++i) {
-            float x = b1_pos(0) + (i + 0.5) * L * cos(orientation);
-            float y = b1_pos(1) + (i + 0.5) * L * sin(orientation);
-            float theta = orientation;
-            VectorXf state(6);
+            double x = b1_pos(0) + (i + 0.5) * L * cos(orientation);
+            double y = b1_pos(1) - (i + 0.5) * L * sin(orientation);
+            double theta = -orientation; // With respect to the x-axis
             state << x, y, theta, 0.0, 0.0, 0.0;
             boom.set_link_state(i, state);
         }
+
+        // // Print link 1 state
+        // cout << "Link 1 state: \n" << boom.get_link_state(0) << endl;
+        // cout.flush();
+        // // Print last link state
+        // cout << "Last link state: \n" << boom.get_link_state(boom.get_num_links() - 1) << endl;
+        // cout.flush();
     }
 
-BoomBoatsDuo:: BoomBoatsDuo(Vector2f center,  float orientation,
- size_t num_links, float L) : t(0) {
+BoomBoatsDuo:: BoomBoatsDuo(Vector2d center,  double orientation,
+ size_t num_links, double L) : t(0) {
     Boom boom(num_links, L);
     this->boom = boom;
-    Vector3f boat1_pos = Vector3f(center(0) - L * num_links * cos(orientation), 
+    Vector3d boat1_pos = Vector3d(center(0) - L * num_links * cos(orientation), 
     center(1) - L * num_links * sin(orientation), PI/2 + orientation);
-    Vector3f boat2_pos = Vector3f(center(0) + L * num_links * cos(orientation), 
+    Vector3d boat2_pos = Vector3d(center(0) + L * num_links * cos(orientation), 
     center(1) + L * num_links * sin(orientation), PI/2 + orientation);
 
     BoomBoat boat1 = BoomBoat(boat1_pos);
@@ -435,17 +455,17 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     std::stringstream ss;
 
     // Write the state of boat1
-    Vector3f boat1_pos = boat1.get_pos();
-    Vector3f boat1_vel = boat1.get_vel();
-    Vector2f boat1_control = boat1.get_control();
+    Vector3d boat1_pos = boat1.get_pos();
+    Vector3d boat1_vel = boat1.get_vel();
+    Vector2d boat1_control = boat1.get_control();
     ss << boat1_pos.transpose() << " ";
     ss << boat1_vel.transpose() << " ";
     ss << boat1_control.transpose() << " ";
 
     // Write the state of boat2
-    Vector3f boat2_pos = boat2.get_pos();
-    Vector3f boat2_vel = boat2.get_vel();
-    Vector2f boat2_control = boat2.get_control();
+    Vector3d boat2_pos = boat2.get_pos();
+    Vector3d boat2_vel = boat2.get_vel();
+    Vector2d boat2_control = boat2.get_control();
     ss << boat2_pos.transpose() << " ";
     ss << boat2_vel.transpose() << " ";
     ss << boat2_control.transpose() << " ";
@@ -456,7 +476,7 @@ void BoomBoatsDuo::print_to_file(const string &filename,
 
     // Write the state of the boom links
     for (int i = 0; i < boom.get_num_links(); ++i) {
-        VectorXf link_state = boom.get_link_state(i);
+        VectorXd link_state = boom.get_link_state(i);
         ss << link_state.transpose() << " ";
     }
 
@@ -486,7 +506,7 @@ json BoomBoatsDuo::get_simulation_params() const {
     return this->simulation_params;
 }
 
-float BoomBoatsDuo::get_time() const {
+double BoomBoatsDuo::get_time() const {
     return this->t;
 }
 
@@ -511,16 +531,16 @@ bool BoomBoatsDuo::is_valid_state() const {
 bool BoomBoatsDuo::are_boats_close() const {
     // Check if the boats are too close or intersect The boom
 
-    float size = this->boat1.get_ship_size();
-    float min_dist = this->boom_boats_duo_params["minimal_distance_size_ratio"];
+    double size = this->boat1.get_ship_size();
+    double min_dist = this->boom_boats_duo_params["minimal_distance_size_ratio"];
     min_dist *= size;
     // Create two matrices to store the points of the boats
-    MatrixXf boat1_points = MatrixXf::Zero(5, 2);
-    MatrixXf boat2_points = MatrixXf::Zero(5, 2);
+    MatrixXd boat1_points = MatrixXd::Zero(5, 2);
+    MatrixXd boat2_points = MatrixXd::Zero(5, 2);
     // 5 points of boat structure
 
-    Vector3f boat1_pos = this->boat1.get_pos();
-    Vector3f boat2_pos = this->boat2.get_pos();
+    Vector3d boat1_pos = this->boat1.get_pos();
+    Vector3d boat2_pos = this->boat2.get_pos();
 
     // print both boats positions
     // cout << "Boat1 position: " << boat1_pos(0) << ", " << boat1_pos(1) << endl;
@@ -528,7 +548,7 @@ bool BoomBoatsDuo::are_boats_close() const {
     // cout << "Boat2 position: " << boat2_pos(0) << ", " << boat2_pos(1) << endl;
     // cout.flush();
 
-    MatrixXf boat = MatrixXf::Zero(5,2);
+    MatrixXd boat = MatrixXd::Zero(5,2);
     boat << -size/2, 0,
            size/2, 0,
            size/2, size,
@@ -536,8 +556,8 @@ bool BoomBoatsDuo::are_boats_close() const {
            0, 1.5*size;
     
     // Rotate the boat points clockwise by the orientation of the boat
-    Matrix2f R1;
-    Matrix2f R2;
+    Matrix2d R1;
+    Matrix2d R2;
     R1 << cos(boat1_pos(2)), sin(boat1_pos(2)),
           -sin(boat1_pos(2)), cos(boat1_pos(2));
     R2 << cos(boat2_pos(2)), sin(boat2_pos(2)),
@@ -565,8 +585,8 @@ bool BoomBoatsDuo::are_boats_close() const {
     // Check if the boats intersect the boom
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < boom.get_num_links(); ++j) {
-            Vector2f P0 = Vector2f(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) - (boom.get_L() / 2) * Vector2f(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
-            Vector2f P1 = Vector2f(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) + (boom.get_L() / 2) * Vector2f(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
+            Vector2d P0 = Vector2d(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) - (boom.get_L() / 2) * Vector2d(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
+            Vector2d P1 = Vector2d(boom.get_link_state(j)(0), boom.get_link_state(j)(1)) + (boom.get_L() / 2) * Vector2d(cos(boom.get_link_state(j)(2)), sin(boom.get_link_state(j)(2)));
             if (j == 0) {
                 if (check_intersection(boat2_points(i, 0), boat2_points(i, 1), boat2_pos(0), boat2_pos(1), P0.x(), P0.y(), P1.x(), P1.y(), boom.get_L())) {
                     cout << "Boat 2 intersects the boom at time: " << this->t << " [s]" << endl;
@@ -593,67 +613,90 @@ bool BoomBoatsDuo::are_boats_close() const {
 }
 
 // Propagation function
-MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
- const Vector2f &control2, MatrixXf state) const {
-    // print both control inputs
-    // cout << "Control1: " << control1.x() << ", " << control1.y() << endl;
-    // cout.flush();
-    // cout << "Control2: " << control2.x() << ", " << control2.y() << endl;
-    // cout.flush();
+MatrixXd BoomBoatsDuo::state_der(const Vector2d &control1,
+ const Vector2d &control2, MatrixXd state) const {
 
     // Model the dynamics of the boom links as spring and dampers
     int num_links = boom.get_num_links();
-    float L = this->boom.get_L();
+    double L = this->boom.get_L();
 
     // 2 boats and num_links links, 6 states each
-    MatrixXf state_der = MatrixXf::Zero(state.rows(), state.cols());
+    MatrixXd state_der = MatrixXd::Zero(state.rows(), state.cols());
 
     // state is of same order as state_der
     // state = [boat1; boat2; link1; link2; ...; link_num_links]
 
     // Calculate state derivative of boat1
 
-    Vector2f boat1_pos = Vector2f(state(0, 0), state(0, 1));
-    Vector2f boat1_vel = Vector2f(state(0, 3), state(0, 4));
+    Vector2d boat1_pos = Vector2d(state(0, 0), state(0, 1));
+    Vector2d boat1_vel = Vector2d(state(0, 3), state(0, 4));
     // P0: left end of link 0 - closest link to boat1
-    float theta_link = state(2, 2);
-    Vector2f P0 = Vector2f(state(2, 0), state(2, 1)) - (L / 2) * Vector2f(cos(theta_link), sin(theta_link));
-    Vector2f P0_dot = Vector2f(state(2, 3), state(2, 4)) - (L / 2) * state(2, 5) * Vector2f(-sin(theta_link), cos(theta_link));
+    double theta_link = state(2, 2);
+    Vector2d P0 = Vector2d(state(2, 0), state(2, 1)) - (L / 2) * Vector2d(cos(theta_link), sin(theta_link));
+    Vector2d P0_dot = Vector2d(state(2, 3), state(2, 4)) - (L / 2) * state(2, 5) * Vector2d(-sin(theta_link), cos(theta_link));
 
-    Vector2f F_spring1 = this->boom.get_k() * (P0 - boat1_pos);
+    Vector2d F_spring1 = this->boom.get_k() * (P0 - boat1_pos);
+
     // unit vector in the direction of (P0 - boat1_pos)
-    Vector2f e1 = (P0 - boat1_pos).normalized();
-    Vector2f F_damp1 = this->boom.get_c() * ((P0_dot - boat1_vel).dot(e1)) * e1;
-    Vector2f boom_force1 = F_spring1 + F_damp1;
+    Vector2d e1 = (P0 - boat1_pos).normalized();
+    Vector2d F_damp1 = this->boom.get_c() * ((P0_dot - boat1_vel).dot(e1)) * e1;
 
-    VectorXf boat1_state_der = this->boat1.state_der(VectorXf(state.row(0)),
+    Vector2d boom_force1 = F_spring1 + F_damp1;
+    // // print boom force1 size and direction
+    // cout << "Boom force1 size in state_der: " << boom_force1.norm() << endl;
+    // cout << "Boom force1 direction in state_der: " << atan2(boom_force1(1), boom_force1(0)) * RAD2DEG << endl;
+    // // Print boat1 force and steering angle
+    // cout << "Boat1 force in state_der: " << control1(0) << endl;
+    // cout << "Boat1 steering angle in state_der: " << control1(1) << endl;
+    // cout.flush();
+
+    VectorXd boat1_state_der = this->boat1.state_der(VectorXd(state.row(0)),
      control1, boom_force1);
 
+    // //  Print force and steering angle of boat1
+    // cout << "Force of boat1 in state_der: " << control1(0) << endl;
+    // cout << "Steering angle of boat1 in state_der: " << control1(1) << endl;
+
+    // //  Print direction and y-point of boat1
+    // cout << "Direction of boat1 in state_der: " << state(0, 2) << endl;
+    // cout << "Y-point of boat1 in state_der: " << state(0, 1) << endl;
+    // cout.flush();
+
     // Calculate state derivative of boat2
-    Vector2f boat2_pos = Vector2f(state(1, 0), state(1, 1));
-    Vector2f boat2_vel = Vector2f(state(1, 3), state(1, 4));
+    Vector2d boat2_pos = Vector2d(state(1, 0), state(1, 1));
+    Vector2d boat2_vel = Vector2d(state(1, 3), state(1, 4));
     // P1: right end of link num_links - closest link to boat2
     theta_link = state(num_links + 1, 2);
-    Vector2f P1 = Vector2f(state(num_links + 1, 0), state(num_links + 1, 1)) + (L / 2) * Vector2f(cos(theta_link), sin(theta_link));
-    Vector2f P1_dot = Vector2f(state(num_links + 1, 3), state(num_links + 1, 4)) + (L / 2) * state(num_links + 1, 5) * Vector2f(-sin(theta_link), cos(theta_link));
+    Vector2d P1 = Vector2d(state(num_links + 1, 0), state(num_links + 1, 1)) + (L / 2) * Vector2d(cos(theta_link), sin(theta_link));
+    Vector2d P1_dot = Vector2d(state(num_links + 1, 3), state(num_links + 1, 4)) + (L / 2) * state(num_links + 1, 5) * Vector2d(-sin(theta_link), cos(theta_link));
 
-    Vector2f F_spring2 = this->boom.get_k() * (P1 - boat2_pos);
+    Vector2d F_spring2 = this->boom.get_k() * (P1 - boat2_pos);
+
     // unit vector in the direction of (P1 - boat2_pos)
-    Vector2f e2 = (P1 - boat2_pos).normalized();
-    Vector2f F_damp2 = this->boom.get_c() * ((P1_dot - boat2_vel).dot(e2)) * e2;
-    Vector2f boom_force2 = F_spring2 + F_damp2;
+    Vector2d e2 = (P1 - boat2_pos).normalized();
+    Vector2d F_damp2 = this->boom.get_c() * ((P1_dot - boat2_vel).dot(e2)) * e2;
+    Vector2d boom_force2 = F_spring2 + F_damp2;
+    // print boom force2 size and direction
+    // cout << "Boom force2 size in state_der: " << boom_force2.norm() << endl;
+    // cout << "Boom force2 direction in state_der: " << atan2(boom_force2(1), boom_force2(0)) << endl;
+    // cout.flush();
 
-    VectorXf boat2_state_der = this->boat2.state_der(VectorXf(state.row(1)),
+    VectorXd boat2_state_der = this->boat2.state_der(VectorXd(state.row(1)),
      control2, boom_force2);
+
+    // // print direction and y-point of boat2
+    // cout << "Direction of boat2 in state_der: " << state(1, 2) << endl;
+    // cout << "Y-point of boat2 in state_der: " << state(1, 1) << endl;
+    // cout.flush();
  
     // Calculate state derivative of the boom links
     // Use boom state derivative function
-    MatrixXf boom_state = MatrixXf::Zero(num_links, 6);
+    MatrixXd boom_state = MatrixXd::Zero(num_links, 6);
     // take all the lines from the state matrix: third line and onwards
     for (int i = 0; i < num_links; i++) {
         boom_state.row(i) = state.row(i + 2);
     }
-    MatrixXf boom_state_der = MatrixXf::Zero(num_links, 6);
+    MatrixXd boom_state_der = MatrixXd::Zero(num_links, 6);
     // Enter forces in negative sign as the boom is applying the force on the boats
     boom_state_der = this->boom.state_der(boom_state, -boom_force1, -boom_force2);
 
@@ -670,10 +713,10 @@ MatrixXf BoomBoatsDuo::state_der(const Vector2f &control1,
 }
 
 // Propagation function
-void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
- const Vector2f &control2, std::string integration_method) {
+void BoomBoatsDuo::propagate(double dt, const Vector2d &control1,
+ const Vector2d &control2, std::string integration_method) {
     // Calculate state derivative
-    MatrixXf state = MatrixXf::Zero(2 + this->boom.get_num_links(), 6);
+    MatrixXd state = MatrixXd::Zero(2 + this->boom.get_num_links(), 6);
     state.row(0).head(3) = this->boat1.get_pos().transpose();
     state.row(0).tail(3) = this->boat1.get_vel().transpose();
     state.row(1).head(3) = this->boat2.get_pos().transpose();
@@ -697,14 +740,14 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
     this->boat2.set_control(control2);
 
 
-    MatrixXf state_new = MatrixXf::Zero(2 + this->boom.get_num_links(), 6);
+    MatrixXd state_new = MatrixXd::Zero(2 + this->boom.get_num_links(), 6);
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {
         state.row(i + 2) = this->boom.get_link_state(i).transpose();
     }
 
     if (integration_method == "Euler") {
-        MatrixXf state_der = this->state_der(control1, control2, state);
+        MatrixXd state_der = this->state_der(control1, control2, state);
 
         state_new = Euler_integration(state, state_der, dt);
         this->t += dt;
@@ -724,7 +767,7 @@ void BoomBoatsDuo::propagate(float dt, const Vector2f &control1,
         state_new = RK6_integration(control1, control2, state, dt, this);
         this->t += dt;
     } else if (integration_method == "RK45") {
-        pair<MatrixXf, float> result = RK45_integration(control1, control2, state, dt, this, this->simulation_params);
+        pair<MatrixXd, double> result = RK45_integration(control1, control2, state, dt, this, this->simulation_params);
         state_new = result.first;
         this->t += result.second;
     } else {

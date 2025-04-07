@@ -224,15 +224,16 @@ for spill_convex_file in os.listdir(foldername_spills_convex):
 ################################################################################
 
 # find minimal distance between points - for the arrows
-if len(dubin_path) > 1:
-    min_dist = ((dubin_path[0][0] - dubin_path[1][0])**2 + (dubin_path[0][1] - dubin_path[1][1])**2)**0.5
-    for i in range(len(dubin_path)-2):
-        dist = ((dubin_path[i][0] - dubin_path[i+1][0])**2 + (dubin_path[i][1] - dubin_path[i+1][1])**2)**0.5
-        if dist < min_dist:
-            min_dist = dist
-else:
-    min_dist = 0
-arrow_length = min_dist / 2
+# if len(dubin_path) > 1:
+#     min_dist = ((dubin_path[0][0] - dubin_path[1][0])**2 + (dubin_path[0][1] - dubin_path[1][1])**2)**0.5
+#     for i in range(len(dubin_path)-2):
+#         dist = ((dubin_path[i][0] - dubin_path[i+1][0])**2 + (dubin_path[i][1] - dubin_path[i+1][1])**2)**0.5
+#         if dist < min_dist:
+#             min_dist = dist
+# else:
+#     min_dist = 0
+# arrow_length = min_dist / 2
+arrow_length = 0.1
 
 
 
@@ -325,7 +326,7 @@ def transform_vertices(position, angle, eta, rudder_L=0.4):
         [-0.5, 1],  # Bow port side
         [-0.5, 0],  # Stern port side
         [0, 0],  # Stern middle
-        [rudder_L * sin(eta), -rudder_L * cos(eta)], # End of rudder
+        [-rudder_L * sin(eta), -rudder_L * cos(eta)], # End of rudder
         [0, 0],  # Stern middle
         [0.5, 0],  # Stern starboard side
         [0.5, 1],  # Bow starboard side

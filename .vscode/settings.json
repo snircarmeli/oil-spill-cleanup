@@ -103,5 +103,6 @@
         "typeindex": "cpp",
         "unordered_set": "cpp",
         "variant": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/snir2/OneDrive - Technion/Msc. Electrical Engineering/Thesis/code/matplotlib-cpp"
 }

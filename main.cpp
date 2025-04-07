@@ -1,6 +1,9 @@
 #include "generic-boat.h"
 #include "boom-boats-duo.h"
 #include "boom-boat.h"
+#include "PID_controller.h"
+#include "integrator.h"
+#include "helper_funcs.h"
 
 #include <vector>
 #include <iostream>
@@ -15,12 +18,12 @@ using json = nlohmann::json;
 
 using std::sin;
 using std::vector;
-using Matrix = vector<vector<float>>;
-using Eigen::Vector3f;
-using Eigen::Vector2f;
-using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
-using Eigen::RowVectorXf;
-using Eigen::MatrixXf;
+using Matrix = vector<vector<double>>;
+using Eigen::Vector3d;
+using Eigen::Vector2d;
+using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
+using Eigen::RowVectorXd;
+using Eigen::MatrixXd;
 
 namespace fs = std::filesystem;
 
@@ -47,7 +50,7 @@ void erase_folder_content(const std::string& foldername) {
     // std::cout.flush(); // Force immediate display of the output
 }
 
-const float PI = 3.141592653589793;
+const double PI = 3.141592653589793;
 
 int main(int argc, char* argv[]) {
 
@@ -79,25 +82,28 @@ int main(int argc, char* argv[]) {
     json file_management_params = params["file_management"];
 
     // Simulation parameters
-    float T = simulation_params["time_duration"];
-    float dt = simulation_params["time_step"];
+    double T = simulation_params["time_duration"];
+    double dt = simulation_params["time_step"];
     // Boom parameters
     size_t num_links = boom_params["num_links"];
-    float L = boom_params["link_length"];
-    float I = boom_params["inertia"];
-    float m = boom_params["mass"];
-    float k = boom_params["spring_constant"];
-    float c = boom_params["damping_coefficient"];
-    float mu_l = boom_params["drag_coefficients"]["linear"];
-    float mu_ct = boom_params["drag_coefficients"]["cross_track"];
-    float mu_r = boom_params["drag_coefficients"]["rotational"];
+    double L = boom_params["link_length"];
+    double I = boom_params["inertia"];
+    double m = boom_params["mass"];
+    double k = boom_params["spring_constant"];
+    double c = boom_params["damping_coefficient"];
+    double mu_l = boom_params["drag_coefficients"]["linear"];
+    double mu_ct = boom_params["drag_coefficients"]["cross_track"];
+    double mu_r = boom_params["drag_coefficients"]["rotational"];
 
     BoomBoat *boat = new BoomBoat();
     // cout << "Managed to create boat" << endl;
-    float orientation = duo_params["initial_orientation"];
-    Vector2f center = Vector2f(duo_params["initial_center"][0], duo_params["initial_center"][1]);
+    double orientation = duo_params["initial_orientation"];
+    Vector2d center = Vector2d(duo_params["initial_center"][0], duo_params["initial_center"][1]);
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
      mu_ct, mu_r, I, m, k, c, center, orientation);
+    //  Set controller
+    PID_Controller controller = PID_Controller(file_path);
+
     // duo->print_status();
     // int num_duos = 1;
 
@@ -107,24 +113,25 @@ int main(int argc, char* argv[]) {
 
 
     
-    // float T = 30;
-    // float dt = 1e-2;
+    // double T = 30;
+    // double dt = 1e-2;
     int numSteps = static_cast<int>(T / dt) + 1;
-    RowVectorXf t = RowVectorXf::LinSpaced(numSteps, 0.0f, T);
+    RowVectorXd t = RowVectorXd::LinSpaced(numSteps, 0.0f, T);
 
-    MatrixXf control1 = MatrixXf::Zero(numSteps, 2);
-    MatrixXf control2 = MatrixXf::Zero(numSteps, 2);
+    MatrixXd control1 = MatrixXd::Zero(numSteps, 2);
+    MatrixXd control2 = MatrixXd::Zero(numSteps, 2);
     // set all forces to 1000 and all steering angles to 0
-    float force = 1000;
+    double force = 1000;
     control1.col(0) = force * VectorXf::Ones(numSteps);
     control2.col(0) = force * VectorXf::Ones(numSteps);  
 
-    float D2R = PI / 180.0;
-    float dir = 0 * D2R;
+    double D2R = PI / 180.0;
+    double dir = 0 * D2R;
     control1.col(1) = dir * VectorXf::Ones(numSteps);
     control2.col(1) = -dir * VectorXf::Ones(numSteps);
 
-    MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
+
+    MatrixXd boat_data = MatrixXd::Zero(numSteps, 9);
     string foldername = file_management_params["output_folder"];
     erase_folder_content(foldername);
 
@@ -146,10 +153,23 @@ int main(int argc, char* argv[]) {
             cout.flush(); // Force flush the buffer  
         }
 
-        Vector2f control1_vec = control1.row(0); // zero just for testing
-        Vector2f control2_vec = control2.row(0); // zero just for testing
+        // Vector2d control1_vec = control1.row(0); // zero just for testing
+        // Vector2d control2_vec = control2.row(0); // zero just for testing
+        
+        // Use informed control update
+        Vector3d boat1_pos = duo->get_boat1().get_pos();
+        Vector3d boat2_pos = duo->get_boat2().get_pos();
+        Vector3d boat1_vel = duo->get_boat1().get_vel();
+        Vector3d boat2_vel = duo->get_boat2().get_vel();
+        Matrix3X2f set_point = Matrix3X2f::Zero();
+        Matrix3X2f set_point_dot = Matrix3X2f::Zero();
+        Matrix2X2f control = controller.get_control(boat1_pos, boat2_pos, boat1_vel, boat2_vel, set_point, set_point_dot);
+        Vector2d control1_vec = control.col(0);
+        Vector2d control2_vec = control.col(1);
+
         string filename = "Duo0.txt";
         duo->print_to_file(filename, foldername);
+
 
         duo->propagate(dt, control1_vec, control2_vec,
          integration_method);

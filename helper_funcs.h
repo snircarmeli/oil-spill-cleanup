@@ -6,35 +6,52 @@
 #include <fstream>
 #include <filesystem> // For file operations
 #include <algorithm> // for sort
+#include <cmath>
 
 #define PI 3.14159265358979323846
 #define DEG2RAD PI / 180.0
 #define RAD2DEG 180.0 / PI
 
-using Eigen::Vector2f;
-using Eigen::Matrix2f;
+using Eigen::Vector2d;
+using Eigen::Vector3d;
+using Eigen::Matrix2d;
+using Eigen::MatrixXd;
 
 using std::min;
 using std::max;
 using std::string;
 
+using std::cout;
+using std::endl;
+
 
 // Wrap theta between -pi and pi
-float wrap_theta(float theta);
+double wrap_theta(double theta);
+
+// wrap eta between -pi / 2 and pi / 2
+double wrap_eta(double eta);
 
 // Sign function
-int sign(float x);
+int sign(double x);
 
 // Rotation matrix
-Matrix2f rot_mat(float theta);
+Matrix2d rot_mat(double theta);
 
 // Check if point k is on segment ij
-bool on_segment(float xi, float yi, float xj, float yj, float xk, float yk);
+bool on_segment(double xi, double yi, double xj, double yj, double xk, double yk);
 
 // Check if two line segments intersect
-bool check_intersection(float x_11, float y_11, float x_12, float y_12,
- float x_21, float y_21, float x_22, float y_22, float L);
+bool check_intersection(double x_11, double y_11, double x_12, double y_12,
+ double x_21, double y_21, double x_22, double y_22, double L);
 
 bool canConvertToFloat(const string &s);
+
+// Function which calculate the derivative of the path in the global frame
+MatrixXd path_der_global(MatrixXd path_points, double ts);
+
+// Function which checks if jumps between two points are too big and interpolates them
+MatrixXd check_path(MatrixXd path_points, double max_jump);
+
+// MatrixXd glob_path_points_2_local_frame_vel(MatrixXd path_points, double ts);
 
 #endif // HELPER_FUNCS_H

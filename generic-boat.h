@@ -12,9 +12,9 @@ using json = nlohmann::json;
 using namespace std;
 using std::vector;
 
-using Eigen::Vector3f;
-using Eigen::Vector2f;
-using Matrix2x3f = Eigen::Matrix<float, 2, 3>;
+using Eigen::Vector3d;
+using Eigen::Vector2d;
+using Matrix2x3d = Eigen::Matrix<double, 2, 3>;
 
 
 class BoomBoat;
@@ -22,31 +22,31 @@ class ContainerBoat;
 
 class GenericBoat {
     private:
-        float radius; // Distance between applied force point and Center of mass [m]
-        float mass; // Mass of Boat [kg]
-        float inertia; // Moment of inertia [kg*m^2]
+        double radius; // Distance between applied force point and Center of mass [m]
+        double mass; // Mass of Boat [kg]
+        double inertia; // Moment of inertia [kg*m^2]
         // Drag coefficient of movement
-        float mu_l; // Drag of advancing [kg / m]
-        float mu_ct; // Drag of drifting sideways (Cross Track) [kg / m] 
-        float mu_r; // drag while rotating [kg * m^2]
+        double mu_l; // Drag of advancing [kg / m]
+        double mu_ct; // Drag of drifting sideways (Cross Track) [kg / m] 
+        double mu_r; // drag while rotating [kg * m^2]
         
         // Max control values
-        float F_max; // Maximum force applied by engine [N]
-        float eta_max; // Maximum steering angle [rad]
+        double F_max; // Maximum force applied by engine [N]
+        double eta_max; // Maximum steering angle [rad]
 
         // EOM for the propogate function (RK4)
-        Matrix2x3f state_der(Matrix2x3f state, Vector2f control);
+        Matrix2x3d state_der(Matrix2x3d state, Vector2d control);
 
         
 
     protected:
         // State variables
-        Vector3f pos; // Position [m], [m], [rad]
-        Vector3f vel; // Velocity [m/s], [m/s], [rad/s]
+        Vector3d pos; // Position [m], [m], [rad]
+        Vector3d vel; // Velocity [m/s], [m/s], [rad/s]
 
         // Current control values
-        float F; // Force applied by engine [N]
-        float eta; // Steering angle [rad]
+        double F; // Force applied by engine [N]
+        double eta; // Steering angle [rad]
 
         json generic_boat_params;
         
@@ -55,9 +55,9 @@ class GenericBoat {
         // Constructors
         GenericBoat(); // Basic setup constructor, set every value to 1
         GenericBoat(const GenericBoat &gen_boat); // Copy constructor
-        GenericBoat(float radius, float mass, float inertia, float mu_l, 
-        float mu_ct, float mu_r, Vector3f pos, Vector3f vel, float F_max,
-         float eta_max); // Parameterized constructor
+        GenericBoat(double radius, double mass, double inertia, double mu_l, 
+        double mu_ct, double mu_r, Vector3d pos, Vector3d vel, double F_max,
+         double eta_max); // Parameterized constructor
         // Destructor
         ~GenericBoat();
 
@@ -65,29 +65,30 @@ class GenericBoat {
         GenericBoat& operator=(const GenericBoat &other);
 
         // RK-4 method for propogation
-        void propogate(Vector2f control, float dt);
+        void propogate(Vector2d control, double dt);
 
         // Accessors
-        Vector3f get_pos() const;
-        Vector3f get_vel() const;
-        Vector2f get_control() const;
-        float get_radius() const;
-        float get_mass() const;
-        float get_inertia() const;
-        float get_mu_l() const;
-        float get_mu_ct() const;
-        float get_mu_r() const;
-        float get_F_max() const;
-        float get_eta_max() const;
-        float get_ship_size() const;
+        Vector3d get_pos() const;
+        Vector3d get_vel() const;
+        Vector3d get_frame_vel() const; // Velocities in the body frame
+        Vector2d get_control() const;
+        double get_radius() const;
+        double get_mass() const;
+        double get_inertia() const;
+        double get_mu_l() const;
+        double get_mu_ct() const;
+        double get_mu_r() const;
+        double get_F_max() const;
+        double get_eta_max() const;
+        double get_ship_size() const;
         void print_params();
 
         // Setters
-        void set_pos(Vector3f pos);
-        void set_vel(Vector3f vel);
-        void set_control(Vector2f control);
+        void set_pos(Vector3d pos);
+        void set_vel(Vector3d vel);
+        void set_control(Vector2d control);
 
-        bool is_valid_control(Vector2f control) const;
+        bool is_valid_control(Vector2d control) const;
 
         void load_params(std::string filename);
     

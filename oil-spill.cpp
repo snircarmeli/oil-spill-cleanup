@@ -4,9 +4,9 @@
 // Default constructor
 OilSpill::OilSpill() : oil_spill_mass(0.0) {
     // Set perimeter_points to an empty matrix
-    this->perimeter_points = MatrixXf(0, 2);
+    this->perimeter_points = MatrixXd(0, 2);
     // Set convex_hull to an empty matrix
-    this->convex_hull = MatrixXf(0, 2);
+    this->convex_hull = MatrixXd(0, 2);
     this->load_oil_spill_params("params.json");
 }
 
@@ -20,8 +20,8 @@ OilSpill::OilSpill(const OilSpill &oil_spill) {
 
 
 // Parameterized constructor
-OilSpill::OilSpill(MatrixXf perimeter_points, MatrixXf convex_hull,
- float oil_spill_mass) {
+OilSpill::OilSpill(MatrixXd perimeter_points, MatrixXd convex_hull,
+ double oil_spill_mass) {
     this->perimeter_points = perimeter_points;
     this->convex_hull = convex_hull;
     this->oil_spill_mass = oil_spill_mass;
@@ -61,7 +61,7 @@ OilSpill::OilSpill(string filename) {
     // Consume the remaining newline character
     file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    this->perimeter_points = MatrixXf(num_points, 2);
+    this->perimeter_points = MatrixXd(num_points, 2);
 
     // Read the points
     string line;
@@ -94,7 +94,7 @@ OilSpill::OilSpill(string filename) {
         }
         
         // If we reach here, iss has only two numbers
-        float x, y;
+        double x, y;
         iss = istringstream(line);
         iss >> x >> y;
         this->perimeter_points.row(cnt) << x, y;
@@ -146,17 +146,17 @@ void OilSpill::load_oil_spill_params(string filename) {
 }
 
 // Getter for perimeter_points
-MatrixXf OilSpill::get_perimeter_points() const {
+MatrixXd OilSpill::get_perimeter_points() const {
     return this->perimeter_points;
 }
 
 // Setter for perimeter_points
-void OilSpill::set_perimeter_points(MatrixXf perimeter_points) {
+void OilSpill::set_perimeter_points(MatrixXd perimeter_points) {
     this->perimeter_points = perimeter_points;
 }
 
 // Getter for convex_hull
-MatrixXf OilSpill::get_convex_hull() const {
+MatrixXd OilSpill::get_convex_hull() const {
     // If convex_hull is empty, calculate it
     if (this->convex_hull.rows() == 0) {
         throw std::runtime_error("Empty convex hull matrix at OilSpill::get_convex_hull"); 
@@ -165,17 +165,17 @@ MatrixXf OilSpill::get_convex_hull() const {
 }
 
 // Setter for convex_hull
-void OilSpill::set_convex_hull(MatrixXf convex_hull) {
+void OilSpill::set_convex_hull(MatrixXd convex_hull) {
     this->convex_hull = convex_hull;
 }
 
 // Getter for oil_spill_mass
-float OilSpill::get_oil_spill_mass() const {
+double OilSpill::get_oil_spill_mass() const {
     return this->oil_spill_mass;
 }
 
 // Setter for oil_spill_mass
-void OilSpill::set_oil_spill_mass(float oil_spill_mass) {
+void OilSpill::set_oil_spill_mass(double oil_spill_mass) {
     this->oil_spill_mass = oil_spill_mass;
 }
 
@@ -200,7 +200,7 @@ void OilSpill::calculate_convex_hull() {
         return;
     }
     
-    MatrixXf pts(n, 2);
+    MatrixXd pts(n, 2);
     // Copy perimeter_points to pts
     pts = perimeter_points;
 
@@ -211,7 +211,7 @@ void OilSpill::calculate_convex_hull() {
     });
 
     // Lambda to compute the cross product of OA and OB
-    auto cross = [&](int O, int A, int B) -> float {
+    auto cross = [&](int O, int A, int B) -> double {
         return (pts(A, 0) - pts(O, 0)) * (pts(B, 1) - pts(O, 1)) - (pts(A, 1) - pts(O, 1)) * (pts(B, 0) - pts(O, 0));
     };
 
@@ -245,8 +245,8 @@ void OilSpill::calculate_convex_hull() {
     VectorXi hull(lower_size + upper_size);
     hull << lower.head(lower_size), upper.head(upper_size);
 
-    // Convert the hull indices back to an MatrixXf
-    MatrixXf hull_matrix(hull.size(), 2);
+    // Convert the hull indices back to an MatrixXd
+    MatrixXd hull_matrix(hull.size(), 2);
     for (int i = 0; i < hull.size(); i++) {
         hull_matrix(i, 0) = pts(hull(i), 0);
         hull_matrix(i, 1) = pts(hull(i), 1);
@@ -256,9 +256,9 @@ void OilSpill::calculate_convex_hull() {
 }
 
 // Getter for the spill centroid
-Vector2f OilSpill::get_spill_centroid() const {
+Vector2d OilSpill::get_spill_centroid() const {
     // Compute the centroid of the oil spill
-    Vector2f centroid = Vector2f::Zero();
+    Vector2d centroid = Vector2d::Zero();
     // Check if the perimeter_points matrix is empty
     if (this->perimeter_points.rows() == 0) {
         throw std::runtime_error("Empty perimeter points matrix at OilSpill::get_spill_centroid");
@@ -271,16 +271,16 @@ Vector2f OilSpill::get_spill_centroid() const {
 }
 
 // Get the convex hull radius
-float OilSpill::get_convex_hull_radius() const {
+double OilSpill::get_convex_hull_radius() const {
     // Check if the convex_hull matrix is empty
     if (this->convex_hull.rows() == 0) {
         throw std::runtime_error("Empty convex hull matrix at OilSpill::get_convex_hull_radius");
     }
     // Compute the centroid of the convex hull
-    Vector2f centroid = this->get_convex_hull_centroid();
+    Vector2d centroid = this->get_convex_hull_centroid();
     // Compute the maximum distance from the centroid
-    float dist;
-    float radius = 0.0;
+    double dist;
+    double radius = 0.0;
     for (int i = 0; i < this->convex_hull.rows(); i++) {
         dist = (this->convex_hull.row(i).transpose() - centroid).norm();
         if (dist > radius) {
@@ -291,9 +291,9 @@ float OilSpill::get_convex_hull_radius() const {
 }
 
 // Getter for the convex hull centroid
-Vector2f OilSpill::get_convex_hull_centroid() const {
+Vector2d OilSpill::get_convex_hull_centroid() const {
     // Compute the centroid of the convex hull
-    Vector2f centroid = Vector2f::Zero();
+    Vector2d centroid = Vector2d::Zero();
     // Check if the convex_hull matrix is empty
     if (this->convex_hull.rows() == 0) {
         throw std::runtime_error("Empty convex hull matrix at OilSpill::get_convex_hull_centroid");
@@ -306,7 +306,7 @@ Vector2f OilSpill::get_convex_hull_centroid() const {
 }
 
 // Expand the oil spill by a factor
-void OilSpill::expand_spill(float factor) {
+void OilSpill::expand_spill(double factor) {
     // Check if the perimeter_points matrix is empty
     if (this->perimeter_points.rows() == 0) {
         throw std::runtime_error("Empty perimeter points matrix at OilSpill::expand_spill");
@@ -316,7 +316,7 @@ void OilSpill::expand_spill(float factor) {
         throw std::runtime_error("Factor is non-positive at OilSpill::expand_spill");
     }
     // Compute the centroid of the oil spill
-    Vector2f centroid = this->get_spill_centroid();
+    Vector2d centroid = this->get_spill_centroid();
     // Expand the oil spill by the factor
     for (int i = 0; i < this->perimeter_points.rows(); i++) {
         this->perimeter_points.row(i) = (centroid + factor * (this->perimeter_points.row(i).transpose() - centroid)).transpose();
@@ -348,11 +348,11 @@ bool OilSpill::is_valid_sequence() const {
     }
     // Check if the sequence of points intersects itself
     for (int i = 0; i < this->perimeter_points.rows() - 2; i++) {
-        Vector2f p1 = this->perimeter_points.row(i);
-        Vector2f p2 = this->perimeter_points.row((i + 1) % this->perimeter_points.rows());
+        Vector2d p1 = this->perimeter_points.row(i);
+        Vector2d p2 = this->perimeter_points.row((i + 1) % this->perimeter_points.rows());
         for (int j = i + 1; j < this->perimeter_points.rows(); j++) {
-            Vector2f p3 = this->perimeter_points.row(j);
-            Vector2f p4 = this->perimeter_points.row((j + 1) % this->perimeter_points.rows());
+            Vector2d p3 = this->perimeter_points.row(j);
+            Vector2d p4 = this->perimeter_points.row((j + 1) % this->perimeter_points.rows());
             if (check_intersection(p1.x(), p1.y(), p2.x(), p2.y(), p3.x(), p3.y(), p4.x(), p4.y(), 1e-6)) {
                 cout << "Spill invalid - Line segments intersect." << endl;
                 cout.flush();
@@ -394,7 +394,7 @@ string filename) const {
 }
 
 // Length of line that passes through the convex centroid and is perpendicular to the line
-float OilSpill::convex_hull_line_length(float orientation) const
+double OilSpill::convex_hull_line_length(double orientation) const
 {
     // Check if the convex_hull matrix is empty
     if (this->convex_hull.rows() == 0) {
@@ -402,19 +402,19 @@ float OilSpill::convex_hull_line_length(float orientation) const
     }
 
     // Rotate the convex hull by -orientation
-    MatrixXf rotated_convex_hull = MatrixXf::Zero(this->convex_hull.rows(), 2);
-    Matrix2f R;
+    MatrixXd rotated_convex_hull = MatrixXd::Zero(this->convex_hull.rows(), 2);
+    Matrix2d R;
     R = rot_mat(-orientation);
     rotated_convex_hull = (R * this->convex_hull.transpose()).transpose();
 
     // Find highest and lowest points
-    float max_y = rotated_convex_hull.col(1).maxCoeff();
-    float min_y = rotated_convex_hull.col(1).minCoeff();
+    double max_y = rotated_convex_hull.col(1).maxCoeff();
+    double min_y = rotated_convex_hull.col(1).minCoeff();
     return max_y - min_y;
 }
 
 // Get the angle of attack of the oil spill
-pair<float, float> OilSpill::angle_of_attack() const
+pair<double, double> OilSpill::angle_of_attack() const
 {
     // Check if the convex_hull matrix is empty
     if (this->convex_hull.rows() == 0) {
@@ -422,22 +422,22 @@ pair<float, float> OilSpill::angle_of_attack() const
     }
     
     // Rotating calipers algorithm (Or something like it)
-    MatrixXf Rotated_convex_hull = MatrixXf::Zero(this->convex_hull.rows(), 2);
-    Matrix2f R; // Rotation matrix
-    float min_length = std::numeric_limits<float>::max();
-    float angle_of_attack = 0.0;
+    MatrixXd Rotated_convex_hull = MatrixXd::Zero(this->convex_hull.rows(), 2);
+    Matrix2d R; // Rotation matrix
+    double min_length = std::numeric_limits<double>::max();
+    double angle_of_attack = 0.0;
     // Iterate Each edge and find its orientation
     for (int i = 0; i < this->convex_hull.rows(); i++) {
-        Vector2f p1 = this->convex_hull.row(i);
-        Vector2f p2 = this->convex_hull.row((i + 1) % this->convex_hull.rows());
-        Vector2f edge = p2 - p1;
-        float orientation = atan2(edge.y(), edge.x());
+        Vector2d p1 = this->convex_hull.row(i);
+        Vector2d p2 = this->convex_hull.row((i + 1) % this->convex_hull.rows());
+        Vector2d edge = p2 - p1;
+        double orientation = atan2(edge.y(), edge.x());
         // Rotate the convex hull by -orientation
         R = rot_mat(PI - orientation);
         Rotated_convex_hull = (R * this->convex_hull.transpose()).transpose();
         // If rotated by (PI - orientation), the edge (p1, p2) is now horizontal, and
         // all other points are above it.
-        Rotated_convex_hull.col(1) -= p1.y() * VectorXf::Ones(this->convex_hull.rows());
+        Rotated_convex_hull.col(1) -= p1.y() * VectorXd::Ones(this->convex_hull.rows());
         if (Rotated_convex_hull.col(1).maxCoeff() < min_length) {
             min_length = Rotated_convex_hull.col(1).maxCoeff();
             angle_of_attack = orientation;

@@ -8,7 +8,7 @@
 #include <fstream> // For file operations
 
 
-using Eigen::MatrixXf;
+using Eigen::MatrixXd;
 using std::string;
 using std::endl;
 
@@ -34,40 +34,40 @@ using std::endl;
 #define R_SEG (2)
 
 // The various types of solvers for each of the path types
-typedef int (*DubinsWord)(float, float, float, float*);
+typedef int (*DubinsWord)(double, double, double, double*);
 
 // A complete list of the possible solvers that could give optimal paths
 extern DubinsWord dubins_words[];
 
 // Dubins path structure
 typedef struct {
-    float qi[3];       // The initial configuration
-    float param[3];    // The lengths of the three segments
-    float rho;         // Model forward velocity / model angular velocity
+    double qi[3];       // The initial configuration
+    double param[3];    // The lengths of the three segments
+    double rho;         // Model forward velocity / model angular velocity
     int type;           // Path type. One of LSL, LSR, ...
 } DubinsPath;
 
 // Callback function for path sampling
-typedef int (*DubinsPathSamplingCallback)(float q[3], float t, void* user_data);
+typedef int (*DubinsPathSamplingCallback)(double q[3], double t, void* user_data);
 
 // Function declarations
-float fmodr(float x, float y);
-float mod2pi(float theta);
-int dubins_init(float q0[3], float q1[3], float rho, DubinsPath* path);
-float dubins_path_length(DubinsPath* path);
+double fmodr(double x, double y);
+double mod2pi(double theta);
+int dubins_init(double q0[3], double q1[3], double rho, DubinsPath* path);
+double dubins_path_length(DubinsPath* path);
 int dubins_path_type(DubinsPath* path);
-int dubins_path_sample(DubinsPath* path, float t, float q[3]);
+int dubins_path_sample(DubinsPath* path, double t, double q[3]);
 int dubins_path_sample_many(DubinsPath* path, DubinsPathSamplingCallback cb,
- float stepSize, void* user_data);
-int dubins_path_endpoint(DubinsPath* path, float q[3]);
-int dubins_extract_subpath(DubinsPath* path, float t, DubinsPath* newpath);
-int dubins_LSL(float alpha, float beta, float d, float* outputs);
-int dubins_RSR(float alpha, float beta, float d, float* outputs);
-int dubins_LSR(float alpha, float beta, float d, float* outputs);
-int dubins_RSL(float alpha, float beta, float d, float* outputs);
-int dubins_LRL(float alpha, float beta, float d, float* outputs);
-int dubins_RLR(float alpha, float beta, float d, float* outputs);
-void save_to_file(string file_path, string folder_name, MatrixXf path,
- MatrixXf path_R, MatrixXf path_L);
+ double stepSize, void* user_data);
+int dubins_path_endpoint(DubinsPath* path, double q[3]);
+int dubins_extract_subpath(DubinsPath* path, double t, DubinsPath* newpath);
+int dubins_LSL(double alpha, double beta, double d, double* outputs);
+int dubins_RSR(double alpha, double beta, double d, double* outputs);
+int dubins_LSR(double alpha, double beta, double d, double* outputs);
+int dubins_RSL(double alpha, double beta, double d, double* outputs);
+int dubins_LRL(double alpha, double beta, double d, double* outputs);
+int dubins_RLR(double alpha, double beta, double d, double* outputs);
+void save_to_file(string file_path, string folder_name, MatrixXd path,
+ MatrixXd path_R, MatrixXd path_L);
 
 #endif // DUBIN_H

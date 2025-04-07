@@ -1,8 +1,8 @@
 #include <Eigen/Dense>
-using Eigen::MatrixXf;
+using Eigen::MatrixXd;
 
 // Euler integration
-MatrixXf Euler_integration(const MatrixXf& state, const MatrixXf& state_der, float dt) {
+MatrixXd Euler_integration(const MatrixXd& state, const MatrixXd& state_der, double dt) {
     return (state + dt * state_der);
 }
 

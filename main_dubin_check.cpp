@@ -3,6 +3,7 @@
 #include "dubin.h"
 #include "helper_funcs.h"
 #include "oil-spill.h"
+#include "non_linear_controller.h"
 
 #include <vector>
 #include <iostream>
@@ -18,10 +19,10 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
-using Eigen::Vector3f;
-using Eigen::Vector2f;
-using Eigen::MatrixXf;
-using Eigen::RowVectorXf;
+using Eigen::Vector3d;
+using Eigen::Vector2d;
+using Eigen::MatrixXd;
+using Eigen::RowVectorXd;
 
 // Path types
 #define LSL (0)
@@ -62,8 +63,8 @@ void erase_folder_content(const std::string& foldername) {
 }
 
 // Calculate the dot of the setpoint at the given index - Numerical differentiation
-Vector3f get_setpoint_dot(MatrixXf path, int i, float dt) {
-    Vector3f setpoint_dot;
+Vector3d get_setpoint_dot(MatrixXd path, int i, double dt) {
+    Vector3d setpoint_dot;
     if (i == 0) {
         setpoint_dot << path(0, i + 1) - path(0, i), path(1, i + 1) - path(1, i), path(2, i + 1) - path(2, i);
         setpoint_dot /= dt;
@@ -100,24 +101,25 @@ int main(int argc, char* argv[]) {
     json duo_params = params["boom_boats_duo"];
     json simulation_params = params["simulation"];
     json file_management_params = params["file_management"];
+    json PID_params = params["PID"];
 
     // Simulation parameters
-    float T = simulation_params["time_duration"];
-    float dt = simulation_params["time_step"];
+    double T = simulation_params["time_duration"];
+    double dt = simulation_params["time_step"];
 
     // Boom parameters
     size_t num_links = boom_params["num_links"];
-    float L = boom_params["link_length"];
-    float I = boom_params["inertia"];
-    float m = boom_params["mass"];
-    float k = boom_params["spring_constant"];
-    float c = boom_params["damping_coefficient"];
-    float mu_l = boom_params["drag_coefficients"]["linear"];
-    float mu_ct = boom_params["drag_coefficients"]["cross_track"];
-    float mu_r = boom_params["drag_coefficients"]["rotational"];
+    double L = boom_params["link_length"];
+    double I = boom_params["inertia"];
+    double m = boom_params["mass"];
+    double k = boom_params["spring_constant"];
+    double c = boom_params["damping_coefficient"];
+    double mu_l = boom_params["drag_coefficients"]["linear"];
+    double mu_ct = boom_params["drag_coefficients"]["cross_track"];
+    double mu_r = boom_params["drag_coefficients"]["rotational"];
 
     // Oil spill parameters
-    float attack_dist = params["oil_spill"]["attack_distance"];
+    double attack_dist = params["oil_spill"]["attack_distance"];
 
     // Set an oil spill - read from spills folder
     string spill_folder = file_management_params["spills_folder"];
@@ -133,8 +135,8 @@ int main(int argc, char* argv[]) {
     }
     // Get convex hull of the oil spill and print it to file
     oil_spill.calculate_convex_hull();
-    float convex_hull_radius = oil_spill.get_convex_hull_radius();
-    Vector2f convex_hull_centroid = oil_spill.get_convex_hull_centroid();
+    double convex_hull_radius = oil_spill.get_convex_hull_radius();
+    Vector2d convex_hull_centroid = oil_spill.get_convex_hull_centroid();
     // Get the file name without the ".txt" extension, adjust it
     string convex_file_name = "oilspill_001_convex.txt";
     oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
@@ -172,18 +174,12 @@ int main(int argc, char* argv[]) {
     //     }
     // }
 
-    // Boundry conditions
-    float qi[3];
+    // Boundry conditions for the Dubin's path
+    double qi[3];
     qi[0] = dubin_params["initial_position"][0];
     qi[1] = dubin_params["initial_position"][1];
     qi[2] = dubin_params["initial_position"][2];
 
-    float qf[3];
-    // Get spill angle of attack
-    float attack_angle = oil_spill.angle_of_attack().first;
-    qf[0] = convex_hull_centroid[0] - (convex_hull_radius + attack_dist) * cos(attack_angle);
-    qf[1] = convex_hull_centroid[1] - (convex_hull_radius + attack_dist) * sin(attack_angle);
-    qf[2] = attack_angle;
     
     // qf[0] = dubin_params["final_position"][0];
     // qf[1] = dubin_params["final_position"][1];
@@ -191,55 +187,94 @@ int main(int argc, char* argv[]) {
 
     // Create duo
     BoomBoat *boat = new BoomBoat();
-    // cout << "Managed to create boat" << endl;
-    float orientation = qi[2] + PI / 2;
-    Vector2f center = Vector2f(qi[0], qi[1]);
+    // -x + PI / 2 --> To accomodate the orientation of the boat in its local frame
+    double orientation = wrap_theta(-qi[2] + PI / 2);
+    Vector2d center = Vector2d(qi[0], qi[1]);
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
      mu_ct, mu_r, I, m, k, c, center, orientation);
 
-    // Create controller
-    PID_Controller controller(params_path);
-
     // Plan path for right and left ship
     // int num_links = params["boom"]["num_links"];
-    // float L = params["boom"]["link_length"];
-    float boom_total_length = num_links * L;
-    float dist_from_center_ratio = params["dubin"]["dist_from_center_ratio"];
-    float dist_from_center = boom_total_length * dist_from_center_ratio;
-    float dist_between_boats = dist_from_center / 2;
+    // double L = params["boom"]["link_length"];
+    double boom_total_length = num_links * L;
+    double dist_from_center_ratio = params["dubin"]["dist_from_center_ratio"];
+    double dist_from_center = boom_total_length * dist_from_center_ratio;
+    double dist_between_boats = dist_from_center / 2;
 
  
     // Rho value
-    float rho = dist_between_boats; //dubin_params["min_turning_radius"];
+    double rho = dist_between_boats; //dubin_params["min_turning_radius"];
 
-    // Initialize the path
+    double qf1[3];
+    // Get spill angle of attack
+    double attack_angle1 = oil_spill.angle_of_attack().first;
+    qf1[0] = convex_hull_centroid[0] - (convex_hull_radius + attack_dist) * cos(attack_angle1);
+    qf1[1] = convex_hull_centroid[1] - (convex_hull_radius + attack_dist) * sin(attack_angle1);
+    qf1[2] = attack_angle1;
+
+    double qf2[3];
+    double attack_angle2 = wrap_theta(oil_spill.angle_of_attack().first + PI);
+    qf2[0] = convex_hull_centroid[0] - (convex_hull_radius + attack_dist) * cos(attack_angle2);
+    qf2[1] = convex_hull_centroid[1] - (convex_hull_radius + attack_dist) * sin(attack_angle2);
+    qf2[2] = attack_angle2;
+
+
+    
+    // Get length of the path with regular attack angle
     DubinsPath path;
-    int ret = dubins_init(qi, qf, rho, &path);
+    int ret = dubins_init(qi, qf1, rho, &path);
     if (ret != EDUBOK) {
-        std::cerr << "Failed to initialize Dubins path." << std::endl;
+        std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
         return 1;
     }
+    double path_length1 = dubins_path_length(&path);
+    // Get length of the path with inverse attack angle
+    ret = dubins_init(qi, qf2, rho, &path);
+    if (ret != EDUBOK) {
+        std::cerr << "Failed to initialize Dubins path with inverse angle of attack." << std::endl;
+        return 1;
+    }
+    double path_length2 = dubins_path_length(&path);
 
+
+    // Compare to get shortest path
+    if (path_length1 < path_length2) {
+        ret = dubins_init(qi, qf1, rho, &path);
+        if (ret != EDUBOK) {
+            std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
+            return 1;
+        }
+    } else {
+        ret = dubins_init(qi, qf2, rho, &path);
+        if (ret != EDUBOK) {
+            std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
+            return 1;
+        }
+    }
+   
     // Sample the path and save it in matrix
-    float step_size = dubin_params["sample_step_size"];
-    float q[3];
+    double step_size = dubin_params["sample_step_size"];
+    double q[3];
     int num_points = static_cast<int>(dubins_path_length(&path) / step_size) + 1;
-    MatrixXf path_points(3, num_points);
-    for (float t = 0; t < dubins_path_length(&path); t += step_size) {
+    MatrixXd path_points(3, num_points);
+    for (double t = 0; t < dubins_path_length(&path); t += step_size) {
         ret = dubins_path_sample(&path, t, q);
         if (ret != EDUBOK) {
             std::cerr << "Failed to sample Dubins path." << std::endl;
             return 1;
         }
-        // cout << "Sampled point: " << q[0] << ", " << q[1] << ", " << q[2] << std::endl;
         path_points.col(t / step_size) << q[0], q[1], wrap_theta(q[2]);
     }
 
+    // Check for jumps in the path
+    double max_jump = dubin_params["max_jump"];
+    path_points = check_path(path_points, max_jump);    
+
     
     // Create two matrices for path points
-    MatrixXf path_L(3, num_points);
-    MatrixXf path_R(3, num_points);
-    float orientation_path = 0.0;
+    MatrixXd path_L(3, num_points);
+    MatrixXd path_R(3, num_points);
+    double orientation_path = 0.0;
     // Fill the matrices with the path points
     for (int i = 0; i < num_points; i++) {
         orientation_path = path_points(2, i) - PI / 2;
@@ -253,19 +288,36 @@ int main(int argc, char* argv[]) {
         path_R(2, i) = path_points(2, i);
     }
 
-    // Save the path to a file
+    // Calculate the reference_dot in global frame
+    MatrixXd path_points_dot_L(3, num_points - 1);
+    MatrixXd path_points_dot_R(3, num_points - 1);
+
+    path_points_dot_L = path_der_global(path_L, step_size);
+    path_points_dot_R = path_der_global(path_R, step_size);
+
+    // MatrixXd path_L_local_frame = glob_path_points_2_local_frame_vel(path_L, step_size);
+    // MatrixXd path_R_local_frame = glob_path_points_2_local_frame_vel(path_R, step_size);
+    // MatrixXd path_local_frame = glob_path_points_2_local_frame_vel(path_points, step_size);
+
+    // Save the global path to a file
     std::string folder_name = "DubinPath";
     std::string file_name = "dubin_path";
     save_to_file(file_name, folder_name, path_points, path_R, path_L);
 
-    
+    // // Save the local frame path to a file
+    // std::string folder_name_local = "DubinPathLocal";
+    // std::string file_name_local = "dubin_path_local";
+    // save_to_file(file_name_local, folder_name_local, path_local_frame, path_R_local_frame, path_L_local_frame);
 
+    // Create controller
+    // PID_Controller controller(params_path);
+    NonLinearController controller(params_path);
 
 
     // Start tracking problem
     int numSteps = static_cast<int>(T / dt) + 1;
-    RowVectorXf t = RowVectorXf::LinSpaced(numSteps, 0.0f, T);
-    MatrixXf boat_data = MatrixXf::Zero(numSteps, 9);
+    RowVectorXd t = RowVectorXd::LinSpaced(numSteps, 0.0f, T);
+    MatrixXd boat_data = MatrixXd::Zero(numSteps, 9);
     string foldername = file_management_params["output_folder"];
     erase_folder_content(foldername);
     
@@ -282,22 +334,34 @@ int main(int argc, char* argv[]) {
     int cnt = 0;
     int jump_index = params["PID"]["jump_index"];
 
-    Vector3f setpoint_L = Vector3f::Zero();
-    Vector3f setpoint_R = Vector3f::Zero();
-    Matrix3X2f setpoint; // First column is for left ship, second column is for right ship
-    Vector3f setpoint_dot_L = Vector3f::Zero(); 
-    Vector3f setpoint_dot_R = Vector3f::Zero();
-    Matrix3X2f setpoint_dot; // First column is for left ship, second column is for right ship
+    // Setpoint
+    Vector3d setpoint_L = Vector3d::Zero();
+    Vector3d setpoint_R = Vector3d::Zero();
+    Matrix3X2d setpoint; // First column is for left ship, second column is for right ship
+    Vector3d setpoint_dot_L = Vector3d::Zero(); 
+    Vector3d setpoint_dot_R = Vector3d::Zero();
+    Matrix3X2d setpoint_dot; // First column is for left ship, second column is for right ship
 
-    Vector3f boat1_pos = Vector3f::Zero();
-    Vector3f boat2_pos = Vector3f::Zero();
-    Vector3f boat1_vel = Vector3f::Zero();
-    Vector3f boat2_vel = Vector3f::Zero();
-    Matrix2X2f control = Matrix2X2f::Zero();
-    Vector2f control1 = Vector2f::Zero();
-    Vector2f control2 = Vector2f::Zero();
+    // // Next setpoint
+    // Vector3d next_setpoint_L = Vector3d::Zero();
+    // Vector3d next_setpoint_R = Vector3d::Zero();
+    // Matrix3X2d next_setpoint; // First column is for left ship, second column is for right ship
+    // Vector3d next_setpoint_dot_L = Vector3d::Zero();
+    // Vector3d next_setpoint_dot_R = Vector3d::Zero();
+    // Matrix3X2d next_setpoint_dot; // First column is for left ship, second column is for right ship
+
+    Vector3d boat1_pos = Vector3d::Zero();
+    Vector3d boat2_pos = Vector3d::Zero();
+    Vector3d boat1_vel = Vector3d::Zero();
+    Vector3d boat2_vel = Vector3d::Zero();
+    Matrix2X2d control = Matrix2X2d::Zero();
+    Vector2d control1 = Vector2d::Zero();
+    Vector2d control2 = Vector2d::Zero();
     
-    while ( (duo->get_time() < T) & (cnt < num_points) ) {
+    // Show percent of path completed
+    double path_percent = 0.0;
+
+    while ( (duo->get_time() < T) && (cnt < num_points) ) {
         // Print current state to file
         duo->print_to_file(filename, foldername);
         if (cnt % k_itr == 0) {
@@ -305,6 +369,8 @@ int main(int argc, char* argv[]) {
                     << std::fixed << std::setprecision(2) 
                     << std::setw(6) << duo->get_time() << " [s] out of "
                     << std::setw(6) << T << " [s]" << std::endl;
+            cout << "Path completion: " << path_percent << "%" << std::endl;
+
             cout.flush(); // Force flush the buffer  
         }
 
@@ -315,23 +381,52 @@ int main(int argc, char* argv[]) {
         setpoint.col(1) = setpoint_R;
 
         // Get the setpoint dot
-        setpoint_dot_L = get_setpoint_dot(path_L, cnt, dt);
-        setpoint_dot_R = get_setpoint_dot(path_R, cnt, dt);
-        setpoint_dot.col(0) = setpoint_dot_L;
-        setpoint_dot.col(1) = setpoint_dot_R;
+        setpoint_dot_L = path_points_dot_L.col(cnt);
+        setpoint_dot_R = path_points_dot_R.col(cnt);
 
-        // Get the control
+
+        // Get the next setpoint
+        int next_index = cnt + jump_index;
+        if (next_index >= num_points) {
+            next_index = num_points - 1;
+        }
+        // next_setpoint_L = path_L.col(next_index);
+        // next_setpoint_R = path_R.col(next_index);
+        // next_setpoint.col(0) = next_setpoint_L;
+        // next_setpoint.col(1) = next_setpoint_R;
+
+        // // Get the next setpoint dot
+        // next_setpoint_dot_L = get_setpoint_dot(path_L, next_index, dt);
+        // next_setpoint_dot_R = get_setpoint_dot(path_R, next_index, dt);
+        // next_setpoint_dot.col(0) = next_setpoint_dot_L;
+        // next_setpoint_dot.col(1) = next_setpoint_dot_R;
+
+        // Get the odometry
         boat1_pos = duo->get_boat1().get_pos();
         boat2_pos = duo->get_boat2().get_pos();
         boat1_vel = duo->get_boat1().get_vel();
         boat2_vel = duo->get_boat2().get_vel();
-        control = controller.get_control(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot);
+
+        // if (PID_params["use_next_setpoint"]) {
+        //     control = controller.get_control_with_next(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot, next_setpoint, next_setpoint_dot);
+        // } else {
+        //     control = controller.get_control(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot);
+        // }
+        
+        // Use non linear controller
+        control = controller.update(*duo, setpoint_L, setpoint_R, setpoint_dot_L, setpoint_dot_R);
+
         // Unpack the control
         control1 = control.col(0);
         control2 = control.col(1);
 
+        // // Print control of boat 2
+        // cout << "Force of boat 2: " << control2(0) << endl;
+        // cout << "Steering angle of boat 2: " << control2(1) * RAD2DEG << endl;
+        // cout.flush();
+
         // testing
-        // float deg2rad = PI / 180;
+        // double deg2rad = PI / 180;
         // control1[0] = 1200;
         // control2[0] = 1200;
         // control1[1] = 1 * deg2rad;
@@ -350,6 +445,12 @@ int main(int argc, char* argv[]) {
         // //     cout.flush();
         // }
 
+        // print velocities of the boats in the local frame
+        // cout << "Boat 1 velocity in local frame: " << duo->get_boat1().get_frame_vel().transpose() << "\n" << endl;
+        // cout << "Boat 2 velocity in local frame: " << duo->get_boat2().get_frame_vel().transpose() << "\n" << endl;
+        // cout << endl;
+        // cout.flush();
+
         // Propagate the system
         duo->propagate(dt, control1, control2, integration_method);
 
@@ -360,9 +461,8 @@ int main(int argc, char* argv[]) {
                 cout.flush();
             }
         }
-        cnt += jump_index; 
-    
-
+        cnt += 1; 
+        path_percent += 100.0 / num_points;
     }
 
     // Delete pointers

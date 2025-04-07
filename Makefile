@@ -2,11 +2,11 @@
 CXXFLAGS = -Wall -g -std=c++17 -I/usr/include/json -I/usr/include/eigen3
 
 # Object files
-OBJS = main_dubin_check.o dubin.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o dubin.o PID_controller.o helper_funcs.o oil-spill.o
+OBJS = main_dubin_check.o dubin.o generic-boat.o boom-boat.o boom-boats-duo.o integrator.o dubin.o PID_controller.o helper_funcs.o oil-spill.o non_linear_controller.o
 RM = rm -rf
 
 # Executable name
-EXEC = main_dubin_check.exe # main.exe
+EXEC = main_dubin_check.exe main.exe
 
 # Default target
 all: $(EXEC)

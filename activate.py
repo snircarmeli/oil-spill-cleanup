@@ -5,21 +5,26 @@ from math import pi, sin, cos
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from matplotlib.animation import FuncAnimation
+import time
+import animate_all_data
 
 command = "make"
+print("Compiling the code...\n")
+start_time = time.time()
 subprocess.run(command, shell=True, text=True, capture_output=True)
 command = "/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main.exe"
 process = subprocess.run(command, shell=True, text=True, capture_output=True)
+print(f"Compilation time: {time.time() - start_time:.2f} seconds\n")
 
 out_code = process.returncode
 stdout = process.stdout
 print("stdout: ", stdout)
-print("out_code: ", out_code)
+# print("out_code: ", out_code)
 
 if out_code == 0:
     
    # Path to the file
-    file_path = 'output.txt'
+    file_path = 'DuosData/Duo0.txt'
 
     # Initialize an empty list to hold the data
     boat_data = []
@@ -89,7 +94,7 @@ if out_code == 0:
             [0, 1], #Bow, head of ship
             [-0.5, 0.5], # Bow port side, complete vertice circle
         ]) * size
-        print(f"Time: {dt * i:.4f} [s]")
+        print(f"Time: {dt * i:.2f} [s]")
 
         # boat_codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
 
@@ -106,7 +111,7 @@ if out_code == 0:
         return line,
 
     # Create the animation
-    interval = 1000 * t_anim[-1] / len(t_anim)
+    interval = t_anim[-1] / len(t_anim)
     ani = FuncAnimation(fig, animate, frames=len(t_anim), init_func=init, blit=True, interval=interval)
 
     # To save the animation, you can use:
