@@ -55,10 +55,10 @@
         "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
     },
     "simulation": {
-        "time_duration": 10.0,
+        "time_duration": 15.0,
         "time_step": 0.01,
         "print_interval": 50,
-        "integration_method": "RK4",
+        "integration_method": "RK2",
         "check_valid_interval": 50
     },
     "integration": {
@@ -72,7 +72,7 @@
         "spills_convex_folder": "spills_convexed"
     },
     "dubin": {
-        "min_turning_radius": 5.0,
+        "min_turning_radius": 4.0,
         "initial_position": [
             0.0,
             0.0,
@@ -83,7 +83,7 @@
             10.0,
             1.57079632679
         ],
-        "sample_step_size": 0.1,
+        "sample_step_size": 0.05,
         "dist_from_center_ratio": 0.7,
         "max_jump": 100.0
     },
@@ -109,14 +109,16 @@
         "switch_tolerance_deg": 5
     },
     "NonLinearController": {
-        "k_u": 1.5,
-        "k_v": 0.5,
-        "k_theta": 45,
+        "k_u": 30,
+        "k_u_d": 0,
+        "k_v": 0,
+        "k_v_d": 0,
+        "k_theta": 0,
         "gamma": 1.0,
         "delta": 10.5,
         "default_k_theta": 1.1,
         "default_k_u": 1.1,
-        "epsilon": 0.1
+        "epsilon": 0.001
     },
     "oil_spill": {
         "attack_distance": 5.0

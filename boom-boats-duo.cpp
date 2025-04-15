@@ -714,8 +714,12 @@ MatrixXd BoomBoatsDuo::state_der(const Vector2d &control1,
 
 // Propagation function
 void BoomBoatsDuo::propagate(double dt, const Vector2d &control1,
- const Vector2d &control2, std::string integration_method) {
+ const Vector2d &control2, std::string integration_method, Vector3d setpoint1,
+ Vector3d setpoint2, Vector3d setpoint1_dot, Vector3d setpoint2_dot) {
     // Calculate state derivative
+
+
+
     MatrixXd state = MatrixXd::Zero(2 + this->boom.get_num_links(), 6);
     state.row(0).head(3) = this->boat1.get_pos().transpose();
     state.row(0).tail(3) = this->boat1.get_vel().transpose();
@@ -780,10 +784,20 @@ void BoomBoatsDuo::propagate(double dt, const Vector2d &control1,
     }
 
 
-    this->boat1.set_pos(state_new.row(0).head(3).transpose());
-    this->boat1.set_vel(state_new.row(0).tail(3).transpose());
-    this->boat2.set_pos(state_new.row(1).head(3).transpose());
-    this->boat2.set_vel(state_new.row(1).tail(3).transpose());
+    // this->boat1.set_pos(state_new.row(0).head(3).transpose());
+    // this->boat1.set_vel(state_new.row(0).tail(3).transpose());
+    // this->boat2.set_pos(state_new.row(1).head(3).transpose());
+    // this->boat2.set_vel(state_new.row(1).tail(3).transpose());
+
+    // set states of boats from setpoints - temporary fix
+    setpoint1(2) = wrap_theta(PI / 2 - setpoint1(2));
+    setpoint1_dot(2) = -setpoint1_dot(2);
+    setpoint2(2) = wrap_theta(PI / 2 - setpoint2(2));
+    setpoint2_dot(2) = -setpoint2_dot(2);
+    this->boat1.set_pos(setpoint1);
+    this->boat1.set_vel(setpoint1_dot);
+    this->boat2.set_pos(setpoint2);
+    this->boat2.set_vel(setpoint2_dot);
 
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {

@@ -112,7 +112,9 @@ public:
     MatrixXd state_der(const Vector2d &control1, const Vector2d &control2,
      MatrixXd state) const;
     void propagate(double dt, const Vector2d &control1,
-     const Vector2d &control2, std::string integration_method);
+     const Vector2d &control2, std::string integration_method,
+      Vector3d setpoint1, Vector3d setpoint2, Vector3d setpoint1_dot,
+       Vector3d setpoint2_dot); // Temporary fix - without control for now
 
     // Getters
     BoomBoat get_boat1() const;

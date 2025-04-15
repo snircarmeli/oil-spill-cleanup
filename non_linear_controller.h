@@ -32,6 +32,8 @@ class NonLinearController {
         // Controller parameters
         double k_u;
         double k_v;
+        double k_u_d;
+        double k_v_d;
         double k_theta;
         double epsilon; // For the calculation of denominators
         double ts; // Time step
@@ -42,6 +44,17 @@ class NonLinearController {
         Vector2d e_r;
         Vector2d e_theta;
 
+        Vector2d e_at;
+        Vector2d e_ct;
+        Vector2d e_at_dot;
+        Vector2d e_ct_dot;
+
+        // error distances along u and v directions
+        Vector2d y1;
+        Vector2d y2;
+        Vector2d y1_dot;
+        Vector2d y2_dot;
+
         Vector2d int_e_theta;
 
         Vector2d e_u_dot;
@@ -49,6 +62,9 @@ class NonLinearController {
 
         // Control outputs
         Matrix2X2d output;
+
+        // Vector of the derivatives of the lyapunov function
+        Vector2d d_lyapunov;
 
     public:
     // Constructor

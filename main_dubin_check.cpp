@@ -380,9 +380,12 @@ int main(int argc, char* argv[]) {
         setpoint.col(0) = setpoint_L;
         setpoint.col(1) = setpoint_R;
 
+        // cout << "Good so far1" << endl; cout.flush();
         // Get the setpoint dot
         setpoint_dot_L = path_points_dot_L.col(cnt);
+        // cout << "Good so far2" << endl; cout.flush();
         setpoint_dot_R = path_points_dot_R.col(cnt);
+        // cout << "Good so far3" << endl; cout.flush();
 
 
         // Get the next setpoint
@@ -452,7 +455,7 @@ int main(int argc, char* argv[]) {
         // cout.flush();
 
         // Propagate the system
-        duo->propagate(dt, control1, control2, integration_method);
+        duo->propagate(dt, control1, control2, integration_method, setpoint_L, setpoint_R, setpoint_dot_L, setpoint_dot_R);
 
         // Check validity of the state
         if (cnt % check_valid_interval == 0) {

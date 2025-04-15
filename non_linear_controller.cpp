@@ -16,6 +16,8 @@ NonLinearController::NonLinearController(string path_to_json) {
     json controller_params = params["NonLinearController"];
     this->k_u = controller_params["k_u"];
     this->k_v = controller_params["k_v"];
+    this->k_u_d = controller_params["k_u_d"];
+    this->k_v_d = controller_params["k_v_d"];
     this->k_theta = controller_params["k_theta"];
     this->epsilon = controller_params["epsilon"]; // For the calculation of denominators
     this->ts = params["simulation"]["time_step"]; // Time step
@@ -25,11 +27,25 @@ NonLinearController::NonLinearController(string path_to_json) {
     this->e_v << 0.0, 0.0;
     this->e_r << 0.0, 0.0;
     this->e_theta << 0.0, 0.0;
+
+    Vector2d e_at = Vector2d::Zero();
+    Vector2d e_ct = Vector2d::Zero();
+    Vector2d e_at_dot = Vector2d::Zero();
+    Vector2d e_ct_dot = Vector2d::Zero();
+
+    this->y1 << 0.0, 0.0;
+    this->y2 << 0.0, 0.0;
+    this->y1_dot << 0.0, 0.0;
+    this->y2_dot << 0.0, 0.0;
+
     this->int_e_theta << 0.0, 0.0;
     this->e_u_dot << 0.0, 0.0;
     this->e_v_dot << 0.0, 0.0;
     // Initialize the output (control signals) to zero
     this->output = Matrix2X2d::Zero();
+
+    // Initialize the d_lyapunov vector to zero
+    this->d_lyapunov = Vector2d::Zero();
 
     // Additional initialization (if needed) involving the duo can go here.
 }
@@ -69,12 +85,12 @@ void NonLinearController::update_errors(BoomBoatsDuo duo, Vector3d setpoint1,
    double theta2 = boat2_pos(2);
 
     // Get the velocities
-    double x1_dot = duo.get_boat1().get_vel()(0);
-    double y1_dot = duo.get_boat1().get_vel()(1);
-    double theta1_dot = duo.get_boat1().get_vel()(2);
-    double x2_dot = duo.get_boat2().get_vel()(0);
-    double y2_dot = duo.get_boat2().get_vel()(1);
-    double theta2_dot = duo.get_boat2().get_vel()(2);
+   double x1_dot = duo.get_boat1().get_vel()(0);
+   double y1_dot = duo.get_boat1().get_vel()(1);
+   double theta1_dot = duo.get_boat1().get_vel()(2);
+   double x2_dot = duo.get_boat2().get_vel()(0);
+   double y2_dot = duo.get_boat2().get_vel()(1);
+   double theta2_dot = duo.get_boat2().get_vel()(2);
 
    // Get the setpoints
    double x1_ref = setpoint1(0);
@@ -82,13 +98,16 @@ void NonLinearController::update_errors(BoomBoatsDuo duo, Vector3d setpoint1,
    double theta1_ref = setpoint1(2);
    double x2_ref = setpoint2(0);
    double y2_ref = setpoint2(1);
-    double theta2_ref = setpoint2(2);
+   double theta2_ref = setpoint2(2);
 
    // Get the setpoint velocities
    double x1_ref_dot = setpoint1_dot(0);
    double y1_ref_dot = setpoint1_dot(1);
+   double theta_ref1_dot = setpoint1_dot(2);
    double x2_ref_dot = setpoint2_dot(0);
    double y2_ref_dot = setpoint2_dot(1);
+   double theta_ref2_dot = setpoint2_dot(2);
+
 
    // Calculate the errors
    this->e_u(0) = -sin(theta1) * (x1_ref-x1) - cos(theta1) * (y1_ref-y1);
@@ -100,16 +119,74 @@ void NonLinearController::update_errors(BoomBoatsDuo duo, Vector3d setpoint1,
    this->e_r(0) = x1_ref_dot * (x1_ref - x1) + y1_ref_dot * (y1_ref - y1);
    this->e_r(1) = x2_ref_dot * (x2_ref - x2) + y2_ref_dot * (y2_ref - y2);
 
+   this->e_at(0) = cos(theta1_ref) * (x1_ref - x1) - sin(theta1_ref) * (y1_ref - y1);
+   this->e_at(1) = cos(theta2_ref) * (x2_ref - x2) - sin(theta2_ref) * (y2_ref - y2);
 
+   this->e_ct(0) = sin(theta1_ref) * (x1_ref - x1) + cos(theta1_ref) * (y1_ref - y1);
+   this->e_ct(1) = sin(theta2_ref) * (x2_ref - x2) + cos(theta2_ref) * (y2_ref - y2);
+
+   // Print e_ct of boat 2
+//    cout << "e_ct2: " << e_ct(1) << endl;
+//    cout.flush(); 
+
+   this->e_at_dot(0) = -theta_ref1_dot * this->e_ct(0) + (x1_ref_dot - x1_dot) * cos(theta1_ref) - (y1_ref_dot - y1_dot) * sin(theta1_ref);
+   this->e_at_dot(1) = -theta_ref2_dot * this->e_ct(1) + (x2_ref_dot - x2_dot) * cos(theta2_ref) - (y2_ref_dot - y2_dot) * sin(theta2_ref);
+
+   this->e_ct_dot(0) = theta_ref1_dot * this->e_at(0) + (x1_ref_dot - x1_dot) * sin(theta1_ref) + (y1_ref_dot - y1_dot) * cos(theta1_ref);
+   this->e_ct_dot(1) = theta_ref2_dot * this->e_at(1) + (x2_ref_dot - x2_dot) * sin(theta2_ref) + (y2_ref_dot - y2_dot) * cos(theta2_ref);
 
    this->e_theta(0) = wrap_theta(theta1_ref - (PI / 2 - theta1));
    this->e_theta(1) = wrap_theta(theta2_ref - (PI / 2 - theta2));
 
+   Vector2d e_theta_dot  = Vector2d(theta_ref1_dot + theta1_dot, theta_ref2_dot + theta2_dot);
+
+   Vector2d tmp; // = cos(e_theta) ^ 2
+   for (int i = 0; i < 2; ++i) {
+        if (cos(this->e_theta(i)) * cos(this->e_theta(i)) < this->epsilon) {
+            tmp(i) = this->epsilon;
+        } else {
+            tmp(i) = cos(this->e_theta(i)) * cos(this->e_theta(i));
+        }
+   }
+   this->y1(0) = this->e_at(0) * cos(this->e_theta(0)) / tmp(0);
+   this->y1(1) = this->e_at(1) * cos(this->e_theta(1)) / tmp(1);
+
+   this->y2(0) = this->e_ct(0) * cos(this->e_theta(0)) / tmp(0);
+   this->y2(1) = this->e_ct(1) * cos(this->e_theta(1)) / tmp(1);
+
+   this->y1_dot(0) = (this->e_at_dot(0) * cos(this->e_theta(0)) + this->e_at(0) * e_theta_dot(0) * sin(this->e_theta(0))) / tmp(0);
+   this->y1_dot(1) = (this->e_at_dot(1) * cos(this->e_theta(1)) + this->e_at(1) * e_theta_dot(1) * sin(this->e_theta(1))) / tmp(1);
+
+   this->y2_dot(0) = (this->e_ct_dot(0) * cos(this->e_theta(0)) + this->e_ct(0) * e_theta_dot(0) * sin(this->e_theta(0))) / tmp(0);
+   this->y2_dot(1) = (this->e_ct_dot(1) * cos(this->e_theta(1)) + this->e_ct(1) * e_theta_dot(1) * sin(this->e_theta(1))) / tmp(1);
+
+
+   // tmp = sin(e_theta) ^ 2
+   for (int i = 0; i < 2; ++i) {
+        if (sin(this->e_theta(i)) * sin(this->e_theta(i)) < this->epsilon) {
+            tmp(i) = this->epsilon;
+        } else {
+            tmp(i) = sin(this->e_theta(i)) * sin(this->e_theta(i));
+        }
+   }
+
+   this->y1(0) += this->e_ct(0) * sin(e_theta(0)) / tmp(0);
+   this->y1(1) += this->e_ct(1) * sin(e_theta(1)) / tmp(1);
+
+   this->y2(0) += -this->e_at(0) * sin(e_theta(0)) / tmp(0);
+   this->y2(1) += -this->e_at(1) * sin(e_theta(1)) / tmp(1);
+
+   this->y1_dot(0) += (this->e_ct_dot(0) * sin(this->e_theta(0)) - this->e_ct(0) * e_theta_dot(0) * cos(this->e_theta(0))) / tmp(0);
+   this->y1_dot(1) += (this->e_ct_dot(1) * sin(this->e_theta(1)) - this->e_ct(1) * e_theta_dot(1) * cos(this->e_theta(1))) / tmp(1);
+
+   this->y2_dot(0) += - (this->e_at_dot(0) * sin(this->e_theta(0)) - this->e_at(0) * e_theta_dot(0) * cos(this->e_theta(0))) / tmp(0);
+   this->y2_dot(1) += - (this->e_at_dot(1) * sin(this->e_theta(1)) - this->e_at(1) * e_theta_dot(1) * cos(this->e_theta(1))) / tmp(1);
+
    // Print e_theta
-   cout << "e_theta1: " << e_theta(0) << endl;
-   cout << "e_theta2: " << e_theta(1) << endl;
-   cout << endl;
-   cout.flush();
+//    cout << "e_theta1: " << e_theta(0) << endl;
+//    cout << "e_theta2: " << e_theta(1) << endl;
+//    cout << endl;
+//    cout.flush();
 
    this->e_u_dot(0) = theta1_dot * this->e_v(0) - (sin(theta1) * (x1_ref_dot - x1_dot) + cos(theta1) * (y1_ref_dot - y1_dot));
    this->e_u_dot(1) = theta2_dot * this->e_v(1) - (sin(theta2) * (x2_ref_dot - x2_dot) + cos(theta2) * (y2_ref_dot - y2_dot));
@@ -119,6 +196,8 @@ void NonLinearController::update_errors(BoomBoatsDuo duo, Vector3d setpoint1,
 
    this->int_e_theta(0) += this->e_theta(0) * this->ts;
    this->int_e_theta(1) += this->e_theta(1) * this->ts;
+
+   
 
     // // Print all errors
     // cout << "e_u1: " << e_u(0) << endl;
@@ -353,6 +432,8 @@ Matrix2X2d NonLinearController::calculate_au_av(BoomBoatsDuo duo,
     double I2 = duo.get_boat2().get_inertia();
     double r2 = duo.get_boat2().get_radius();
 
+    Vector2d m = Vector2d(m1, m2);
+
     // // Calculate k_theta
     // Vector2d k_theta;
     // Vector2d denom;
@@ -417,64 +498,71 @@ Matrix2X2d NonLinearController::calculate_au_av(BoomBoatsDuo duo,
     // double mu_w2 = duo.get_boat2().get_mu_r();
     // double omega1 = duo.get_boat1().get_frame_vel()(2);
     // double omega2 = duo.get_boat2().get_frame_vel()(2);
+    double u1 = duo.get_boat1().get_frame_vel()(0);
+    double u2 = duo.get_boat2().get_frame_vel()(0);
     double v1 = duo.get_boat1().get_frame_vel()(1);
     double v2 = duo.get_boat2().get_frame_vel()(1);
     Vector2d v = Vector2d(v1, v2);
 
     Matrix2X2d au_av; // First column is for boat 1 and second column is for boat 2
-    // a_u = -k_u * m * e_u
-    au_av(0, 0) = -this->k_u * m1 * e_u(0);
-    au_av(0, 1) = -this->k_u * m2 * e_u(1);
+    // a_u = -k_u * m * e_u + k_u * m * e_theta
+    // au_av(0, 0) = -this->k_u * m1 * e_u(0);
+    // au_av(0, 1) = -this->k_u * m2 * e_u(1);
     
     // au_av(0, 0) = 1000;
     // au_av(0, 1) = 1000;
 
-    // a_v = -k_theta * (I / r) * e_theta - (I / r) * theta_ref_dot  + (I / r) * gamma * (v * e_v + e_r)
-    // Calculate gamma
-    // if (v * e_v + e_r < 0) then gamma = (1/e_theta) * (1 + k_v), else gamma = (1/e_theta) * (1 - k_v)
-    Vector2d gamma;
-    Vector2d denom; // denom is e_theta
+    // au = k_u * y1 + k_u_d * y1_dot
+    
+    au_av(0, 0) = this->k_u * this->y1(0) + this->k_u_d * this->y1_dot(0);
+    au_av(0, 1) = this->k_u * this->y1(1) + this->k_u_d * this->y1_dot(1);
+    // au_av(0, 0) = this->k_u * this->e_at(0) * cos(this->e_theta(0));
+    // au_av(0, 1) = this->k_u * this->e_at(1) * cos(this->e_theta(1));
 
-    // for (int i = 0; i < 2; i++) {
-    //     if (abs(this->e_theta(i)) < this->epsilon) {
-    //         if (this->e_theta(i) == 0) {
-    //             denom(i) = 1 / this->epsilon;
-    //         } else {
-    //             denom(i) = this->epsilon * sign(this->e_theta(i));
-    //         }
-    //     } else {
-    //         denom(i) = this->e_theta(i);
-    //     }
 
-    //     if ((v(i) * this->e_v(i) + this->e_r(i)) <= 0) {
-    //         gamma(i) = (1 / denom(i)) * (1 - this->k_v);
-    //         // gamma(i) = 0;
-    //     } else {
-    //         // Print v(i) * this->e_v(i) + this->e_r(i)) and e_theta(i)
-    //         cout << "v(i) * this->e_v(i) + this->e_r(i): " << v(i) * this->e_v(i) + this->e_r(i) << endl;
-    //         cout << "e_theta(i): " << this->e_theta(i) << endl;
-    //         gamma(i) = (1 / denom(i)) * (1 + this->k_v);
-    //     }
-    // }
-
-    for (int i = 0; i < 2; i++) {
-        if ((v(i) * this->e_v(i) + this->e_r(i)) < 0) {
-            gamma(i) = -(1 / this->epsilon) * this->e_theta(i) * this->k_v;
-        } else if ((v(i) * this->e_v(i) + this->e_r(i)) > 0) {
-            gamma(i) = (1 / this->epsilon) * this->e_theta(i) * this->k_v;
+    // a_v = - (I / r) * (k_theta * e_theta + theta_ref_dot + (v * e_v + e_r + k_v * e_v^2) / e_theta)
+    Vector2d tmp;
+    for (int i = 0; i < 2; ++i) {
+        if (abs(this->e_theta(i)) > this->epsilon) {
+            tmp(i) = (v(i) * this->e_v(i) + e_r(i) +  this->k_v * this->e_v(i) * this->e_v(i)) / this->e_theta(i);
+        } else if (this->e_theta(i) == 0) {
+            tmp(i) = 0;
+            // cout << "e_theta is zero" << endl;
+            // cout.flush();
         } else {
-            gamma(i) = 0;
+            // cout << "e_theta is smaller than epsilon" << endl;
+            // cout.flush();
+            tmp(i) = (v(i) * this->e_v(i) + e_r(i) +  this->k_v * this->e_v(i) * this->e_v(i)) / (this->epsilon * sign(this->e_theta(i)));
         }
     }
-    
-    // // print gamma
-    // cout << "gamma1: " << gamma(0) << endl;  
-    // cout << "gamma2: " << gamma(1) << endl;
-    // cout.flush();
 
-    au_av(1, 0) = (I1 / r1) * (-this->k_theta * this->e_theta(0) - setpoint1_dot(2) + gamma(0) * (v1 * this->e_v(0) + e_r(0)));
-    au_av(1, 1) = (I2 / r2) * (-this->k_theta * this->e_theta(1) - setpoint2_dot(2) + gamma(1) * (v2 * this->e_v(1) + e_r(1)));
+    tmp = tmp * 0;
     
+
+    // au_av(1, 0) = - (I1 / r1) * (this->k_theta * this->e_theta(0) + setpoint1_dot(2) + tmp(0));
+    // au_av(1, 1) = - (I2 / r2) * (this->k_theta * this->e_theta(1) + setpoint2_dot(2) + tmp(1));
+
+    // au_av(1, 0) = 0;
+    // au_av(1, 1) = 0;
+
+    // a_v = -k_v * y2 - k_v_d * y2_dot
+    au_av(1, 0) = -this->k_v * this->y2(0) - this->k_v_d * this->y2_dot(0) - this->k_theta * this->e_theta(0);
+    au_av(1, 1) = -this->k_v * this->y2(1) - this->k_v_d * this->y2_dot(1) - this->k_theta * this->e_theta(1);
+
+
+    // Update the d_lyapunov vector
+    // d_lyapunov = e_theta * (theta_ref_dot + (r / I) * a_v) + u * e_u + v * e_v + e_r
+//    this->d_lyapunov(0) = this->e_theta(0) * (setpoint1_dot(2) + (r1 / I1) * au_av(1, 0)) + u1 * this->e_u(0) + v1 * this->e_v(0) + this->e_r(0);
+//    this->d_lyapunov(1) = this->e_theta(1) * (setpoint2_dot(2) + (r2 / I2) * au_av(1, 1)) + u2 * this->e_u(1) + v2 * this->e_v(1) + this->e_r(1);
+
+    // Print d_lyapunov if it is non negative
+    // if (d_lyapunov(0) > 0 || d_lyapunov(1) > 0) {
+    //     cout << "d_lyapunov1: " << d_lyapunov(0) << endl;
+    //     cout << "d_lyapunov2: " << d_lyapunov(1) << endl;
+    //     cout << endl;
+    //     cout.flush();
+    // }
+   
     // // print a_u1 and a_u2
     // cout << "au1: " << au_av(0, 0) << endl;
     // cout << "au2: " << au_av(0, 1) << endl;
@@ -497,6 +585,7 @@ Matrix2X2d NonLinearController::update(BoomBoatsDuo duo, Vector3d setpoint1,
 
     // Update the errors and step before calculating du and dv
     update_errors(duo, setpoint1, setpoint2, setpoint1_dot, setpoint2_dot); 
+    
 
     // Calculate du and dv for each boat (Cancelling drag and link forces)
     Matrix2X2d du_dv = calculate_du_dv(duo);
@@ -505,11 +594,9 @@ Matrix2X2d NonLinearController::update(BoomBoatsDuo duo, Vector3d setpoint1,
 
     // Calculate the control signals after calculating du and dv
     Matrix2X2d control_signals = calculate_control_signals(au_av, du_dv);
-
     // Update the control signals
     output = control_signals;
 
     // Return the control signals
     return control_signals;
-
 }
