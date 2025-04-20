@@ -1,5 +1,4 @@
 #include "oil-spill.h"
-#include <fstream>
 
 // Default constructor
 OilSpill::OilSpill() : oil_spill_mass(0.0) {

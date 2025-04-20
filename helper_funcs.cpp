@@ -166,6 +166,131 @@ MatrixXd check_path(MatrixXd path_points, double max_jump) {
     return new_path_points;
 }
 
+// Function that calculates the convex hull of a set of points
+MatrixXd calculate_convex_hull(const MatrixXd &points) {
+    // Check if the points matrix is empty
+    if (points.rows() == 0) {
+        throw std::runtime_error("Empty points matrix at convex_hull");
+    }
+    int n = points.rows();
+    // If there is 0-2 points, throw an error
+    if (n <= 2) {
+        throw std::runtime_error("Less than 3 points in the points matrix at convex_hull");
+    }
+    // If there are 3 points, return the points matrix
+    if (n == 3) {
+        return points;
+    }
+
+    MatrixXd pts(n, 2);
+    // Copy points to pts
+    pts = points;
+
+    // Sort points lexicographically (first by x, then by y)
+    VectorXi indices = VectorXi::LinSpaced(n, 0, n - 1);
+    sort(indices.data(), indices.data() + indices.size(), [&](int a, int b) {
+        return (pts(a, 0) < pts(b, 0)) || ((pts(a, 0) == pts(b, 0)) && (pts(a, 1) < pts(b, 1)));
+    });
+
+    // Lambda to compute the cross product of OA and OB
+    auto cross = [&](int O, int A, int B) -> double {
+        return (pts(A, 0) - pts(O, 0)) * (pts(B, 1) - pts(O, 1)) - (pts(A, 1) - pts(O, 1)) * (pts(B, 0) - pts(O, 0));
+    };
+
+    // Build the lower hull
+    VectorXi lower(n);
+    int lower_size = 0;
+    for (int i = 0; i < n; i++) {
+        int idx = indices(i);
+        while (lower_size >= 2 && cross(lower(lower_size - 2), lower(lower_size - 1), idx) <= 0) {
+            lower_size--;
+        }
+        lower(lower_size++) = idx;
+    }
+
+    // Build the upper hull
+    VectorXi upper(n);
+    int upper_size = 0;
+    for (int i = n - 1; i >= 0; i--) {
+        int idx = indices(i);
+        while (upper_size >= 2 && cross(upper(upper_size - 2), upper(upper_size - 1), idx) <= 0) {
+            upper_size--;
+        }
+        upper(upper_size++) = idx;
+    }
+
+    // Remove the last point of each half because it's repeated at the beginning of the other half
+    if (lower_size > 0) lower_size--;
+    if (upper_size > 0) upper_size--;
+
+    // Concatenate lower and upper hull to get the full hull
+    VectorXi hull(lower_size + upper_size);
+    hull << lower.head(lower_size), upper.head(upper_size);
+
+    // Convert the hull indices back to a MatrixXd
+    MatrixXd hull_matrix(hull.size(), 2);
+    for (int i = 0; i < hull.size(); i++) {
+        hull_matrix(i, 0) = pts(hull(i), 0);
+        hull_matrix(i, 1) = pts(hull(i), 1);
+    }
+
+    return hull_matrix;
+}
+
+// Helper function for calculating distance between point and segment
+double point_to_segment_distance(const Vector2d &p, const Vector2d &a, const Vector2d &b) {
+    Vector2d ab = b - a;
+    Vector2d ap = p - a;
+    double t = ap.dot(ab) / ab.squaredNorm();
+    t = std::max(0.0, std::min(1.0, t));
+    Vector2d closest = a + t * ab;
+    return (p - closest).norm();
+}
+
+// Compute minimal distance between two convex hulls using rotating calipers
+// Both hulls are counter-clockwise and 2D (Nx2 matrices)
+double calculate_convex_hull_distance(const MatrixXd &hull1, const MatrixXd &hull2) {
+    int n = hull1.rows(), m = hull2.rows();
+    if (n < 2 || m < 2) return numeric_limits<double>::infinity();
+
+    int i = 0, j = 0;
+    // Find the lowest point in hull1 and the highest in hull2
+    for (int k = 1; k < n; ++k)
+        if (hull1(k, 1) < hull1(i, 1)) i = k;
+    for (int k = 1; k < m; ++k)
+        if (hull2(k, 1) > hull2(j, 1)) j = k;
+
+    double min_dist = numeric_limits<double>::infinity();
+    int start_i = i, start_j = j;
+
+    do {
+        Vector2d a1 = hull1.row(i);
+        Vector2d a2 = hull1.row((i + 1) % n);
+        Vector2d b1 = hull2.row(j);
+        Vector2d b2 = hull2.row((j + 1) % m);
+
+        Vector2d edge1 = a2 - a1;
+        Vector2d edge2 = b2 - b1;
+
+        // Use cross product to determine rotation
+        double cross = edge1.x() * edge2.y() - edge1.y() * edge2.x();
+
+        // Advance the caliper with the smaller angle
+        if (cross <= 0)
+            i = (i + 1) % n;
+        else
+            j = (j + 1) % m;
+
+        // Compute distances
+        min_dist = min(min_dist, point_to_segment_distance(a1, b1, b2));
+        min_dist = min(min_dist, point_to_segment_distance(b1, a1, a2));
+
+    } while (i != start_i || j != start_j);
+
+    return min_dist;
+}
+
+
 // MatrixXd glob_path_points_2_local_frame_vel(MatrixXd path_points, double ts) {
 //     // This function returns a path in local frame, first number is u,
 //     // second number is v (zero bassicaly), third number is orientation
