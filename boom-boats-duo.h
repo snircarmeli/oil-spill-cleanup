@@ -29,12 +29,15 @@ private:
     double k; // Spring constant
     double c; // Damping coefficient
 
+
+
     json boom_params;
 
 
 public:
     // Constructor
-    Boom(size_t num_links, double L, double mu_l, double mu_ct, double mu_r, double I, double m, double k, double c);
+    Boom(size_t num_links, double L, double mu_l, double mu_ct, double mu_r,
+         double I, double m, double k, double c);
     Boom(size_t num_links, double L);
     // Default constructor
     Boom();
@@ -79,6 +82,13 @@ private:
     BoomBoat boat2;
     Boom boom;
     double t; // Time [s]
+
+    // Volume of the holding tank and available volume
+    double V_max; // Maximum volume of the holding tank
+    double V_available; // Available volume of the holding tank
+
+    // Cleaning rate
+    double cleaning_rate; // Rate of cleaning [m^3/s]
     
     json boom_boats_duo_params;
     json simulation_params;
@@ -86,9 +96,12 @@ private:
 public:
     // Constructor
     BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2, size_t num_links,
-     double L, double mu_l, double mu_ct, double mu_r, double I, double m, double k,
-      double c, Vector2d center, double orientation);
+     double L, double mu_l, double mu_ct, double mu_r, double I, double m,
+      double k, double c, Vector2d center, double orientation, double V_max,
+       double V_available, double cleaning_rate);
     BoomBoatsDuo(Vector2d center, double orientation, size_t num_links, double L);
+    // Default constructor
+    BoomBoatsDuo();
 
     // Destructor
     ~BoomBoatsDuo();
@@ -101,8 +114,6 @@ public:
     void print_to_file(const string &filename, const string &foldername) const;
 
     void load_boom_boats_duo_params(std::string filename);
-    json get_simulation_params() const;
-    double get_time() const;
 
     // Validation of state
     bool is_valid_state() const; // Check if boom doesn't intersect itself and
@@ -112,46 +123,23 @@ public:
     MatrixXd state_der(const Vector2d &control1, const Vector2d &control2,
      MatrixXd state) const;
     void propagate(double dt, const Vector2d &control1,
-     const Vector2d &control2, std::string integration_method,
-      Vector3d setpoint1, Vector3d setpoint2, Vector3d setpoint1_dot,
-       Vector3d setpoint2_dot); // Temporary fix - without control for now
+     const Vector2d &control2, std::string integration_method); // Temporary fix - without control for now
 
     // Getters
     BoomBoat get_boat1() const;
     BoomBoat get_boat2() const;
+    Vector2d get_center() const;
     Boom get_boom() const;
+    json get_simulation_params() const;
+    double get_time() const;
+    double get_V_max() const;
+    double get_V_available() const;
+    double get_cleaning_rate() const;
+
+    // Setters
+    bool decrease_V_available(double delta); // Returns true if successful
+    void set_cleaning_rate(double rate); // Set the cleaning rate
 };
 
-
-// Runge-Kutta methods
-
-// // Runge-Kutta 2nd order integration
-// MatrixXd RK2_integration(const Vector2d &control1, const Vector2d &control2, 
-//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
-
-// // Runge-Kutta 3rd order integration
-// MatrixXd RK3_integration(const Vector2d &control1, const Vector2d &control2, 
-//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
-
-// // Runge-Kutta 4th order integration
-// MatrixXd RK4_integration(const Vector2d &control1, const Vector2d &control2, 
-//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
-
-// // Runge-Kutta 5th order integration
-// MatrixXd RK5_integration(const Vector2d &control1, const Vector2d &control2, 
-//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
-
-// // Runge-Kutta 6th order integration
-// MatrixXd RK6_integration(const Vector2d &control1, const Vector2d &control2, 
-//  const MatrixXd &state, double dt, BoomBoatsDuo boom_boats_duo);
-
-// // Runge-Kutta 4-5 integration. Adaptive time step
-// std::pair<MatrixXd, double> RK45_integration(const Vector2d& control1,
-//  const Vector2d& control2, const MatrixXd& state, double dt,
-//   BoomBoatsDuo boom_boats_duo, json simulation_params);
-  
-// These functions are already defined in generic-boat.h 
-// double wrap_theta(double theta);
-// int sign(double x);
 
 #endif

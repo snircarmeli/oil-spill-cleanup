@@ -34,9 +34,6 @@ class GenericBoat {
         double F_max; // Maximum force applied by engine [N]
         double eta_max; // Maximum steering angle [rad]
 
-        // EOM for the propogate function (RK4)
-        Matrix2x3d state_der(Matrix2x3d state, Vector2d control);
-
         
 
     protected:
@@ -63,9 +60,6 @@ class GenericBoat {
 
         // Assignment operator
         GenericBoat& operator=(const GenericBoat &other);
-
-        // RK-4 method for propogation
-        void propogate(Vector2d control, double dt);
 
         // Accessors
         Vector3d get_pos() const;

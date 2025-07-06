@@ -25,7 +25,7 @@ start_time = time.time()
 subprocess.run(command, shell=True, text=True, capture_output=True)
 print(f"Compilation time: {time.time() - start_time:.2f} seconds\n")
 
-command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main_dubin_check.exe"
+command = f"/mnt/c/Users/snir2/OneDrive\ -\ Technion/Msc.\ Electrical\ Engineering/Thesis/code/main_dubin_check"
 # print("Running the main.exe file...\n")
 start_time = time.time()
 process = subprocess.run(command, shell=True, text=True)
@@ -35,6 +35,8 @@ out_code = process.returncode
 if out_code != 0:
     print(f"Error in the code. Return code: {out_code}")
     exit()
+
+print("Done running the code. Extracting data...\n")
 
 params = json.load(open('params.json'))
 
@@ -145,22 +147,39 @@ with open(os.path.join(foldername_boats, filename), 'r') as file:
             'num_links': 0,
             'link_length': 0,
             'links_states': [],
-            'time': 0
+            'time': 0,
+            'volume_available': 0,
+            'volume_max':0
         }
         values = list(map(float, line.split()))
         # print(values)
+        cnt = 0
         duo_data['boat1_pos'] = values[:3]
+        
         duo_data['boat1_vel'] = values[3:6]
+        
         duo_data['boat1_control'] = values[6:8]
+        
         duo_data['boat2_pos'] = values[8:11]
+        
         duo_data['boat2_vel'] = values[11:14]
+        
         duo_data['boat2_control'] = values[14:16]
+        
         duo_data['num_links'] = int(values[16])
+        
         duo_data['link_length'] = values[17]
+        
         for k in range(num_links): # Just location without velocity
                     duo_data['links_states'].append(values[18 + k * 6: 21 + k * 6])
+                    
         #  Time step
-        duo_data['time'] = values[-1]
+        duo_data['time'] = values[18 + num_links * 6]
+        
+        duo_data['volume_available'] = values[19 + num_links * 6]
+        
+        duo_data['volume_max'] = values[20 + num_links * 6]
+        
         duo_boats_data[j] = duo_data.copy()
 
         duo_boats_data.append(duo_data)
@@ -239,6 +258,9 @@ arrow_length = 0.1
 
 ################################################################################
 
+print("Data loaded successfully.\n")
+print("Starting to plot the data...\n")
+
 # Plot all the data
 fig, ax = plt.subplots()
 ax.set_aspect('equal', 'box')
@@ -257,13 +279,13 @@ for i in range(len(dubin_path) - 1):
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
     
     # Print right path
-    ax.plot(dubin_path_R[i][0], dubin_path_R[i][1], 'bo', markersize=marker_size)
+    ax.plot(dubin_path_R[i][0], dubin_path_R[i][1], 'ro', markersize=marker_size)
     ax.arrow(dubin_path_R[i][0], dubin_path_R[i][1],
      arrow_length * cos(dubin_path_R[i][2]), arrow_length * sin(dubin_path_R[i][2]),
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
     
     # Print left path
-    ax.plot(dubin_path_L[i][0], dubin_path_L[i][1], 'ro', markersize=marker_size)
+    ax.plot(dubin_path_L[i][0], dubin_path_L[i][1], 'bo', markersize=marker_size)
     ax.arrow(dubin_path_L[i][0], dubin_path_L[i][1],
      arrow_length * cos(dubin_path_L[i][2]), arrow_length * sin(dubin_path_L[i][2]),
       fc='k', ec='k', head_width=arrow_length / 1.5, head_length=arrow_length / 4)
@@ -293,9 +315,9 @@ link_dots.append(dots)
 ########################################
 
 # Plot the spills
-for spill in spills_data:
+for i, spill in enumerate(spills_data):
     spill_points = np.array(spill['spill'])
-    ax.plot(spill_points[:, 0], spill_points[:, 1], 'r.')
+    ax.plot(spill_points[:, 0], spill_points[:, 1], 'r.', label=f'Spill {i}' if i == 0 else "")
     for spill_line in spill['spill_lines']:
         ax.plot([spill_line[0][0], spill_line[1][0]], [spill_line[0][1], spill_line[1][1]], 'r--')
 
@@ -392,18 +414,18 @@ def update(frame):
                 dots_positions.append(end_pos)
 
             
-            point1 = [
-                dubin_path_L[frame][0],
-                dubin_path_L[frame][1],
-            ]
-            point2 = [
-                dubin_path_R[frame][0],
-                dubin_path_R[frame][1],
-            ]
-            links_positions.append(point1)
-            links_positions.append(point2)
-            dots_positions.append(point1)
-            dots_positions.append(point2)
+            # point1 = [
+            #     dubin_path_L[frame][0],
+            #     dubin_path_L[frame][1],
+            # ]
+            # point2 = [
+            #     dubin_path_R[frame][0],
+            #     dubin_path_R[frame][1],
+            # ]
+            # links_positions.append(point1)
+            # links_positions.append(point2)
+            # dots_positions.append(point1)
+            # dots_positions.append(point2)
 
 
             if links_positions:
@@ -440,3 +462,5 @@ ani = FuncAnimation(fig, update_with_time, frames=len(duo_boats_data), init_func
 
 
 plt.show()
+# ani.save("animation.mp4", writer="ffmpeg", fps=30)
+

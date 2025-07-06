@@ -23,6 +23,7 @@ using std::min;
 using std::max;
 using std::string;
 using std::sort;
+using std::numeric_limits;
 
 using std::cout;
 using std::endl;
@@ -61,6 +62,7 @@ MatrixXd calculate_convex_hull(const MatrixXd &points);
 // Function that calculates the minimal distance between two convex hulls
 double calculate_convex_hull_distance(const MatrixXd &hull1, const MatrixXd &hull2);
 
-// MatrixXd glob_path_points_2_local_frame_vel(MatrixXd path_points, double ts);
+// Function that calculates the minimal distance between a point and a convex hull
+double calculate_point_convex_hull_distance(const MatrixXd &hull, Vector2d point);
 
 #endif // HELPER_FUNCS_H

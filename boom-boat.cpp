@@ -31,13 +31,18 @@ BoomBoat::BoomBoat() : GenericBoat() {
     // json params;
     // file >> params;
     this->load_boom_boat_params("params.json");
-    this->fuel = this->boom_boat_params["initial_fuel"].get<double>();
-    this->cap = this->boom_boat_params["waste_tank_capacity"].get<double>();
-    this->tank_curr = 0.0;
+
     this->pos << 0, 0, 0;
     this->vel << 0, 0, 0;
     this->set_control(Vector2d(0.0, 0.0));
 }
+
+// Copy constructor
+BoomBoat::BoomBoat(const BoomBoat &boom_boat) : GenericBoat(boom_boat),
+ fuel_max(boom_boat.fuel_max), fuel_available(boom_boat.fuel_available) {
+    this->set_control(Vector2d(0.0, 0.0));
+    this->boom_boat_params = boom_boat.boom_boat_params;
+ }
 
 // Constructor with position
 BoomBoat::BoomBoat(Vector3d pos) : GenericBoat() {
@@ -49,27 +54,19 @@ BoomBoat::BoomBoat(Vector3d pos) : GenericBoat() {
     // json params;
     // file >> params;
     this->load_boom_boat_params("params.json");
-    this->fuel = this->boom_boat_params["initial_fuel"].get<double>();
-    this->cap = this->boom_boat_params["waste_tank_capacity"].get<double>();
-    this->tank_curr = 0.0;
+    this->fuel_max = this->boom_boat_params["fuel_max"].get<double>();
+    this->fuel_available = this->fuel_max;
     this->pos = pos;
     this->vel << 0, 0, 0;
     this->set_control(Vector2d(0.0, 0.0));
 }
 
-// Copy constructor
-BoomBoat::BoomBoat(const BoomBoat &boom_boat) : GenericBoat(boom_boat),
- fuel(boom_boat.fuel), tank_curr(boom_boat.tank_curr), cap(boom_boat.cap) {
-    this->set_control(Vector2d(0.0, 0.0));
-    this->boom_boat_params = boom_boat.boom_boat_params;
- }
-
 
 // Parameterized constructor
 BoomBoat::BoomBoat(double radius, double mass, double inertia, double mu_l,
- double mu_ct, double mu_r, Vector3d pos, Vector3d vel, double fuel, double cap,
+ double mu_ct, double mu_r, Vector3d pos, Vector3d vel, double fuel_max,
   double F_max, double eta_max) : GenericBoat(radius, mass, inertia, mu_l, mu_ct,
-   mu_r, pos, vel, F_max, eta_max), fuel(fuel), tank_curr(fuel), cap(cap) {
+   mu_r, pos, vel, F_max, eta_max), fuel_max(fuel_max), fuel_available(fuel_max) {
     this->set_control(Vector2d(0.0, 0.0));
     this->load_boom_boat_params("params.json");
 }
@@ -83,31 +80,47 @@ BoomBoat::~BoomBoat() {}
 BoomBoat &BoomBoat::operator=(const BoomBoat &boom_boat) {
     if (this != &boom_boat) {
         GenericBoat::operator=(boom_boat);
-        this->fuel = boom_boat.fuel;
-        this->tank_curr = boom_boat.tank_curr;
-        this->cap = boom_boat.cap;
+        this->fuel_max = boom_boat.fuel_max;
+        this->fuel_available = boom_boat.fuel_available;
         this->boom_boat_params = boom_boat.boom_boat_params;
         }
     return *this;
 }
 
 // Getter for fuel
-double BoomBoat::get_fuel() const { return fuel; }
+double BoomBoat::get_available_fuel() const { return fuel_available; }
 
-// Getter for cap
-double BoomBoat::get_cap() const { return cap; }
+// Getter for fuel_max
+double BoomBoat::get_fuel_max() const { return fuel_max; }
 
-
-// Getter for tank_curr
-double BoomBoat::get_tank_curr() const { return tank_curr; }
+// Decrease fuel by delta
+bool BoomBoat::decrease_fuel(double delta) {
+    if (delta < 0) {
+        throw std::runtime_error("Fuel decrease cannot be negative.");
+    }
+    if (fuel_available - delta < 0) {
+        cout << "Not enough fuel available." << endl;
+        cout << "Current fuel: " << fuel_available << " kg" << endl;
+        cout.flush();
+        return false;
+    }
+    fuel_available -= delta;
+    return true;
+}
 
 // Setter for fuel
-void BoomBoat::set_fuel(double fuel) {
+bool BoomBoat::set_fuel(double fuel) {
     if (fuel < 0) {
-        std::cerr << "Fuel cannot be negative." << std::endl;
-        return;
+        throw std::runtime_error("Fuel cannot be negative.");
     }
-    this->fuel = fuel;
+    if (fuel > fuel_max) {
+        cout << "Fuel exceeds maximum capacity." << std::endl;
+        cout << "Current fuel: " << fuel_available << " kg" << endl;
+        cout.flush();
+        return false;
+    }
+    this->fuel_available = fuel;
+    return true;
 }
 
 // Load parameters from the json file
@@ -166,14 +179,10 @@ void BoomBoat::load_boom_boat_params(std::string filename) {
 
 // Print the status of the boat
 void BoomBoat::print_status() const {
-    std::cout << "Fuel: " << this->fuel << " kg\n" << std::endl;
-    std::cout << "Tank Current: " << this->tank_curr << " kg\n"
-                << std::endl;
-    std::cout << "Capacity: " << this->cap << " kg\n" << std::endl;
-
+    cout << "Fuel: " << this->fuel_available << " kg, out of " << this->fuel_max << " kg\n" << endl;
     // position and velocity
-    std::cout << "Position: " << this->get_pos().transpose() << std::endl;
-    std::cout << "Velocity: " << this->get_vel().transpose() << std::endl;
+    cout << "Position: " << this->get_pos().transpose() << endl;
+    cout << "Velocity: " << this->get_vel().transpose() << endl;
 }
 
 // State derivative function
@@ -211,8 +220,8 @@ VectorXd BoomBoat::state_der(VectorXd state, Vector2d control,
     double F_boom_v = F1 * cos(theta) - F2 * sin(theta);
 
     // EOM
-    double u_dot = (F * cos(eta) - mu_l * u * u * sign(u) + F_boom_u) / mass;
-    double v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v) + F_boom_v) / mass;
+    double u_dot = (F * cos(eta) - mu_l * u * u * sign(u) + F_boom_u) / mass + omega * v;
+    double v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v) + F_boom_v) / mass - omega * u;
     double omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega) - r * F_boom_v) / I;
     
 
@@ -224,8 +233,8 @@ VectorXd BoomBoat::state_der(VectorXd state, Vector2d control,
     // cout.flush();
 
     // Rotation backward to global frame
-    double x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);
-    double y_dotdot = u_dot * cos(theta) - v_dot * sin(theta);
+    double x_dotdot = u_dot * sin(theta) + v_dot * cos(theta) + omega * x_dot;
+    double y_dotdot = u_dot * cos(theta) - v_dot * sin(theta) - omega * y_dot;
 
     VectorXd state_dot(6);
     state_dot << x_dot, y_dot, omega, x_dotdot, y_dotdot, omega_dot;

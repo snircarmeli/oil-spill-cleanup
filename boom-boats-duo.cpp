@@ -312,8 +312,8 @@ MatrixXd Boom::state_der(const MatrixXd &state, const Vector2d Boom_force1,
         F_e = (F0 + F1).dot(e);
         F_n = (F0 + F1).dot(n);
         // Calculate the state derivatives
-        vel_e_dot = (1 / m) * (F_e - mu_l * (vel_e * vel_e) * sign(vel_e));
-        vel_n_dot = (1 / m) * (F_n - mu_ct * (vel_n * vel_n) * sign(vel_n));
+        vel_e_dot = (1 / m) * (F_e - mu_l * (vel_e * vel_e) * sign(vel_e)) + vel_n * theta_dot_i; // Added the contribution of the rotational motion
+        vel_n_dot = (1 / m) * (F_n - mu_ct * (vel_n * vel_n) * sign(vel_n)) - vel_e * theta_dot_i; // Added the contribution of the rotational motion
         omega_dot = (1 / I) * (torque - mu_r * (theta_dot_i * theta_dot_i) * sign(theta_dot_i));
         // Rotate back to the global frame
         x_dotdot = vel_e_dot * cos(theta) - vel_n_dot * sin(theta);
@@ -337,12 +337,22 @@ MatrixXd Boom::state_der(const MatrixXd &state, const Vector2d Boom_force1,
 // BoomBoatsDuo Constructor
 BoomBoatsDuo::BoomBoatsDuo(const BoomBoat &b1, const BoomBoat &b2,
  size_t num_links, double L, double mu_l, double mu_ct, double mu_r,
-  double I, double m, double k, double c, Vector2d center, double orientation)
+  double I, double m, double k, double c, Vector2d center, double orientation, 
+   double V_max, double V_available, double cleaning_rate)
     : boat1(b1.get_radius(), b1.get_mass(), b1.get_inertia(), b1.get_mu_l(), b1.get_mu_ct(), b1.get_mu_r(),
-            b1.get_pos(), b1.get_vel(), b1.get_fuel(), b1.get_cap(), b1.get_F_max(), b1.get_eta_max()),
+            b1.get_pos(), b1.get_vel(), b1.get_fuel_max(), b1.get_F_max(), b1.get_eta_max()),
       boat2(b2.get_radius(), b2.get_mass(), b2.get_inertia(), b2.get_mu_l(), b2.get_mu_ct(), b2.get_mu_r(),
-            b2.get_pos(), b2.get_vel(), b2.get_fuel(), b2.get_cap(), b2.get_F_max(), b2.get_eta_max()),
-            boom(num_links, L, mu_l, mu_ct, mu_r, I, m, k, c), t(0) {
+            b2.get_pos(), b2.get_vel(), b2.get_fuel_max(), b2.get_F_max(), b2.get_eta_max()),
+            boom(num_links, L, mu_l, mu_ct, mu_r, I, m, k, c), t(0), V_max(V_max), V_available(V_available),
+            cleaning_rate(cleaning_rate) {
+
+        // Check if V_max and V_available are valid
+        if (V_max <= 0 || V_available <= 0 || V_available > V_max) {
+            cout << "V_max: " << V_max << endl;
+            cout << "V_available: " << V_available << endl;
+            cout.flush();
+            throw std::invalid_argument("V_max and V_available must be positive, and V_available must be less than V_max");
+        }
 
         this->load_boom_boats_duo_params("params.json");
 
@@ -397,6 +407,18 @@ BoomBoatsDuo:: BoomBoatsDuo(Vector2d center,  double orientation,
     this->boat2 = boat2;
 
     this->load_boom_boats_duo_params("params.json");
+    
+    this->V_max = boom_boats_duo_params["V_max"].get<double>();
+    this->V_available = this->V_max;
+    this->cleaning_rate = boom_boats_duo_params["cleaning_rate"].get<double>();
+}
+
+// Default Constructor
+BoomBoatsDuo::BoomBoatsDuo() : t(0) {
+    this->load_boom_boats_duo_params("params.json");
+    this->V_max = boom_boats_duo_params["V_max"].get<double>();
+    this->V_available = this->V_max;
+    this->cleaning_rate = boom_boats_duo_params["cleaning_rate"].get<double>();
 }
 
 
@@ -410,6 +432,9 @@ BoomBoatsDuo& BoomBoatsDuo::operator=(const BoomBoatsDuo &other) {
         boat2 = other.boat2;
         boom = other.boom;
         t = other.t;
+        V_max = other.V_max;
+        V_available = other.V_available;
+        cleaning_rate = other.cleaning_rate;
         boom_boats_duo_params = other.boom_boats_duo_params;
     }
     return *this;
@@ -418,12 +443,11 @@ BoomBoatsDuo& BoomBoatsDuo::operator=(const BoomBoatsDuo &other) {
 // Utility functions
 
 void BoomBoatsDuo::print_status() const {
-    cout << "Boat 1 State: \n";
-    boat1.print_status();
-    cout << "Boat 2 State: \n";
-    boat2.print_status();
-    cout << "Boom State: \n";
-    boom.print_links_states();
+    cout << "Boat 1 Location: " << boat1.get_pos().head(2).transpose() << endl;
+    cout << "Boat 2 Location: " << boat2.get_pos().head(2).transpose() << endl;
+    cout << "V_available: " << V_available << endl;
+    cout << "V_max: " << V_max << endl;
+    cout.flush();
 }
 
 void BoomBoatsDuo::print_to_file(const string &filename,
@@ -483,6 +507,11 @@ void BoomBoatsDuo::print_to_file(const string &filename,
     // input the time
     ss << this->t << " ";
 
+    // input the available capacity
+    ss << this->V_available << " ";
+    // input the maximum capacity
+    ss << this->V_max << " ";
+
     // Write the collected string to the file
     file << ss.str() << std::endl;
 
@@ -502,13 +531,6 @@ void BoomBoatsDuo::load_boom_boats_duo_params(std::string filename){
     this->simulation_params = params["simulation"];
 }
 
-json BoomBoatsDuo::get_simulation_params() const {
-    return this->simulation_params;
-}
-
-double BoomBoatsDuo::get_time() const {
-    return this->t;
-}
 
 // Validation of states
 bool BoomBoatsDuo::is_valid_state() const {
@@ -714,8 +736,7 @@ MatrixXd BoomBoatsDuo::state_der(const Vector2d &control1,
 
 // Propagation function
 void BoomBoatsDuo::propagate(double dt, const Vector2d &control1,
- const Vector2d &control2, std::string integration_method, Vector3d setpoint1,
- Vector3d setpoint2, Vector3d setpoint1_dot, Vector3d setpoint2_dot) {
+ const Vector2d &control2, std::string integration_method) {
     // Calculate state derivative
 
 
@@ -778,26 +799,26 @@ void BoomBoatsDuo::propagate(double dt, const Vector2d &control1,
         throw std::runtime_error("Invalid integration method: " + integration_method);
     }
 
-    // wrap theta for all states, third column
-    for (int i = 0; i < state_new.rows(); i++) {
-        state_new(i, 2) = wrap_theta(state_new(i, 2));
-    }
+    // // wrap theta for all states, third column
+    // for (int i = 0; i < state_new.rows(); i++) {
+    //     state_new(i, 2) = wrap_theta(state_new(i, 2));
+    // }
 
 
-    // this->boat1.set_pos(state_new.row(0).head(3).transpose());
-    // this->boat1.set_vel(state_new.row(0).tail(3).transpose());
-    // this->boat2.set_pos(state_new.row(1).head(3).transpose());
-    // this->boat2.set_vel(state_new.row(1).tail(3).transpose());
+    this->boat1.set_pos(state_new.row(0).head(3).transpose());
+    this->boat1.set_vel(state_new.row(0).tail(3).transpose());
+    this->boat2.set_pos(state_new.row(1).head(3).transpose());
+    this->boat2.set_vel(state_new.row(1).tail(3).transpose());
 
-    // set states of boats from setpoints - temporary fix
-    setpoint1(2) = wrap_theta(PI / 2 - setpoint1(2));
-    setpoint1_dot(2) = -setpoint1_dot(2);
-    setpoint2(2) = wrap_theta(PI / 2 - setpoint2(2));
-    setpoint2_dot(2) = -setpoint2_dot(2);
-    this->boat1.set_pos(setpoint1);
-    this->boat1.set_vel(setpoint1_dot);
-    this->boat2.set_pos(setpoint2);
-    this->boat2.set_vel(setpoint2_dot);
+    // // set states of boats from setpoints - temporary fix
+    // setpoint1(2) = wrap_theta(PI / 2 - setpoint1(2));
+    // setpoint1_dot(2) = -setpoint1_dot(2);
+    // setpoint2(2) = wrap_theta(PI / 2 - setpoint2(2));
+    // setpoint2_dot(2) = -setpoint2_dot(2);
+    // this->boat1.set_pos(setpoint1);
+    // this->boat1.set_vel(setpoint1_dot);
+    // this->boat2.set_pos(setpoint2);
+    // this->boat2.set_vel(setpoint2_dot);
 
     // set states of links: rows 2-end
     for (int i = 0; i < this->boom.get_num_links(); i++) {
@@ -814,6 +835,47 @@ BoomBoat BoomBoatsDuo::get_boat2() const { // return copy of boat2
     return this->boat2;
 }
 
+Vector2d BoomBoatsDuo::get_center() const { // return center of the boats
+    Vector2d pos1 = this->boat1.get_pos().head(2);
+    Vector2d pos2 = this->boat2.get_pos().head(2);
+    return (pos1 + pos2) / 2.0; // return the center of the boats
+}
+
 Boom BoomBoatsDuo::get_boom() const { // return copy of boom
     return this->boom;
+}
+
+json BoomBoatsDuo::get_simulation_params() const {
+    return this->simulation_params;
+}
+
+double BoomBoatsDuo::get_time() const {
+    return this->t;
+}
+
+double BoomBoatsDuo::get_V_max() const {
+    return this->V_max;
+}
+
+double BoomBoatsDuo::get_V_available() const {
+    return this->V_available;
+}
+
+// Setters
+
+bool BoomBoatsDuo::decrease_V_available(double delta) {
+    if (this->V_available - delta < 0) {
+        cout << "Not enough available capacity" << endl;
+        cout.flush();
+        return false;
+    }
+    this->V_available -= delta;
+    return true;
+}
+
+void BoomBoatsDuo::set_cleaning_rate(double rate) {
+    if (rate <= 0) {
+        throw std::runtime_error("Cleaning rate must be non negative");
+    }
+    this->cleaning_rate = rate;
 }

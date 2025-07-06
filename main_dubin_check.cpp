@@ -1,9 +1,11 @@
-#include "PID_controller.h"
+// #include "PID_controller.h"
 #include "boom-boats-duo.h"
 #include "dubin.h"
 #include "helper_funcs.h"
 #include "oil-spill.h"
-#include "non_linear_controller.h"
+#include "set_point_controller.h"
+#include "MILP_Allocator.h"
+#include "obstacle.h"
 
 #include <vector>
 #include <iostream>
@@ -22,6 +24,7 @@ namespace fs = std::filesystem;
 using Eigen::Vector3d;
 using Eigen::Vector2d;
 using Eigen::MatrixXd;
+using Eigen::MatrixXi;
 using Eigen::RowVectorXd;
 
 // Path types
@@ -101,7 +104,6 @@ int main(int argc, char* argv[]) {
     json duo_params = params["boom_boats_duo"];
     json simulation_params = params["simulation"];
     json file_management_params = params["file_management"];
-    json PID_params = params["PID"];
 
     // Simulation parameters
     double T = simulation_params["time_duration"];
@@ -126,8 +128,8 @@ int main(int argc, char* argv[]) {
     // Print convex hull to file
     string convex_hull_folder = file_management_params["spills_convex_folder"];
 
-    // Get the file "oilspill_001.txt" from the spills folder
-    string filename_spill = spill_folder + "/oilspill_001.txt";
+    // Get the file "oilspill_017.txt" from the spills folder
+    string filename_spill = spill_folder + "/oilspill_017.txt";
     OilSpill oil_spill(filename_spill);
     if (!oil_spill.is_valid_sequence()) {
         std::cerr << "Invalid sequence of points in file: " << filename_spill << std::endl;
@@ -135,10 +137,22 @@ int main(int argc, char* argv[]) {
     }
     // Get convex hull of the oil spill and print it to file
     oil_spill.calculate_convex_hull();
+
+    // Get the file "obstacle_001.txt" from the obstacles folder
+    string obstacles_folder = file_management_params["obstacles_folder"];
+    string filename_obstacle = obstacles_folder + "/obstacle_001.txt";
+    Obstacle obstacle(filename_obstacle);
+    if (!obstacle.is_valid_sequence()) {
+        std::cerr << "Invalid sequence of points in file: " << filename_obstacle << std::endl;
+        return 1;
+    }
+    // Get convex hull of the obstacle and print it to file
+    obstacle.calculate_convex_hull();
+    
     double convex_hull_radius = oil_spill.get_convex_hull_radius();
     Vector2d convex_hull_centroid = oil_spill.get_convex_hull_centroid();
     // Get the file name without the ".txt" extension, adjust it
-    string convex_file_name = "oilspill_001_convex.txt";
+    string convex_file_name = "oilspill_017_convex.txt";
     oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
 
     // // Iterate over the files in the spills folder
@@ -188,10 +202,12 @@ int main(int argc, char* argv[]) {
     // Create duo
     BoomBoat *boat = new BoomBoat();
     // -x + PI / 2 --> To accomodate the orientation of the boat in its local frame
-    double orientation = wrap_theta(-qi[2] + PI / 2);
+    // double orientation = wrap_theta(-qi[2] + PI / 2);
+    double orientation = -qi[2] + PI / 2;
     Vector2d center = Vector2d(qi[0], qi[1]);
     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
-     mu_ct, mu_r, I, m, k, c, center, orientation);
+     mu_ct, mu_r, I, m, k, c, center, orientation, duo_params["V_max"],
+      duo_params["V_max"], duo_params["cleaning_rate"]);
 
     // Plan path for right and left ship
     // int num_links = params["boom"]["num_links"];
@@ -255,7 +271,7 @@ int main(int argc, char* argv[]) {
     // Sample the path and save it in matrix
     double step_size = dubin_params["sample_step_size"];
     double q[3];
-    int num_points = static_cast<int>(dubins_path_length(&path) / step_size) + 1;
+    int num_points = static_cast<int>(dubins_path_length(&path) / step_size);
     MatrixXd path_points(3, num_points);
     for (double t = 0; t < dubins_path_length(&path); t += step_size) {
         ret = dubins_path_sample(&path, t, q);
@@ -288,12 +304,12 @@ int main(int argc, char* argv[]) {
         path_R(2, i) = path_points(2, i);
     }
 
-    // Calculate the reference_dot in global frame
-    MatrixXd path_points_dot_L(3, num_points - 1);
-    MatrixXd path_points_dot_R(3, num_points - 1);
+    // // Calculate the reference_dot in global frame
+    // MatrixXd path_points_dot_L(3, num_points - 1);
+    // MatrixXd path_points_dot_R(3, num_points - 1);
 
-    path_points_dot_L = path_der_global(path_L, step_size);
-    path_points_dot_R = path_der_global(path_R, step_size);
+    // path_points_dot_L = path_der_global(path_L, step_size);
+    // path_points_dot_R = path_der_global(path_R, step_size);
 
     // MatrixXd path_L_local_frame = glob_path_points_2_local_frame_vel(path_L, step_size);
     // MatrixXd path_R_local_frame = glob_path_points_2_local_frame_vel(path_R, step_size);
@@ -311,8 +327,17 @@ int main(int argc, char* argv[]) {
 
     // Create controller
     // PID_Controller controller(params_path);
-    NonLinearController controller(params_path);
+    // NonLinearController controller(params_path);
+    SetPointController controller(params_path, path_L, path_R, *duo);
 
+    // Create the vector of duo, currently only one duo
+    std::vector<BoomBoatsDuo> duos;
+    duos.push_back(*duo);
+    // Create the vector of oil spills, currently only one oil spill
+    std::vector<OilSpill> oil_spills;
+    oil_spills.push_back(oil_spill);
+    // Create the vector of obstacles, currently empty
+    std::vector<Obstacle> obstacles;
 
     // Start tracking problem
     int numSteps = static_cast<int>(T / dt) + 1;
@@ -323,7 +348,7 @@ int main(int argc, char* argv[]) {
     
     // Print time every k iterations
     int k_itr = simulation_params["print_interval"];
-    int check_valid_interval = simulation_params["check_valid_interval"];
+    // int check_valid_interval = simulation_params["check_valid_interval"];
     std::string integration_method = simulation_params["integration_method"];
 
     // data file for duo
@@ -332,15 +357,15 @@ int main(int argc, char* argv[]) {
     cout << "Running simulation..." << std::endl << std::endl;
     cout.flush(); // Force immediate display of the output
     int cnt = 0;
-    int jump_index = params["PID"]["jump_index"];
+    // int jump_index = params["PID"]["jump_index"];
 
-    // Setpoint
-    Vector3d setpoint_L = Vector3d::Zero();
-    Vector3d setpoint_R = Vector3d::Zero();
-    Matrix3X2d setpoint; // First column is for left ship, second column is for right ship
-    Vector3d setpoint_dot_L = Vector3d::Zero(); 
-    Vector3d setpoint_dot_R = Vector3d::Zero();
-    Matrix3X2d setpoint_dot; // First column is for left ship, second column is for right ship
+    // // Setpoint
+    // Vector3d setpoint_L = Vector3d::Zero();
+    // Vector3d setpoint_R = Vector3d::Zero();
+    // Matrix3X2d setpoint; // First column is for left ship, second column is for right ship
+    // Vector3d setpoint_dot_L = Vector3d::Zero(); 
+    // Vector3d setpoint_dot_R = Vector3d::Zero();
+    // Matrix3X2d setpoint_dot; // First column is for left ship, second column is for right ship
 
     // // Next setpoint
     // Vector3d next_setpoint_L = Vector3d::Zero();
@@ -350,49 +375,52 @@ int main(int argc, char* argv[]) {
     // Vector3d next_setpoint_dot_R = Vector3d::Zero();
     // Matrix3X2d next_setpoint_dot; // First column is for left ship, second column is for right ship
 
-    Vector3d boat1_pos = Vector3d::Zero();
-    Vector3d boat2_pos = Vector3d::Zero();
-    Vector3d boat1_vel = Vector3d::Zero();
-    Vector3d boat2_vel = Vector3d::Zero();
+    // Vector3d boat1_pos = Vector3d::Zero();
+    // Vector3d boat2_pos = Vector3d::Zero();
+    // Vector3d boat1_vel = Vector3d::Zero();
+    // Vector3d boat2_vel = Vector3d::Zero();
     Matrix2X2d control = Matrix2X2d::Zero();
     Vector2d control1 = Vector2d::Zero();
     Vector2d control2 = Vector2d::Zero();
     
     // Show percent of path completed
-    double path_percent = 0.0;
+    // double path_percent = 0.0;
 
-    while ( (duo->get_time() < T) && (cnt < num_points) ) {
+
+    // Check the MILP allocator
+    // vector<MatrixXi> x_solutions = allocate_duos(duos, oil_spills, obstacles);
+
+    while ( (duo->get_time() < T) ) { // && (cnt < num_points) ) {
         // Print current state to file
         duo->print_to_file(filename, foldername);
         if (cnt % k_itr == 0) {
-            cout << "Simulation time: " 
-                    << std::fixed << std::setprecision(2) 
-                    << std::setw(6) << duo->get_time() << " [s] out of "
-                    << std::setw(6) << T << " [s]" << std::endl;
-            cout << "Path completion: " << path_percent << "%" << std::endl;
+            cout << "Simulation time: " << std::fixed << std::setprecision(2)
+                 << std::setw(6) << duo->get_time() << " [s] out of "
+                 << std::setw(6) << T << " [s]" << std::endl;
+            // cout << "Path completion: " << path_percent << "%" << std::endl;
 
-            cout.flush(); // Force flush the buffer  
+            cout.flush(); // Force flush the buffer
         }
 
         // Get the setpoint
-        setpoint_L = path_L.col(cnt);
-        setpoint_R = path_R.col(cnt);
-        setpoint.col(0) = setpoint_L;
-        setpoint.col(1) = setpoint_R;
+        // setpoint_L = path_L.col(cnt);
+        // setpoint_R = path_R.col(cnt);
+        // setpoint.col(0) = setpoint_L;
+        // setpoint.col(1) = setpoint_R;
 
         // cout << "Good so far1" << endl; cout.flush();
         // Get the setpoint dot
-        setpoint_dot_L = path_points_dot_L.col(cnt);
+        // setpoint_dot_L = path_points_dot_L.col(cnt);
         // cout << "Good so far2" << endl; cout.flush();
-        setpoint_dot_R = path_points_dot_R.col(cnt);
+        // setpoint_dot_R = path_points_dot_R.col(cnt);
         // cout << "Good so far3" << endl; cout.flush();
 
 
-        // Get the next setpoint
-        int next_index = cnt + jump_index;
-        if (next_index >= num_points) {
-            next_index = num_points - 1;
-        }
+        // // Get the next setpoint
+        // int next_index = cnt + jump_index;
+        // if (next_index >= num_points) {
+        //     next_index = num_points - 1;
+        // }
         // next_setpoint_L = path_L.col(next_index);
         // next_setpoint_R = path_R.col(next_index);
         // next_setpoint.col(0) = next_setpoint_L;
@@ -405,10 +433,10 @@ int main(int argc, char* argv[]) {
         // next_setpoint_dot.col(1) = next_setpoint_dot_R;
 
         // Get the odometry
-        boat1_pos = duo->get_boat1().get_pos();
-        boat2_pos = duo->get_boat2().get_pos();
-        boat1_vel = duo->get_boat1().get_vel();
-        boat2_vel = duo->get_boat2().get_vel();
+        // boat1_pos = duo->get_boat1().get_pos();
+        // boat2_pos = duo->get_boat2().get_pos();
+        // boat1_vel = duo->get_boat1().get_vel();
+        // boat2_vel = duo->get_boat2().get_vel();
 
         // if (PID_params["use_next_setpoint"]) {
         //     control = controller.get_control_with_next(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot, next_setpoint, next_setpoint_dot);
@@ -417,7 +445,10 @@ int main(int argc, char* argv[]) {
         // }
         
         // Use non linear controller
-        control = controller.update(*duo, setpoint_L, setpoint_R, setpoint_dot_L, setpoint_dot_R);
+        // control = controller.update(*duo);
+
+        // use SetPointController
+        control = controller.update(*duo);
 
         // Unpack the control
         control1 = control.col(0);
@@ -455,17 +486,18 @@ int main(int argc, char* argv[]) {
         // cout.flush();
 
         // Propagate the system
-        duo->propagate(dt, control1, control2, integration_method, setpoint_L, setpoint_R, setpoint_dot_L, setpoint_dot_R);
+        duo->propagate(dt, control1, control2, integration_method);
 
         // Check validity of the state
-        if (cnt % check_valid_interval == 0) {
-            if (!duo->is_valid_state()) {
-                cout << "Invalid state detected at time: " << duo->get_time() << std::endl;
-                cout.flush();
-            }
-        }
+        // if (cnt % check_valid_interval == 0) {
+        //     if (!duo->is_valid_state()) {
+        //         cout << "Invalid state detected at time: " << duo->get_time() << std::endl;
+        //         cout.flush();
+        //     }
+        // }
+
         cnt += 1; 
-        path_percent += 100.0 / num_points;
+        // path_percent += 100.0 / num_points;
     }
 
     // Delete pointers

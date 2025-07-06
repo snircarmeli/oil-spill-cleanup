@@ -1,0 +1,1040 @@
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:37:04 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "gurobi.log"
+Set parameter Threads to value 4
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:38:20 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "gurobi.log"
+Set parameter Threads to value 4
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:39:18 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "gurobi.log"
+Set parameter Threads to value 4
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:42:10 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:49:40 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 10:08:29 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 10:54:56 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 10:55:13 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 10:58:50 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 19 rows, 10 columns and 34 nonzeros
+Model fingerprint: 0xc4af2516
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 10:59:55 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 19 rows, 10 columns and 34 nonzeros
+Model fingerprint: 0xc4af2516
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 11:11:02 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 19 rows, 10 columns and 34 nonzeros
+Model fingerprint: 0xc4af2516
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 21 11:59:58 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 19 rows, 10 columns and 34 nonzeros
+Model fingerprint: 0xc4af2516
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 13:04:57 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 13:07:57 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 13:08:20 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 13:08:25 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 13:11:12 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, gurobi_cl) logging started Sun Jun 22 13:13:44 2025
+
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, gurobi_cl) logging started Sun Jun 22 13:14:27 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Sun Jun 22 14:25:00 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Mon Jun 23 11:16:31 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Mon Jun 23 11:21:00 2025
+
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Mon Jun 23 11:21:08 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 18 rows, 10 columns and 33 nonzeros
+Model fingerprint: 0xec8fcb36
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:08:06 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 18 rows, 10 columns and 33 nonzeros
+Model fingerprint: 0xec8fcb36
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 3 rows and 0 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:11:57 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:12:45 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 5 rows, 10 columns and 7 nonzeros
+Model fingerprint: 0xda278cd1
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e+00, 1e+00]
+Found heuristic solution: objective 0.0000000
+
+Explored 0 nodes (0 simplex iterations) in 0.51 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 1: 0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 0.000000000000e+00, best bound 0.000000000000e+00, gap 0.0000%
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:13:12 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 7 rows, 10 columns and 9 nonzeros
+Model fingerprint: 0x7cede6e5
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 7 rows and 10 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 1: 0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 0.000000000000e+00, best bound 0.000000000000e+00, gap 0.0000%
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:13:34 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Tue Jun 24 16:22:53 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 15:42:03 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.01s
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:03:29 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:03:32 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:03:58 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:04:57 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:05:25 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:05:34 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:09:14 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:10:49 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:13:14 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:17:33 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:24:39 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:24:47 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 12.0.2 (linux64, C++) logging started Sat Jun 28 16:30:55 2025
+
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2679631
+Set parameter TimeLimit to value 3600
+Set parameter LogFile to value "gurobi.log"
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Set parameter InfUnbdInfo to value 1
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (linux64 - "Ubuntu 20.04.6 LTS")
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12700H, instruction set [SSE2|AVX|AVX2]
+Thread count: 20 physical cores, 20 logical processors, using up to 20 threads
+
+Non-default parameters:
+TimeLimit  3600
+InfUnbdInfo  1
+
+Academic license 2679631 - for non-commercial use only - registered to sn___@campus.technion.ac.il
+Optimize a model with 11 rows, 10 columns and 19 nonzeros
+Model fingerprint: 0x42d62377
+Variable types: 2 continuous, 8 integer (6 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+00]
+  Objective range  [1e+01, 1e+01]
+  Bounds range     [1e+00, 2e+00]
+  RHS range        [1e-01, 3e+00]
+Presolve removed 9 rows and 9 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 20 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -

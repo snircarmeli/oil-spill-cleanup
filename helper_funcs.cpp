@@ -290,6 +290,29 @@ double calculate_convex_hull_distance(const MatrixXd &hull1, const MatrixXd &hul
     return min_dist;
 }
 
+// Function that calculates the minimal distance between a point and a convex hull
+double calculate_point_convex_hull_distance(const MatrixXd &hull, Vector2d point) {
+    // Check if the hull is empty
+    if (hull.rows() == 0) {
+        throw std::runtime_error("Empty hull at calculate_point_convex_hull_distance");
+    }
+    // Check if the hull has less than 3 points
+    if (hull.rows() < 3) {
+        throw std::runtime_error("Less than 3 points in the hull at calculate_point_convex_hull_distance");
+    }
+    // Calculate the distance
+    int n = hull.rows();
+    double min_dist = numeric_limits<double>::infinity();
+    double dist = point_to_segment_distance(point, hull.row(0), hull.row(1));
+    int cnt = 0;
+    while (dist < min_dist && cnt < n) {
+        min_dist = dist;
+        dist = point_to_segment_distance(point, hull.row(cnt), hull.row((cnt + 1) % n));
+        cnt++;
+    }
+    return min_dist;
+}
+
 
 // MatrixXd glob_path_points_2_local_frame_vel(MatrixXd path_points, double ts) {
 //     // This function returns a path in local frame, first number is u,

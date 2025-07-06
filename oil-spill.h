@@ -10,6 +10,7 @@
 
 
 #include "helper_funcs.h" // Helper functions
+#include "obstacle.h" // Obstacle class
 
 // Parsing json parameters
 #include "json/json.hpp"
@@ -38,14 +39,14 @@ private:
     // Member variables
     MatrixXd perimeter_points; // Perimeter of the oil spill [m]
     MatrixXd convex_hull; // Convex hull of the oil spill
-    double oil_spill_mass; // Mass of the oil spill [kg]
+    double volume; // Volume of the oil spill [m^3]
     json oil_spill_params;
 
 public:
     // Constructors
     OilSpill(); // Default constructor
     OilSpill(const OilSpill &oil_spill); // Copy constructor
-    OilSpill(MatrixXd perimeter_points, MatrixXd convex_hull, double oil_spill_mass); // Parameterized constructor
+    OilSpill(MatrixXd perimeter_points, MatrixXd convex_hull, double volume); // Parameterized constructor
     OilSpill(string filename); // Constructor with filename
 
     // Destructor
@@ -65,9 +66,9 @@ public:
     MatrixXd get_convex_hull() const;
     void set_convex_hull(MatrixXd convex_hull);
 
-    // Getter and Setter for oil_spill_mass
-    double get_oil_spill_mass() const;
-    void set_oil_spill_mass(double oil_spill_mass);
+    // Getter and Setter for volume
+    double get_volume() const;
+    void set_volume(double volume);
 
     // Get convex hull of the oil spill
     void calculate_convex_hull();
@@ -80,6 +81,9 @@ public:
 
     // Getter for the convex hull centroid
     Vector2d get_convex_hull_centroid() const;
+
+    // Getter for the risk factor of the oil spill
+    double get_risk_factor(const vector<Obstacle>& obstacles) const;
 
     // Expand the oil spill by a factor, change the convex hull also if not empty
     void expand_spill(double factor);

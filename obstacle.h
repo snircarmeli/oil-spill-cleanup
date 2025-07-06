@@ -6,10 +6,13 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
-#include <vector>
 #include <Eigen/Dense>
-#include <cmath>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iterator>
+#include <iostream>
+#include <cmath>
 
 #include "helper_funcs.h" // Helper functions
 
@@ -18,17 +21,24 @@
 #include "json/json.hpp"
 using json = nlohmann::json;
 
-using namespace std;
-using std::vector;
 using std::cout;
 using std::endl;
 using std::string;
 using std::ifstream;
+using std::vector;
+using std::sort;
+using std::ofstream;
+using std::pair;
+using std::make_pair;
 
-using Eigen::Vector3d;
 using Eigen::Vector2d;
 using Eigen::MatrixXd;
 using Eigen::VectorXi;
+using Eigen::VectorXd;
+using Eigen::Matrix2d;
+
+using std::istringstream;
+using std::numeric_limits;
 
 class Obstacle {
 private:
@@ -60,9 +70,25 @@ public:
     MatrixXd get_perimeter_points() const;
     void set_perimeter_points(const MatrixXd &points);
 
+    // Get convex hull of the obstacle
+    void calculate_convex_hull();
+
     // Getter and Setter for convex_hull
     MatrixXd get_convex_hull() const;
     void set_convex_hull(const MatrixXd &hull);
+
+    // Getter for obstacle centroid
+    Vector2d get_obstacle_centroid() const;
+
+    // Getter for convex hull centroid
+    Vector2d get_convex_hull_centroid() const;
+
+    // Check if sequence of points is valid: if it does not intersect itself,
+    //  and has at least 3 points
+    bool is_valid_sequence() const;
+
+    // Print obstacle to file
+    void print_convex_hull_to_file(string foldername, string filename) const;
 
     // Getter and Setter for crucial flag
     bool is_crucial() const;

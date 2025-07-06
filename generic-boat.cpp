@@ -108,90 +108,9 @@ GenericBoat& GenericBoat::operator=(const GenericBoat &gen_boat) {
     return *this;
 }
 
-//EOM
- Matrix2x3d GenericBoat::state_der(Matrix2x3d state, Vector2d control) {
-    double F = control[0]; // F is 10
-    double eta = control[1]; // 
-    // State: x, y, theta, x_dot, y_dot, omega
-    double theta = wrap_theta(state(0, 2));
-  
-    double x_dot = state(1, 0);
-    double y_dot = state(1, 1);
-    double omega = state(1, 2);
-
-    double r = this->radius;
-    double mass = this->mass;
-    double I = this->inertia;
-    double mu_r = this->mu_r;
-    double mu_l = this->mu_l;
-    double mu_ct = this->mu_ct;
-    
-    // Rotation to local frame
-    double u = x_dot * sin(theta) + y_dot * cos(theta);
-    double v = x_dot * cos(theta) - y_dot * sin(theta);
-    // EOM
-    double u_dot = (F * cos(eta) - mu_l * u * u * sign(u)) / mass;
-    double v_dot = (-F * sin(eta) - mu_ct * v * v * sign(v)) / mass;
-    double omega_dot = (r * F * sin(eta) - mu_r * omega * omega * sign(omega)) / I;
-    // Rotation backward to global frame
-    double x_dotdot = u_dot * sin(theta) + v_dot * cos(theta);
-    double y_dotdot = u_dot * cos(theta) - v_dot * sin(theta);
-
-    Matrix2x3d state_dot;
-    state_dot << x_dot, y_dot, omega, x_dotdot, y_dotdot, omega_dot;
-    return state_dot;
-}
-
-void GenericBoat::propogate(Vector2d control, double dt) {
-    double F = control[0];
-    double eta = control[1];
-    // cout << eta << endl;
-    if (abs(F) > this->F_max || abs(eta) > this->eta_max) {
-        throw std::runtime_error("Force or steering angle exceeds maximum allowed values");
-    }
 
 
-    // Runge-Kutta 4
-    Matrix2x3d y_n;
-    y_n << this->pos[0], this->pos[1], wrap_theta(this->pos[2]), 
-        this->vel[0], this->vel[1], this->vel[2];
 
-    Matrix2x3d k1 = this->state_der(y_n, control);
-
-    // Vectorized operations to update y_tmp
-    Matrix2x3d y_tmp = y_n + (dt / 2.0f) * k1;
-
-    Matrix2x3d k2 = this->state_der(y_tmp, control);
-    y_tmp = y_n + (dt / 2.0f) * k2;
-
-    Matrix2x3d k3 = this->state_der(y_tmp, control);
-    y_tmp = y_n + dt * k3;
-
-    Matrix2x3d k4 = this->state_der(y_tmp, control);
-
-    // Compute y_(n+1) using vectorized operations
-    Matrix2x3d y_next = y_n + (dt / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
-    // Runge-Kutta 4
-    
-    // // Forward euler
-    // Matrix2x3d y_n;
-    // y_n << this->pos[0], this->pos[1], wrap_theta(this->pos[2]),
-    //        this->vel[0], this->vel[1], this->vel[2];
-    // Matrix2x3d state_dot = this->state_der(y_n, control);
-    // Matrix2x3d y_next = y_n + dt * state_dot;
-
-    this->pos = y_next.row(0);  // Takes the first 3 elements from y_next
-
-    // Wrap theta (third element)
-    this->pos[2] = wrap_theta(this->pos[2]);
-
-    // Assign vel (last 3 elements)
-    this->vel = y_next.row(1);  // Takes the last 3 elements from y_next
-
-
-    // Debugging statement
-    // cout << "hi" << endl;
-}
 
 
 // Accessors

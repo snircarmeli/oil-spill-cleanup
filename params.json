@@ -41,8 +41,7 @@
         }
     },
     "boom_boat": {
-        "initial_fuel": 100.0,
-        "waste_tank_capacity": 100.0
+        "fuel_max": 100.0
     },
     "boom_boats_duo": {
         "num_duos": 1,
@@ -52,14 +51,17 @@
         ],
         "initial_orientation": 0,
         "minimal_distance_size_ratio": 1,
-        "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size"
+        "minimal_distance_comment": "minimal distance 'will' be 3 times the ship size",
+        "V_max": 2000.0,
+        "V_max_comment": "Maximum capacity",
+        "cleaning_rate": 0.1
     },
     "simulation": {
-        "time_duration": 15.0,
+        "time_duration": 35.0,
         "time_step": 0.01,
         "print_interval": 50,
         "integration_method": "RK2",
-        "check_valid_interval": 50
+        "check_valid_interval": 200
     },
     "integration": {
         "RK45_tolerance": 1e-3,
@@ -69,10 +71,12 @@
         "output_folder": "DuosData",
         "dubin_folder": "DubinPath",
         "spills_folder": "spills",
-        "spills_convex_folder": "spills_convexed"
+        "spills_convex_folder": "spills_convexed",
+        "obstacles_folder": "obstacles",
+        "obstacles_convex_folder": "obstacles_convexed"
     },
     "dubin": {
-        "min_turning_radius": 4.0,
+        "min_turning_radius": 30.0,
         "initial_position": [
             0.0,
             0.0,
@@ -87,40 +91,45 @@
         "dist_from_center_ratio": 0.7,
         "max_jump": 100.0
     },
-    "PID": {
-        "Kp": [
-            100,
-            0.01
-        ],
-        "Ki": [
-            140.0,
-            0.0
-        ],
-        "Kd": [
-            0.0,
-            0.45
-        ],
-        "output_F_max": 100000.0,
-        "output_eta_max": 1.57079632679,
-        "use_next_setpoint": true,
-        "jump_index": 10,
-        "alpha": 0.05,
-        "print_PID": false,
-        "switch_tolerance_deg": 5
-    },
-    "NonLinearController": {
-        "k_u": 30,
-        "k_u_d": 0,
-        "k_v": 0,
-        "k_v_d": 0,
-        "k_theta": 0,
-        "gamma": 1.0,
-        "delta": 10.5,
-        "default_k_theta": 1.1,
-        "default_k_u": 1.1,
-        "epsilon": 0.001
-    },
     "oil_spill": {
-        "attack_distance": 5.0
+        "attack_distance": 5.0,
+        "MinimalDistance_Obstacle": 100.0
+    },
+    "SetPointController": {
+        "wc_theta": 9,
+        "wc_u": 0.4,
+        "phase_margin_theta": 55,
+        "phase_margin_u": 55,
+        "sat_theta": 12000,
+        "sat_u": 600,
+        "Tt_theta": 2,
+        "Tt_u": 1.0,
+        "tolerance_d": 5,
+        "skip_index": 80,
+        "max_error_theta_deg": 40, 
+        "debug": 0
+    },
+    "MILP_Solver": {
+        "velocity": 10.0,
+        "SR": 100.0,
+        "timelimit": 300,
+        "threads": 4,
+        "threads_comment": "Number of threads to use",
+        "mipgap": 0.01,
+        "mipgap_comment": "Relative MIP gap tolerance"
+    },
+    "TaskAllocator": {
+        "min_dist": 20
+    },
+    "ObjectiveCost": {
+        "w_time": 1,
+        "w_fuel": 1,
+        "w_duo_duo_dist": 1,
+        "w_duo_obstacle_dist": 1,
+        "w_duo_spill_dist": 1,
+        "d_min_duo_duo": 10,
+        "d_min_duo_obstacle": 20,
+        "d_min_duo_spill": 5,
+        "kappa": 1
     }
 }

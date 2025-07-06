@@ -16,9 +16,9 @@ using Eigen::MatrixXd;
 class BoomBoat : public GenericBoat {
 private:
     // Member variables
-    double fuel; // Fuel [kg]
-    double tank_curr; // Waste oil in tank [L]
-    double cap; // Waste oil capacity [L]
+    double fuel_max; // Maximum fuel capacity [kg]
+    double fuel_available; // Fuel [kg]
+
     // const double F_max; // Maximum force applied by engine [N]
     // const double eta_max; // Maximum steering angle [rad]
 
@@ -30,7 +30,7 @@ public:
     BoomBoat(const BoomBoat &boom_boat); // Copy constructor
     BoomBoat(Vector3d pos);
     BoomBoat(double radius, double mass, double inertia, double mu_l, double mu_ct, 
-             double mu_r, Vector3d pos, Vector3d vel, double fuel, double cap,
+             double mu_r, Vector3d pos, Vector3d vel, double fuel_max, 
               double F_max, double eta_max); // Parameterized constructor
 
     // Destructor
@@ -40,11 +40,12 @@ public:
     BoomBoat &operator=(const BoomBoat &boom_boat);
 
     // Getter and Setter for fuel
-    double get_fuel() const;
-    double get_cap() const;
-    double get_tank_curr() const;
-    
-    void set_fuel(double fuel);
+    double get_available_fuel() const;
+    double get_fuel_max() const;
+
+    bool decrease_fuel(double delta); // Returns true if successful, false if not enough fuel
+
+    bool set_fuel(double fuel); // Returns true if successful, false if fuel is negative
 
     void load_boom_boat_params(std::string filename);
 

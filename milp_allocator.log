@@ -1,0 +1,29 @@
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:21:19 2025
+
+Set parameter LogFile to value "milp_allocator.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:24:10 2025
+
+Set parameter LogFile to value "milp_allocator.log"
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:27:48 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "milp_allocator.log"
+Set parameter Threads to value 4
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:30:54 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "milp_allocator.log"
+Set parameter Threads to value 4
+
+Gurobi 12.0.2 (linux64, C++) logging started Fri Jun 13 17:32:36 2025
+
+Set parameter TimeLimit to value 300
+Set parameter MIPGap to value 0.01
+Set parameter LogFile to value "milp_allocator.log"
+Set parameter Threads to value 4

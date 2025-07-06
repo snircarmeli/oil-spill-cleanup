@@ -1,7 +1,7 @@
 #include "oil-spill.h"
 
 // Default constructor
-OilSpill::OilSpill() : oil_spill_mass(0.0) {
+OilSpill::OilSpill() : volume(0.0) {
     // Set perimeter_points to an empty matrix
     this->perimeter_points = MatrixXd(0, 2);
     // Set convex_hull to an empty matrix
@@ -13,35 +13,37 @@ OilSpill::OilSpill() : oil_spill_mass(0.0) {
 OilSpill::OilSpill(const OilSpill &oil_spill) {
     this->perimeter_points = oil_spill.perimeter_points;
     this->convex_hull = oil_spill.convex_hull;
-    this->oil_spill_mass = oil_spill.oil_spill_mass;
+    this->volume = oil_spill.volume;
     this->load_oil_spill_params("params.json");
 }
 
 
 // Parameterized constructor
 OilSpill::OilSpill(MatrixXd perimeter_points, MatrixXd convex_hull,
- double oil_spill_mass) {
+ double volume) {
     this->perimeter_points = perimeter_points;
     this->convex_hull = convex_hull;
-    this->oil_spill_mass = oil_spill_mass;
+    this->volume = volume;
     this->load_oil_spill_params("params.json");
 }
 
 // Constructor with filename
 OilSpill::OilSpill(string filename) {
     // Load parameters from txt file filename
-    
     ifstream file(filename);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file at OilSpill::OilSpill");
     }
+
     // First line is the oil spill mass
-    file >> this->oil_spill_mass;
+    file >> this->volume;
+
     // Check if mass is non-negative
-    if (this->oil_spill_mass < 0) {
+    if (this->volume < 0) {
         file.close();
         throw std::runtime_error("Negative oil spill mass at OilSpill::OilSpill");
     }
+
     // Second line is the number of points
     int num_points;
     file >> num_points;
@@ -51,6 +53,7 @@ OilSpill::OilSpill(string filename) {
         file.close();
         throw std::runtime_error("Incomplete number of points at OilSpill::OilSpill");
     }
+
     // Check if num_points is non-negative
     if (num_points < 0) {
         file.close();
@@ -67,15 +70,19 @@ OilSpill::OilSpill(string filename) {
     int cnt = 0;
     string test;
     int cnt2 = 0;
+
     // Enter the next line of file into line
-    getline(file, line);
-    while (!line.empty()) {
+    
+    while (getline(file, line)) {
+        if (line.empty()) {
+            continue;  // skip empty lines
+        }
         // Check if line has only two numbers
         istringstream iss(line);
-        // Read all data in iss to check if it has only two numbers
         cnt2 = 0;
         test = "";
-        while(!iss.eof()) {
+
+        while (!iss.eof()) {
             iss >> test;
             // Check if test is a number
             if (canConvertToFloat(test)) {
@@ -83,32 +90,35 @@ OilSpill::OilSpill(string filename) {
                 if (cnt2 > 2) {
                     throw std::runtime_error("Too many points in file " + filename + " at line " + std::to_string(cnt + 3) + " at OilSpill::OilSpill");
                 }
-            }
-            else {
+            } else {
                 throw std::runtime_error("Invalid data in file " + filename + " at line " + std::to_string(cnt + 3) + " at OilSpill::OilSpill");
             }
         }
+
         if (cnt2 < 2) {
             throw std::runtime_error("Invalid point in file " + filename + " at line " + std::to_string(cnt + 3) + " at OilSpill::OilSpill");
         }
-        
+
         // If we reach here, iss has only two numbers
         double x, y;
         iss = istringstream(line);
         iss >> x >> y;
         this->perimeter_points.row(cnt) << x, y;
+
         cnt++;
-        getline(file, line);
     }
     file.close();
+
     // Check if cnt is less than num_points
     if (cnt < num_points) {
         throw std::runtime_error("Greater number of points reported at file " + filename + " at OilSpill::OilSpill");
     }
+
     // Check if cnt is greater than num_points
     if (cnt > num_points) {
         throw std::runtime_error("Smaller number of points reported at file " + filename + " at OilSpill::OilSpill");
     }
+
 
     this->load_oil_spill_params("params.json");
 }
@@ -119,8 +129,9 @@ OilSpill::~OilSpill() {}
 // Assignment operator
 OilSpill &OilSpill::operator=(const OilSpill &oil_spill) {
     if (this != &oil_spill) {
-        this->oil_spill_mass = oil_spill.oil_spill_mass;
+        this->volume = oil_spill.volume;
         this->perimeter_points = oil_spill.perimeter_points;
+        this->convex_hull = oil_spill.convex_hull;
     }
     
     // Check if the perimeter_points is valid
@@ -158,7 +169,7 @@ void OilSpill::set_perimeter_points(MatrixXd perimeter_points) {
 MatrixXd OilSpill::get_convex_hull() const {
     // If convex_hull is empty, calculate it
     if (this->convex_hull.rows() == 0) {
-        throw std::runtime_error("Empty convex hull matrix at OilSpill::get_convex_hull"); 
+        throw std::runtime_error("Empty convex hull matrix at OilSpill::get_convex_hull");
     }
     return this->convex_hull;
 }
@@ -168,14 +179,14 @@ void OilSpill::set_convex_hull(MatrixXd convex_hull) {
     this->convex_hull = convex_hull;
 }
 
-// Getter for oil_spill_mass
-double OilSpill::get_oil_spill_mass() const {
-    return this->oil_spill_mass;
+// Getter for volume
+double OilSpill::get_volume() const {
+    return this->volume;
 }
 
-// Setter for oil_spill_mass
-void OilSpill::set_oil_spill_mass(double oil_spill_mass) {
-    this->oil_spill_mass = oil_spill_mass;
+// Setter for volume
+void OilSpill::set_volume(double volume) {
+    this->volume = volume;
 }
 
 // Get convex hull of the oil spill
@@ -304,6 +315,35 @@ Vector2d OilSpill::get_convex_hull_centroid() const {
     return centroid;
 }
 
+// Getter for the risk factor of the oil spill
+double OilSpill::get_risk_factor(const vector<Obstacle>& obstacles) const {
+    // Risk factor:
+    // R = V * (1 + \sigma_obs w_j / (distance from obstacle) * I[distance from obstacle < minDistance])
+    double min_distance = this->oil_spill_params["MinimalDistance_Obstacle"].get<double>();
+    // Check if the perimeter_points matrix is empty
+    if (this->perimeter_points.rows() == 0) {
+        throw std::runtime_error("Empty perimeter points matrix at OilSpill::get_risk_factor");
+    }
+
+    double sum = 0;
+    MatrixXd obstacle_convex_hull;
+    double distance;
+    double weight;
+    // Iterate over all obstacles
+    for (const auto& obstacle : obstacles) {
+        // get the convex hull of the obstacle
+        obstacle_convex_hull = obstacle.get_convex_hull();
+        // Check if the obstacle_convex_hull matrix is empty
+        if (obstacle_convex_hull.rows() == 0) {
+            continue; // Skip empty obstacles
+        }
+        distance = calculate_convex_hull_distance(this->convex_hull, obstacle_convex_hull);
+        weight = obstacle.get_weight();
+        sum += (distance <= min_distance) * weight / distance;
+    }
+    return this->volume * (1 + sum);
+}
+
 // Expand the oil spill by a factor
 void OilSpill::expand_spill(double factor) {
     // Check if the perimeter_points matrix is empty
@@ -364,7 +404,7 @@ bool OilSpill::is_valid_sequence() const {
 
 // Utility function to display OilSpill status
 void OilSpill::print_status() const {
-    cout << "Oil spill mass: " << this->oil_spill_mass << " kg" << endl;
+    cout << "Oil spill mass: " << this->volume << " kg" << endl;
     cout << "Perimeter points: " << endl;
     cout << this->perimeter_points << endl;
     cout << "Convex hull: " << endl;
@@ -382,7 +422,7 @@ string filename) const {
         throw std::runtime_error("Could not open file at OilSpill::print_convex_hull_to_file");
     }
     // First row is the oil spill mass
-    file << this->oil_spill_mass << endl;
+    file << this->volume << endl;
     // Second row is the number of points
     file << this->convex_hull.rows() << endl;
     // Write the points

@@ -104,5 +104,19 @@
         "unordered_set": "cpp",
         "variant": "cpp"
     },
+    "makefile.launchConfigurations": [],
+    "makefile.configurations": [],
+    "makefile.defaultTarget": "main_dubin_check",
+    "makefile.compilerPath": "/usr/bin/g++",
+    "makefile.makePath": "/usr/bin/make",
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.default.includePath": [
+        "/opt/gurobi1202/linux64/include",
+        "/usr/include",
+        "/usr/include/eigen3",
+        "/usr/include/json"
+    ],
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
     "cmake.sourceDirectory": "C:/Users/snir2/OneDrive - Technion/Msc. Electrical Engineering/Thesis/code/matplotlib-cpp"
 }

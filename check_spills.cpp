@@ -1,5 +1,6 @@
 // Check spills in the folder "spills"
-
+// build:
+// g++ -std=c++17 check_spills.cpp oil-spill.o helper_funcs.o -I/usr/include/eigen3 -I/usr/include/json -o check_spills.exe
 #include "oil-spill.h"
 #include <iostream>
 #include <fstream>
