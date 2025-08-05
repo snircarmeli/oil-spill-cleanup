@@ -17,8 +17,8 @@ def generate_spill(center_x, center_y, num_points=5):
 # Generate 20 spills centered on a grid.
 grid_size = 5
 spills = {}
-for i in range(20):
-    # # For now, only generate the 17th spill.
+for i in range(40):
+    # For now, only generate the 17th spill.
     if i != 16:
         continue
     center_x = (i % grid_size) * 10

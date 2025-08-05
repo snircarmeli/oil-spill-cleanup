@@ -57,11 +57,12 @@
         "cleaning_rate": 0.1
     },
     "simulation": {
-        "time_duration": 35.0,
+        "time_duration": 30.0,
         "time_step": 0.01,
         "print_interval": 50,
         "integration_method": "RK2",
-        "check_valid_interval": 200
+        "check_valid_interval": 200,
+        "activate_simulation": 1
     },
     "integration": {
         "RK45_tolerance": 1e-3,
@@ -73,7 +74,9 @@
         "spills_folder": "spills",
         "spills_convex_folder": "spills_convexed",
         "obstacles_folder": "obstacles",
-        "obstacles_convex_folder": "obstacles_convexed"
+        "obstacles_convex_folder": "obstacles_convexed",
+        "Control_Folder": "ControlData",
+        "Control_File": "Data"
     },
     "dubin": {
         "min_turning_radius": 30.0,
@@ -95,41 +98,67 @@
         "attack_distance": 5.0,
         "MinimalDistance_Obstacle": 100.0
     },
-    "SetPointController": {
-        "wc_theta": 9,
-        "wc_u": 0.4,
-        "phase_margin_theta": 55,
-        "phase_margin_u": 55,
-        "sat_theta": 12000,
-        "sat_u": 600,
-        "Tt_theta": 2,
-        "Tt_u": 1.0,
-        "tolerance_d": 5,
-        "skip_index": 80,
-        "max_error_theta_deg": 40, 
-        "debug": 0
-    },
     "MILP_Solver": {
         "velocity": 10.0,
         "SR": 100.0,
-        "timelimit": 300,
-        "threads": 4,
-        "threads_comment": "Number of threads to use",
-        "mipgap": 0.01,
-        "mipgap_comment": "Relative MIP gap tolerance"
+        "debug": 1,
+        "num_agents": 10,
+        "distance_between_duos": 10.0,
+        "num_spills": 40,
+        "big_M_coeff": 1000,
+        "Gurobi_params": {
+            "OutputFlag": 1,
+            "LogFile": "",
+            "TimeLimit": 4000,
+            "Threads": 0,
+            "MIPGap_Percent": 1,
+            "MIPFocus": 2
+        },
+        "Constraints": {
+            "C1": 1,
+            "C2": 1,
+            "C3": 1,
+            "C4": 1,
+            "C5": 0,
+            "T1": 1,
+            "T2": 1,
+            "T3": 0,
+            "F1": 1,
+            "F2": 0,
+            "F3": 1,
+            "F4": 0
+        }
     },
-    "TaskAllocator": {
-        "min_dist": 20
+    "SetPointController": {
+        "wc_theta": 8,
+        "wc_u": 8,
+        "phase_margin_theta": 60,
+        "phase_margin_u": 25,
+        "sat_theta": 12000,
+        "sat_u": 1000,
+        "Tt_theta": 0.5,
+        "Tt_u": 1.0,
+        "tolerance_d": 6,
+        "skip_index": 50,
+        "max_error_theta_deg": 40, 
+        "debug_a": 0,
+        "debug_v": 0,
+        "enable_lag": 1,
+        "enable_windup_protection": 1,
+        "speed_control": 1,
+        "speed_reference": 5.0
     },
-    "ObjectiveCost": {
-        "w_time": 1,
-        "w_fuel": 1,
-        "w_duo_duo_dist": 1,
-        "w_duo_obstacle_dist": 1,
-        "w_duo_spill_dist": 1,
-        "d_min_duo_duo": 10,
-        "d_min_duo_obstacle": 20,
-        "d_min_duo_spill": 5,
-        "kappa": 1
+    "ControlValidation": {
+        "qi": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "qf": [
+            50.0,
+            20.0,
+            0
+        ],
+        "max_time": 30
     }
 }

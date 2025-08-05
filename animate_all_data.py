@@ -290,9 +290,12 @@ for i, spill in enumerate(spills_data):
 
 for spill_convex in spills_convex_data:
     spill_points = np.array(spill_convex['spill_convex'])
-    ax.plot(spill_points[:, 0], spill_points[:, 1], 'c--')
-    for spill_line in spill_convex['spill_convex_lines']:
-        ax.plot([spill_line[0][0], spill_line[1][0]], [spill_line[0][1], spill_line[1][1]], 'c--')
+    if spill_points.size > 0:
+        ax.plot(spill_points[:, 0], spill_points[:, 1], 'c--')
+        for spill_line in spill_convex['spill_convex_lines']:
+            ax.plot([spill_line[0][0], spill_line[1][0]], [spill_line[0][1], spill_line[1][1]], 'c--')
+    else:
+        continue
 
 
 ########################################
@@ -421,7 +424,9 @@ def update_with_time(frame):
     time_text.set_text(f'Time: {time_vec[frame]:.2f}s')
     return artists + [time_text]
 
-interval = np.mean(np.diff(time_vec)) * 1000  # Interval in milliseconds
+pace = 10
+
+interval = np.mean(np.diff(time_vec)) * 1000 / pace  # Interval in milliseconds, run twice as fast
 # Animate the plot
 ani = FuncAnimation(fig, update_with_time, frames=len(duo_boats_data), init_func=init, blit=True, interval=interval)
 

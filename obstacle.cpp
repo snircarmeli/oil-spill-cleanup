@@ -129,6 +129,9 @@ Obstacle::Obstacle(string filename) {
     if (cnt < num_points) {
         throw std::runtime_error("Greater number of points reported at file " + filename + " at Obstacle::Obstacle(filename)");
     }
+
+    // Calculate convex hull of the obstacle
+    this->calculate_convex_hull();
 }
 
 // Destructor

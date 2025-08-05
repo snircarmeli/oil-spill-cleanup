@@ -54,13 +54,23 @@ int main()
             else {
                 cout << "Invalid geometry in " << fname << endl;
                 cout.flush();
+                // Delete the file
+                if (!fs::remove(fname)) {
+                    cout << "Failed to delete file: " << fname << endl;
+                } else {
+                    cout << "Deleted file: " << fname << endl;
+                }
             }
         }
         catch (const std::exception& e)
         {
             cout << "Error processing " << fname << ": " << e.what() << endl;
-            // if (!fs::remove(fname))
-            //     cout << "  (failed to delete corrupt file)" << endl;
+            // Delete the file
+            if (!fs::remove(fname)) {
+                cout << "Failed to delete file: " << fname << endl;
+            } else {
+                cout << "Deleted file: " << fname << endl;
+            }
         }
     }
     return 0;

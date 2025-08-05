@@ -121,6 +121,7 @@ OilSpill::OilSpill(string filename) {
 
 
     this->load_oil_spill_params("params.json");
+    this->calculate_convex_hull();
 }
 
 // Destructor
@@ -417,6 +418,10 @@ void OilSpill::print_status() const {
 void OilSpill::print_convex_hull_to_file(string foldername, 
 string filename) const {
     // Create the file or reset it
+    // Print foldername and filename
+    cout << "Printing convex hull to file: " << foldername << "/" << filename << ".txt" << endl;
+    system("pwd");
+    cout.flush();
     ofstream file(foldername + "/" + filename + ".txt");
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file at OilSpill::print_convex_hull_to_file");

@@ -26,6 +26,16 @@ using Eigen::Vector2d;
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::RowVectorXd;
+using std::string;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ifstream;
+using std::exception;
+using std::vector;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 
 // Path types
 #define LSL (0)
@@ -42,26 +52,26 @@ using Eigen::RowVectorXd;
 
 #define PI 3.14159265358979323846
 
-void erase_folder_content(const std::string& foldername) {
+void erase_folder_content(const string& foldername) {
     if (!fs::exists(foldername)) {
-        std::cerr << "Folder does not exist: " << foldername << std::endl;
+        cerr << "Folder does not exist: " << foldername << endl;
         return;
     }
 
     if (!fs::is_directory(foldername)) {
-        std::cerr << "Path is not a folder: " << foldername << std::endl;
+        cerr << "Path is not a folder: " << foldername << endl;
         return;
     }
 
     for (const auto& entry : fs::directory_iterator(foldername)) {
         if (entry.is_regular_file()) { // Only process regular files
             if (!fs::remove(entry.path())) {
-                std::cerr << "Failed to delete file: " << entry.path() << std::endl;
+                cerr << "Failed to delete file: " << entry.path() << endl;
             }
         }
     }
 
-    // cout << "All files in folder " << foldername << " have been removed." << std::endl << std::endl;
+    // cout << "All files in folder " << foldername << " have been removed." << endl << endl;
     // cout.flush(); // Force immediate display of the output
 }
 
@@ -84,12 +94,12 @@ Vector3d get_setpoint_dot(MatrixXd path, int i, double dt) {
 int main(int argc, char* argv[]) {
     // Get parameters from the JSON file
     // Path to the JSON file
-    std::string params_path = "params.json";
+    string params_path = "params.json";
 
     // Open the file and parse it
-    std::ifstream file(params_path);
+    ifstream file(params_path);
     if (!file.is_open()) {
-        std::cerr << "Failed to open parameters file " << params_path << std::endl;
+        cerr << "Failed to open parameters file " << params_path << endl;
         return 1;
     }
 
@@ -108,6 +118,7 @@ int main(int argc, char* argv[]) {
     // Simulation parameters
     double T = simulation_params["time_duration"];
     double dt = simulation_params["time_step"];
+    int activate = simulation_params["activate_simulation"];
 
     // Boom parameters
     size_t num_links = boom_params["num_links"];
@@ -128,32 +139,51 @@ int main(int argc, char* argv[]) {
     // Print convex hull to file
     string convex_hull_folder = file_management_params["spills_convex_folder"];
 
-    // Get the file "oilspill_017.txt" from the spills folder
+    // Iterate over all obstacles in the obstacles folder, calculate convex hull, and collect them
+    vector<Obstacle> obstacles;
+    vector<string> bad_obstacle_files;
+    for (const auto& entry : fs::directory_iterator(file_management_params["obstacles_folder"])) {
+        if (entry.is_regular_file()) {
+            string filename = entry.path().string();
+            try {
+                Obstacle obs(filename);
+                if (!obs.is_valid_sequence()) {
+                    bad_obstacle_files.push_back(filename);
+                    continue;
+                }
+                obs.calculate_convex_hull();
+                obstacles.push_back(obs);
+            } catch (const exception &e) {
+                bad_obstacle_files.push_back(filename);
+            }
+        }
+    }
+    if (!bad_obstacle_files.empty()) {
+        cout << "Bad obstacle files:" << endl;
+        for (const auto& fname : bad_obstacle_files) {
+            cout << fname << endl;
+        }
+        cout.flush();
+    }
+
+    // For backward compatibility, keep the original oil spill loading code
     string filename_spill = spill_folder + "/oilspill_017.txt";
     OilSpill oil_spill(filename_spill);
     if (!oil_spill.is_valid_sequence()) {
-        std::cerr << "Invalid sequence of points in file: " << filename_spill << std::endl;
+        cerr << "Invalid sequence of points in file: " << filename_spill << endl;
         return 1;
     }
+
     // Get convex hull of the oil spill and print it to file
     oil_spill.calculate_convex_hull();
 
-    // Get the file "obstacle_001.txt" from the obstacles folder
-    string obstacles_folder = file_management_params["obstacles_folder"];
-    string filename_obstacle = obstacles_folder + "/obstacle_001.txt";
-    Obstacle obstacle(filename_obstacle);
-    if (!obstacle.is_valid_sequence()) {
-        std::cerr << "Invalid sequence of points in file: " << filename_obstacle << std::endl;
-        return 1;
-    }
-    // Get convex hull of the obstacle and print it to file
-    obstacle.calculate_convex_hull();
     
     double convex_hull_radius = oil_spill.get_convex_hull_radius();
     Vector2d convex_hull_centroid = oil_spill.get_convex_hull_centroid();
     // Get the file name without the ".txt" extension, adjust it
-    string convex_file_name = "oilspill_017_convex.txt";
+    string convex_file_name = "oilspill_017_convex";
     oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
+
 
     // // Iterate over the files in the spills folder
     // for (const auto &entry : fs::directory_iterator(spill_folder)) {
@@ -174,7 +204,7 @@ int main(int argc, char* argv[]) {
     //                 string convex_file_name = entry.path().stem().string() + "_convex";
     //                 oil_spill.print_convex_hull_to_file(convex_hull_folder, convex_file_name);
     //             }
-    //         } catch (const std::exception &e) {
+    //         } catch (const exception &e) {
     //             cout << "Error processing file: " << filename << ". Error: " << e.what() << endl;
     //             cout << endl;
     //             cout.flush();
@@ -209,6 +239,23 @@ int main(int argc, char* argv[]) {
      mu_ct, mu_r, I, m, k, c, center, orientation, duo_params["V_max"],
       duo_params["V_max"], duo_params["cleaning_rate"]);
 
+    // int num_duos = params["MILP_Solver"]["num_agents"];
+    // double distance_between_duos = params["MILP_Solver"]["distance_between_duos"];
+    // // Create the vector of duos
+    // vector<BoomBoatsDuo> duos;
+    // duos.push_back(*duo);
+    // // insert num_duo - 1 more agents, to the left and right of the first one
+    // for (int i = 1; i < num_duos; i++) {
+    //     // Create a new duo for each additional agent
+    //     BoomBoat *boat = new BoomBoat();
+    //     double orientation = -qi[2] + PI / 2;
+    //     Vector2d center = Vector2d(qi[0] + cos(orientation) * distance_between_duos * i, qi[1] + sin(orientation) * distance_between_duos * i);
+    //     BoomBoatsDuo* duo = new BoomBoatsDuo(*boat, *boat, num_links, L, mu_l,
+    //      mu_ct, mu_r, I, m, k, c, center, orientation, duo_params["V_max"],
+    //       duo_params["V_max"], duo_params["cleaning_rate"]);
+    //     duos.push_back(*duo);
+    // }
+
     // Plan path for right and left ship
     // int num_links = params["boom"]["num_links"];
     // double L = params["boom"]["link_length"];
@@ -240,14 +287,14 @@ int main(int argc, char* argv[]) {
     DubinsPath path;
     int ret = dubins_init(qi, qf1, rho, &path);
     if (ret != EDUBOK) {
-        std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
+        cerr << "Failed to initialize Dubins path with original angle of attack." << endl;
         return 1;
     }
     double path_length1 = dubins_path_length(&path);
     // Get length of the path with inverse attack angle
     ret = dubins_init(qi, qf2, rho, &path);
     if (ret != EDUBOK) {
-        std::cerr << "Failed to initialize Dubins path with inverse angle of attack." << std::endl;
+        cerr << "Failed to initialize Dubins path with inverse angle of attack." << endl;
         return 1;
     }
     double path_length2 = dubins_path_length(&path);
@@ -257,13 +304,13 @@ int main(int argc, char* argv[]) {
     if (path_length1 < path_length2) {
         ret = dubins_init(qi, qf1, rho, &path);
         if (ret != EDUBOK) {
-            std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
+            cerr << "Failed to initialize Dubins path with original angle of attack." << endl;
             return 1;
         }
     } else {
         ret = dubins_init(qi, qf2, rho, &path);
         if (ret != EDUBOK) {
-            std::cerr << "Failed to initialize Dubins path with original angle of attack." << std::endl;
+            cerr << "Failed to initialize Dubins path with original angle of attack." << endl;
             return 1;
         }
     }
@@ -276,7 +323,7 @@ int main(int argc, char* argv[]) {
     for (double t = 0; t < dubins_path_length(&path); t += step_size) {
         ret = dubins_path_sample(&path, t, q);
         if (ret != EDUBOK) {
-            std::cerr << "Failed to sample Dubins path." << std::endl;
+            cerr << "Failed to sample Dubins path." << endl;
             return 1;
         }
         path_points.col(t / step_size) << q[0], q[1], wrap_theta(q[2]);
@@ -316,28 +363,40 @@ int main(int argc, char* argv[]) {
     // MatrixXd path_local_frame = glob_path_points_2_local_frame_vel(path_points, step_size);
 
     // Save the global path to a file
-    std::string folder_name = "DubinPath";
-    std::string file_name = "dubin_path";
+    string folder_name = "DubinPath";
+    string file_name = "dubin_path";
     save_to_file(file_name, folder_name, path_points, path_R, path_L);
 
-    // // Save the local frame path to a file
-    // std::string folder_name_local = "DubinPathLocal";
-    // std::string file_name_local = "dubin_path_local";
-    // save_to_file(file_name_local, folder_name_local, path_local_frame, path_R_local_frame, path_L_local_frame);
+
 
     // Create controller
-    // PID_Controller controller(params_path);
-    // NonLinearController controller(params_path);
     SetPointController controller(params_path, path_L, path_R, *duo);
 
-    // Create the vector of duo, currently only one duo
-    std::vector<BoomBoatsDuo> duos;
-    duos.push_back(*duo);
-    // Create the vector of oil spills, currently only one oil spill
-    std::vector<OilSpill> oil_spills;
-    oil_spills.push_back(oil_spill);
-    // Create the vector of obstacles, currently empty
-    std::vector<Obstacle> obstacles;
+
+    
+    // BoomBoatsDuo(Vector2d center, double orientation, size_t num_links, double L);
+
+    // Create a second duo with the same parameters with a different center
+    // BoomBoatsDuo* duo2 = new BoomBoatsDuo(center + Vector2d(20, 20), PI / 2, num_links, L);
+
+    
+    // // Create the vector of oil spills
+    // vector<OilSpill> oil_spills;
+    // int cnt_spills = 0;
+    // int max_spills = params["MILP_Solver"]["num_spills"]; // Set your desired limit here
+    // for (const auto& entry : fs::directory_iterator(spill_folder)) {
+    //     if (cnt_spills >= max_spills) break;
+    //     if (entry.is_regular_file()) {
+    //         string filename = entry.path().string();
+    //         OilSpill spill(filename);
+    //         // spill.calculate_convex_hull();
+    //         if (spill.is_valid_sequence()) {
+    //             oil_spills.push_back(spill);
+    //             cnt_spills++;
+    //         }
+    //     }
+    // }
+
 
     // Start tracking problem
     int numSteps = static_cast<int>(T / dt) + 1;
@@ -349,36 +408,15 @@ int main(int argc, char* argv[]) {
     // Print time every k iterations
     int k_itr = simulation_params["print_interval"];
     // int check_valid_interval = simulation_params["check_valid_interval"];
-    std::string integration_method = simulation_params["integration_method"];
+    string integration_method = simulation_params["integration_method"];
 
     // data file for duo
     string filename = "Duo0.txt";
 
-    cout << "Running simulation..." << std::endl << std::endl;
+    cout << "Running simulation..." << endl << endl;
     cout.flush(); // Force immediate display of the output
     int cnt = 0;
-    // int jump_index = params["PID"]["jump_index"];
 
-    // // Setpoint
-    // Vector3d setpoint_L = Vector3d::Zero();
-    // Vector3d setpoint_R = Vector3d::Zero();
-    // Matrix3X2d setpoint; // First column is for left ship, second column is for right ship
-    // Vector3d setpoint_dot_L = Vector3d::Zero(); 
-    // Vector3d setpoint_dot_R = Vector3d::Zero();
-    // Matrix3X2d setpoint_dot; // First column is for left ship, second column is for right ship
-
-    // // Next setpoint
-    // Vector3d next_setpoint_L = Vector3d::Zero();
-    // Vector3d next_setpoint_R = Vector3d::Zero();
-    // Matrix3X2d next_setpoint; // First column is for left ship, second column is for right ship
-    // Vector3d next_setpoint_dot_L = Vector3d::Zero();
-    // Vector3d next_setpoint_dot_R = Vector3d::Zero();
-    // Matrix3X2d next_setpoint_dot; // First column is for left ship, second column is for right ship
-
-    // Vector3d boat1_pos = Vector3d::Zero();
-    // Vector3d boat2_pos = Vector3d::Zero();
-    // Vector3d boat1_vel = Vector3d::Zero();
-    // Vector3d boat2_vel = Vector3d::Zero();
     Matrix2X2d control = Matrix2X2d::Zero();
     Vector2d control1 = Vector2d::Zero();
     Vector2d control2 = Vector2d::Zero();
@@ -387,103 +425,66 @@ int main(int argc, char* argv[]) {
     // double path_percent = 0.0;
 
 
-    // Check the MILP allocator
+    // // Check the MILP allocator
     // vector<MatrixXi> x_solutions = allocate_duos(duos, oil_spills, obstacles);
+    // // Print the allocation results
+    // cout << "Allocation results:" << endl;
+    // for (int k = 0; k < static_cast<int>(x_solutions.size()); ++k) {
+    //     // If all zeros, continue to next duo
+    //     if (x_solutions[k].sum() == 0) {
+    //         cout << "Duo " << k << ": No allocation, Staying put." << endl;
+    //         continue;
+    //     }
+    //     cout << "Duo " << k << ":" << endl;
+    //     int curr = 0;
+    //     VectorXi path_vec = VectorXi::Zero(x_solutions[k].rows());
+    //     for (int i = 0; i < x_solutions[k].rows(); ++i) {
+    //         for (int j = 0; j < x_solutions[k].cols(); ++j) {
+    //             if (x_solutions[k](i, j) == 1) {
+    //                 path_vec[i] = j;
+    //             }
+    //         }
+    //     }
+    //     while (path_vec[curr] != 0) {
+    //         cout << "Going from " << curr << " to " << path_vec[curr] << " " << endl;
+    //         curr = path_vec[curr];
+    //     }
+    //     cout << "Going from " << curr << " to 0" << endl;
 
-    while ( (duo->get_time() < T) ) { // && (cnt < num_points) ) {
+    //     // for (int i = 0; i < x_solutions[k].rows(); ++i) {
+    //     //     for (int j = 0; j < x_solutions[k].cols(); ++j) {
+    //     //         if (x_solutions[k](i, j) == 1 && i != j) {
+    //     //             cout << "Going from " << i << " to " << j << " " << endl;
+    //     //         }
+    //     //     }
+    //     //     cout << endl;
+    //     // }
+    // }
+
+    // cout << endl;
+    // cout.flush(); // Force immediate display of the output
+
+    while ( (duo->get_time() < T) && activate == 1) { // && (cnt < num_points) ) {
         // Print current state to file
         duo->print_to_file(filename, foldername);
         if (cnt % k_itr == 0) {
-            cout << "Simulation time: " << std::fixed << std::setprecision(2)
-                 << std::setw(6) << duo->get_time() << " [s] out of "
-                 << std::setw(6) << T << " [s]" << std::endl;
-            // cout << "Path completion: " << path_percent << "%" << std::endl;
+            cout << "Simulation time: " << fixed << setprecision(2)
+                 << setw(6) << duo->get_time() << " [s] out of "
+                 << setw(6) << T << " [s]" << endl;
+            // cout << "Path completion: " << path_percent << "%" << endl;
 
             cout.flush(); // Force flush the buffer
         }
 
-        // Get the setpoint
-        // setpoint_L = path_L.col(cnt);
-        // setpoint_R = path_R.col(cnt);
-        // setpoint.col(0) = setpoint_L;
-        // setpoint.col(1) = setpoint_R;
-
-        // cout << "Good so far1" << endl; cout.flush();
-        // Get the setpoint dot
-        // setpoint_dot_L = path_points_dot_L.col(cnt);
-        // cout << "Good so far2" << endl; cout.flush();
-        // setpoint_dot_R = path_points_dot_R.col(cnt);
-        // cout << "Good so far3" << endl; cout.flush();
-
-
-        // // Get the next setpoint
-        // int next_index = cnt + jump_index;
-        // if (next_index >= num_points) {
-        //     next_index = num_points - 1;
-        // }
-        // next_setpoint_L = path_L.col(next_index);
-        // next_setpoint_R = path_R.col(next_index);
-        // next_setpoint.col(0) = next_setpoint_L;
-        // next_setpoint.col(1) = next_setpoint_R;
-
-        // // Get the next setpoint dot
-        // next_setpoint_dot_L = get_setpoint_dot(path_L, next_index, dt);
-        // next_setpoint_dot_R = get_setpoint_dot(path_R, next_index, dt);
-        // next_setpoint_dot.col(0) = next_setpoint_dot_L;
-        // next_setpoint_dot.col(1) = next_setpoint_dot_R;
-
-        // Get the odometry
-        // boat1_pos = duo->get_boat1().get_pos();
-        // boat2_pos = duo->get_boat2().get_pos();
-        // boat1_vel = duo->get_boat1().get_vel();
-        // boat2_vel = duo->get_boat2().get_vel();
-
-        // if (PID_params["use_next_setpoint"]) {
-        //     control = controller.get_control_with_next(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot, next_setpoint, next_setpoint_dot);
-        // } else {
-        //     control = controller.get_control(boat1_pos, boat2_pos, boat1_vel, boat2_vel, setpoint, setpoint_dot);
-        // }
         
-        // Use non linear controller
-        // control = controller.update(*duo);
 
         // use SetPointController
         control = controller.update(*duo);
+        controller.print_to_file(file_management_params["Control_File"], file_management_params["Control_Folder"], *duo);
 
         // Unpack the control
         control1 = control.col(0);
         control2 = control.col(1);
-
-        // // Print control of boat 2
-        // cout << "Force of boat 2: " << control2(0) << endl;
-        // cout << "Steering angle of boat 2: " << control2(1) * RAD2DEG << endl;
-        // cout.flush();
-
-        // testing
-        // double deg2rad = PI / 180;
-        // control1[0] = 1200;
-        // control2[0] = 1200;
-        // control1[1] = 1 * deg2rad;
-        // control2[1] = -1 * deg2rad;
-
-        // Print Forces for boat 1 and boat 2
-        
-
-        // // Check validity of the control inputs
-        // if (!duo->get_boat1().is_valid_control(control1) && duo->get_time() > 0) {
-        //     // cout<< "Invalid control input for boat 1 at time: " << duo->get_time() << " [s]" << endl;
-        //     // cout.flush();
-        // }
-        // if (!duo->get_boat2().is_valid_control(control2) && duo->get_time() > 0) {
-        // //     cout<< "Invalid control input for boat 2 at time: " << duo->get_time() << " [s]" << endl;
-        // //     cout.flush();
-        // }
-
-        // print velocities of the boats in the local frame
-        // cout << "Boat 1 velocity in local frame: " << duo->get_boat1().get_frame_vel().transpose() << "\n" << endl;
-        // cout << "Boat 2 velocity in local frame: " << duo->get_boat2().get_frame_vel().transpose() << "\n" << endl;
-        // cout << endl;
-        // cout.flush();
 
         // Propagate the system
         duo->propagate(dt, control1, control2, integration_method);
@@ -491,7 +492,7 @@ int main(int argc, char* argv[]) {
         // Check validity of the state
         // if (cnt % check_valid_interval == 0) {
         //     if (!duo->is_valid_state()) {
-        //         cout << "Invalid state detected at time: " << duo->get_time() << std::endl;
+        //         cout << "Invalid state detected at time: " << duo->get_time() << endl;
         //         cout.flush();
         //     }
         // }

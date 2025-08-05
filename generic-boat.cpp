@@ -176,7 +176,7 @@ void GenericBoat::set_vel(Vector3d vel) {
 
 void GenericBoat::set_control(Vector2d control) {
     if (abs(control(0)) > this->F_max) {
-        control(0) = this->F_max * sign(control(0));
+        this->F = this->F_max * sign(control(0));
     }
     this->eta = wrap_eta(control[1]);
 }

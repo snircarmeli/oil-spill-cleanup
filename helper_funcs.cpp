@@ -136,8 +136,6 @@ MatrixXd check_path(MatrixXd path_points, double max_jump) {
     for (int i = 0; i < n - 1; i++) {
         // Check if the jump between two points is too big
         if ((new_path_points.col(i + 1) - new_path_points.col(i)).norm() > max_jump) {
-            // cout << "Jump between points " << i << " and " << i + 1 << " is too big" << endl;
-            // cout.flush();
             // The point i+1 is too far, we will use point i and point i+2 to interpolate
             // Check if i+2 is out of bounds
             if (i + 2 < n) {
@@ -145,15 +143,8 @@ MatrixXd check_path(MatrixXd path_points, double max_jump) {
                 Vector3d point1 = new_path_points.col(i);
                 Vector3d point2 = new_path_points.col(i + 2);
                 Vector3d new_point = (point1 + point2) / 2;
-                // Print point i, point i+1, point i+2
-                // cout << "Point i: " << new_path_points.col(i).transpose() << endl;
-                // cout << "Point i+1: " << new_path_points.col(i+1).transpose() << endl;
-                // cout << "Point i+2: " << new_path_points.col(i + 2).transpose() << endl;
-                // cout << endl;
-                // cout << "New point: " << new_point.transpose() << endl;
-                // cout << endl;
-                // cout << endl;
-                // cout.flush();
+
+                // Wrap theta
                 new_point(2) = wrap_theta(new_point(2)); // Wrap theta
                 new_path_points.col(i + 1) = new_point;
 

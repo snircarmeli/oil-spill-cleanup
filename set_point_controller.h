@@ -30,6 +30,7 @@ using std::cout;
 
 class SetPointController {
     private:
+        json setpoint_params;
         // Controller parameters for orientation
         double wc_theta; // Crossover frequency
         double Kp_theta; // Gain controller - set by wc_theta
@@ -54,6 +55,9 @@ class SetPointController {
         Matrix2X2d last_output_lag;
         Matrix2X2d last_output_lead;
 
+        int enable_lag; // Flag to indicate if lag controller is used
+        int enable_windup_protection; // Flag to indicate if windup protection is used
+
         // Tolerance parameter for achieving the setpoint
         double tolerance_d; // Tolerance for distance from setpoint
 
@@ -75,10 +79,30 @@ class SetPointController {
         Vector2d e_theta;
         Vector2d e_u;
 
+        Vector2d ref_ang;
+
         // Max error in theta that above it, the u-controller is not used
         double max_error_theta;
 
-        int debug;
+        // Boolean to mark if the setpoint was updated
+        bool setpoint_updated;
+
+        int debug_a;
+        int debug_v;
+
+        // Flags to indicate if the new setpoints (position only) are the same as the previous ones
+        bool setpoint1_same;
+        bool setpoint2_same;
+
+        // Parameters for unwrapping angles
+        Vector2d last_ref_ang;
+        Vector2d last_e_theta;
+        bool first_update_ref_ang; // Flag to indicate if this is the first update of ref_ang
+        bool first_update_e_theta; // Flag to indicate if this is the first update of e
+
+        Vector2d u_ref; // Reference control signals for the boats
+        vector<bool> waiting_for_other;
+        bool EOP; // End of path flag
 
     public:
         // Constructor of parameters from JSON file
@@ -98,12 +122,16 @@ class SetPointController {
         double get_ts() const;
         double get_tolerance_d() const;
         double get_skip_index() const;
+        bool is_setpoint_updated() const;
 
         Vector3d get_setpoint1() const;
         Vector3d get_setpoint2() const;
 
         Vector2d get_e_theta() const;
         Vector2d get_e_u() const;
+
+        // Unwrap angles
+        Vector2d unwrap_angles(const Vector2d& current_angles, Vector2d& last_angles, bool is_first);
 
         // Update the error values
         // Update errors and step
@@ -130,6 +158,10 @@ class SetPointController {
         // If it did, the setpoint is updated to the next one.
         // Either way, the control signals are calculated and returned.
         Matrix2X2d update(BoomBoatsDuo duo);
+
+        // Function which prints data to a file
+        void print_to_file(const string &filename, const string &foldername,
+            const BoomBoatsDuo &duo) const;
 
 };
 

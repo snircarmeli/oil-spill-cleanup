@@ -1,6 +1,6 @@
 // Check spills in the folder "spills"
 // build:
-// g++ -std=c++17 check_spills.cpp oil-spill.o helper_funcs.o -I/usr/include/eigen3 -I/usr/include/json -o check_spills.exe
+// g++ -std=c++17 check_spills.cpp oil-spill.o helper_funcs.o obstacle.o -I/usr/include/eigen3 -I/usr/include/json -o check_spills.exe
 #include "oil-spill.h"
 #include <iostream>
 #include <fstream>
@@ -18,6 +18,7 @@ int main() {
         cout << "Folder spills does not exist." << endl;
         return 1;
     }
+
 
     // Check if the spills folder is a directory
     if (!std::filesystem::is_directory("spills")) {
@@ -45,6 +46,16 @@ int main() {
         return 1;
     }
 
+    if (!std::filesystem::exists("spills_convexed")) {
+        cout << "Folder spills_convexed does not exist." << endl;
+        return 1;
+    }
+
+    if (!std::filesystem::is_directory("spills_convexed")) {
+        cout << "spills_convexed is not a directory." << endl;
+        return 1;
+    }
+
     // Iterate over the files in the spills folder
     for (const auto &entry : std::filesystem::directory_iterator("spills")) {
         // Check if the file is a regular file
@@ -56,7 +67,14 @@ int main() {
                     cout << "Invalid sequence of points in file: " << filename << endl;
                     cout << endl;
                     cout.flush();
+                    // Delete the file
+                    if (!std::filesystem::remove(filename)) {
+                        cout << "Failed to delete file: " << filename << endl;
+                        cout << endl;
+                        cout.flush();
+                    }
                 }
+                oil_spill.print_convex_hull_to_file("spills_convexed", entry.path().stem().string() + "_convex");
             } catch (const std::exception &e) {
                 cout << "Error processing file: " << filename << ". Error: " << e.what() << endl;
                 cout << endl;
